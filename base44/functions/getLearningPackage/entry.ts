@@ -22,25 +22,36 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const lessonIdParam = body.lesson_id || body.lessonId;
     const topicIdParam = body.topic_id || body.topicId;
+    const assessmentIdParam = body.assessment_id || body.assessmentId;
     const studentIdParam = body.student_id || body.studentId;
 
-    if (!lessonIdParam && !topicIdParam) {
+    if (!lessonIdParam && !topicIdParam && !assessmentIdParam) {
       return Response.json(
-        { success: false, error: "lesson_id atau topic_id diperlukan." },
+        { success: false, error: "lesson_id, topic_id, atau assessment_id diperlukan." },
         { status: 400, headers: resHeaders }
       );
     }
 
-    // Authenticate optional user token (works for direct login or child session)
+    // Authenticate optional user token
     const authUser = await base44.auth.me().catch(() => null);
     const activeStudentId = studentIdParam || authUser?.id || null;
 
     // ------------------------------------------------------------------
-    // 2. FETCH ROOT LESSON ANCHOR
+    // 2. FETCH ROOT LESSON ANCHOR (SUPPORT ASSESSMENT_ID LOOKUP)
     // ------------------------------------------------------------------
+    let lessonIdToFetch = lessonIdParam;
+    let targetAssessmentObj: any = null;
+
+    if (assessmentIdParam) {
+      targetAssessmentObj = await db.entities.Assessment.get(assessmentIdParam).catch(() => null);
+      if (targetAssessmentObj && targetAssessmentObj.lesson_id) {
+        lessonIdToFetch = targetAssessmentObj.lesson_id;
+      }
+    }
+
     let lesson: any = null;
-    if (lessonIdParam) {
-      lesson = await db.entities.Lesson.get(lessonIdParam).catch(() => null);
+    if (lessonIdToFetch) {
+      lesson = await db.entities.Lesson.get(lessonIdToFetch).catch(() => null);
     } else if (topicIdParam) {
       const lessons = await db.entities.Lesson.filter({ topic_id: topicIdParam }).catch(() => []);
       lesson = lessons && lessons.length > 0 ? lessons[0] : null;
@@ -48,7 +59,7 @@ Deno.serve(async (req) => {
 
     if (!lesson) {
       return Response.json(
-        { success: false, error: "Pelajaran tidak dijumpai." },
+        { success: false, error: "Pelajaran atau penilaian tidak dijumpai." },
         { status: 404, headers: resHeaders }
       );
     }
@@ -92,10 +103,16 @@ Deno.serve(async (req) => {
       versionId ? db.entities.AIExplanation.filter({ lesson_version_id: versionId }).catch(() => []) : [],
     ]);
 
+    // Ensure target assessment is present if requested directly
+    let finalAssessments = assessments || [];
+    if (targetAssessmentObj && !finalAssessments.some((a: any) => a.id === targetAssessmentObj.id)) {
+      finalAssessments.push(targetAssessmentObj);
+    }
+
     // ------------------------------------------------------------------
     // 5. TIER 3 BATCH FETCH: Questions & MCQ Options (Zero N+1 Query)
     // ------------------------------------------------------------------
-    const assessmentIds = (assessments || []).map((a: any) => a.id);
+    const assessmentIds = finalAssessments.map((a: any) => a.id);
     let questions: any[] = [];
     if (assessmentIds.length > 0) {
       questions = await db.entities.QuestionBank.filter({ assessment_id: { $in: assessmentIds } }).catch(() => []);
@@ -162,6 +179,17 @@ Deno.serve(async (req) => {
         } catch { /* ignore parse error */ }
       }
 
+      const rawAiExps = explanationsMap[qKey] || explanationsMap[q.question_text] || [];
+      const firstExp = rawAiExps[0] || null;
+
+      // Normalized explanation details object
+      const explanationDetails = {
+        concept: firstExp?.concept || topic?.name || 'Konsep Utama',
+        explanation_markdown: firstExp?.explanation_markdown || q.explanation || '',
+        analogy: firstExp?.analogy || '',
+        example: firstExp?.example || ''
+      };
+
       assembledQuestionsMap[asmId].push({
         id: qKey,
         learning_standard_id: q.learning_standard_id || topic?.learning_standard_id || null,
@@ -171,14 +199,15 @@ Deno.serve(async (req) => {
         options: qOpts,
         correct_answer: q.correct_answer || 'A',
         explanation: q.explanation || '',
+        explanation_details: explanationDetails,
         difficulty: q.difficulty || 'medium',
         cognitive_level: q.cognitive_level || 'understand',
-        ai_explanations: explanationsMap[qKey] || explanationsMap[q.question_text] || []
+        ai_explanations: rawAiExps
       });
     }
 
     // Assemble Assessments
-    const assembledAssessments = (assessments || []).map((a: any) => ({
+    const assembledAssessments = finalAssessments.map((a: any) => ({
       id: a.id,
       title: a.title,
       assessment_type: a.assessment_type || 'PRACTICE',
@@ -219,6 +248,22 @@ Deno.serve(async (req) => {
       education_level: studentUser?.education_level || studentUser?.school_year || ''
     } : null;
 
+    // Resolve Primary Assessment Context
+    const primaryAssessment = (assessmentIdParam
+      ? assembledAssessments.find((a: any) => a.id === assessmentIdParam)
+      : null) || assembledAssessments[0] || null;
+
+    const assessmentContext = {
+      challenge_type: primaryAssessment?.assessment_type || 'PRACTICE',
+      reward: {
+        xp: primaryAssessment?.reward_xp ?? 50,
+        coins: primaryAssessment?.reward_coins ?? 10
+      },
+      completion_message: primaryAssessment
+        ? `Tahniah! Anda telah menyempurnakan ${primaryAssessment.title || 'penilaian ini'}.`
+        : "Tahniah! Anda telah menyempurnakan penilaian ini."
+    };
+
     // ------------------------------------------------------------------
     // 7. FINAL LEARNING PACKAGE PAYLOAD CONTRACT
     // ------------------------------------------------------------------
@@ -247,6 +292,7 @@ Deno.serve(async (req) => {
       },
       content_blocks: formattedBlocks,
       assessments: assembledAssessments,
+      assessment_context: assessmentContext,
       student_context: studentContext,
       rewards: {
         lesson_completion_xp: 20,
