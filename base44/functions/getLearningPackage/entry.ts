@@ -92,13 +92,16 @@ Deno.serve(async (req) => {
     const versionId = publishedVersion?.id || null;
 
     // ------------------------------------------------------------------
-    // 4. TIER 2 BATCH FETCH: Subject, SP Code, Blocks, Assessments, AIExplanations
+    // 4. TIER 2 BATCH FETCH: Subject, SP Code, Blocks (Content/Blocks), Assessments, AIExplanations
     // ------------------------------------------------------------------
     const subjectId = topic?.subject_id;
     const [subject, learningStandard, blocks, assessments, explanations] = await Promise.all([
       subjectId ? db.entities.Subject.get(subjectId).catch(() => null) : null,
       topic?.learning_standard_id ? db.entities.LearningStandard.get(topic.learning_standard_id).catch(() => null) : null,
-      versionId ? db.entities.LessonBlock.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []) : [],
+      versionId ? Promise.all([
+        db.entities.LessonContent.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
+        db.entities.LessonBlock.filter({ lesson_version_id: versionId, status: "published" }).catch(() => [])
+      ]).then(([lc, lb]) => [...lc, ...lb]) : [],
       db.entities.Assessment.filter({ lesson_id: lessonId, workflow_status: "PUBLISHED" }).catch(() => []),
       versionId ? db.entities.AIExplanation.filter({ lesson_version_id: versionId }).catch(() => []) : [],
     ]);
@@ -128,12 +131,13 @@ Deno.serve(async (req) => {
     // 6. IN-MEMORY ASSEMBLY & SHIELDING
     // ------------------------------------------------------------------
 
-    // Group Options by question_id
+    // Group Options by question_id (SECURITY: Omit is_correct and correctness metadata)
     const optionsMap: Record<string, any[]> = {};
     for (const opt of options) {
       const qKey = opt.question_id;
       if (!optionsMap[qKey]) optionsMap[qKey] = [];
       optionsMap[qKey].push({
+        id: opt.id,
         label: opt.label,
         text: opt.text,
         sort_order: opt.sort_order ?? 0
@@ -144,20 +148,7 @@ Deno.serve(async (req) => {
       optionsMap[k].sort((a, b) => a.sort_order - b.sort_order);
     });
 
-    // Group Explanations by Question ID or Concept
-    const explanationsMap: Record<string, any[]> = {};
-    for (const exp of explanations) {
-      const key = exp.question_id || exp.concept;
-      if (!explanationsMap[key]) explanationsMap[key] = [];
-      explanationsMap[key].push({
-        concept: exp.concept,
-        explanation_markdown: exp.explanation_markdown || exp.explanation || '',
-        analogy: exp.analogy || '',
-        example: exp.example || ''
-      });
-    }
-
-    // Assemble Questions
+    // Assemble Questions (SECURITY: Sanitized for client-side pre-quiz retrieval)
     const assembledQuestionsMap: Record<string, any[]> = {};
     for (const q of questions) {
       const qKey = q.question_id || q.id;
@@ -170,25 +161,25 @@ Deno.serve(async (req) => {
         try {
           const parsedOpts = typeof q.options_json === 'string' ? JSON.parse(q.options_json) : q.options_json;
           if (Array.isArray(parsedOpts)) {
-            qOpts = parsedOpts.map((optText: string, idx: number) => ({
-              label: String.fromCharCode(65 + idx),
-              text: optText,
-              sort_order: idx
-            }));
+            qOpts = parsedOpts.map((optItem: any, idx: number) => {
+              if (typeof optItem === 'object' && optItem !== null) {
+                return {
+                  id: optItem.id || optItem.label || String.fromCharCode(65 + idx),
+                  label: optItem.label || String.fromCharCode(65 + idx),
+                  text: optItem.text || optItem.option_text || '',
+                  sort_order: optItem.sort_order ?? idx
+                };
+              }
+              return {
+                id: String.fromCharCode(65 + idx),
+                label: String.fromCharCode(65 + idx),
+                text: String(optItem),
+                sort_order: idx
+              };
+            });
           }
         } catch { /* ignore parse error */ }
       }
-
-      const rawAiExps = explanationsMap[qKey] || explanationsMap[q.question_text] || [];
-      const firstExp = rawAiExps[0] || null;
-
-      // Normalized explanation details object
-      const explanationDetails = {
-        concept: firstExp?.concept || topic?.name || 'Konsep Utama',
-        explanation_markdown: firstExp?.explanation_markdown || q.explanation || '',
-        analogy: firstExp?.analogy || '',
-        example: firstExp?.example || ''
-      };
 
       assembledQuestionsMap[asmId].push({
         id: qKey,
@@ -197,12 +188,8 @@ Deno.serve(async (req) => {
         question_type: q.question_type || 'MCQ',
         question_image_url: q.question_image_url || null,
         options: qOpts,
-        correct_answer: q.correct_answer || 'A',
-        explanation: q.explanation || '',
-        explanation_details: explanationDetails,
         difficulty: q.difficulty || 'medium',
-        cognitive_level: q.cognitive_level || 'understand',
-        ai_explanations: rawAiExps
+        cognitive_level: q.cognitive_level || 'understand'
       });
     }
 
@@ -218,10 +205,39 @@ Deno.serve(async (req) => {
       questions: assembledQuestionsMap[a.id] || []
     }));
 
-    // Format & Parse LessonBlocks
+    // Format & Parse LessonBlocks / LessonContent
     const formattedBlocks = (blocks || [])
-      .sort((a: any, b: any) => (a.order_number || 0) - (b.order_number || 0))
       .map((b: any) => {
+        if (b.content_type) {
+          let blockType = "TEXT_MARKDOWN";
+          if (b.content_type === "notes") blockType = "TEXT_MARKDOWN";
+          else if (b.content_type === "mindmap") blockType = "MINDMAP";
+          else if (b.content_type === "video") blockType = "VIDEO";
+          else if (b.content_type === "worksheet") blockType = "WORKSHEET";
+          else blockType = b.content_type.toUpperCase();
+
+          let parsedPayload: any = {};
+          if (b.content_type === "mindmap") {
+            try {
+              parsedPayload = { branches: typeof b.content_markdown === "string" ? JSON.parse(b.content_markdown) : b.content_markdown };
+            } catch {
+              parsedPayload = { markdown: b.content_markdown || "" };
+            }
+          } else {
+            parsedPayload = {
+              markdown: b.content_markdown || "",
+              voice_script: b.voice_script || "",
+              media_url: b.media_url || "",
+            };
+          }
+          return {
+            id: b.id,
+            block_type: blockType,
+            title: b.title || "",
+            order_number: b.sort_order ?? 0,
+            payload: parsedPayload,
+          };
+        }
         let parsedPayload = b.payload;
         if (typeof parsedPayload === 'string') {
           try { parsedPayload = JSON.parse(parsedPayload); } catch { /* keep raw string */ }
@@ -233,7 +249,8 @@ Deno.serve(async (req) => {
           order_number: b.order_number,
           payload: parsedPayload || {}
         };
-      });
+      })
+      .sort((a: any, b: any) => (a.order_number || 0) - (b.order_number || 0));
 
     // Assemble Optional Student Context
     const activeProgress = progressList?.[0] || {};
