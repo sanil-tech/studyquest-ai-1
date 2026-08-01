@@ -104,6 +104,7 @@ export default function BlockRenderer({
   block,
   studentName = "Pengembara",
   isSpeaking = false,
+  isCompleted = false,
   onSpeak = () => {},
   onComplete = () => {}
 }) {
@@ -111,7 +112,7 @@ export default function BlockRenderer({
 
   // Safely resolve payload (handles both pre-parsed JSON objects and raw JSON strings)
   const payload = typeof block.payload === "string"
-    ? (() => { try { return JSON.parse(block.payload); } catch { return {}; } })()
+    ? (() => { try { return JSON.parse(block.payload); } catch { return { markdown: block.payload }; } })()
     : (block.payload || {});
 
   switch (block.block_type) {
@@ -124,9 +125,9 @@ export default function BlockRenderer({
             <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-amber-400" /> {block.title || "Nota Pengembaraan"}
             </h3>
-            {payload.markdown && (
+            {(payload.markdown || payload.text) && (
               <Button
-                onClick={() => onSpeak(payload.markdown)}
+                onClick={() => onSpeak(payload.markdown || payload.text)}
                 className={`h-9 px-3 rounded-xl font-black text-xs ${
                   isSpeaking ? "bg-rose-500 hover:bg-rose-600 text-white" : "bg-amber-400 hover:bg-amber-300 text-stone-950"
                 }`}
@@ -140,13 +141,87 @@ export default function BlockRenderer({
             {payload.image_url && (
               <img src={payload.image_url} alt="Illustration" className="w-full max-w-md mx-auto rounded-2xl mb-4 border border-stone-700" />
             )}
-            <div dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(payload.markdown || "", studentName)) }} />
+            <div dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(payload.markdown || payload.text || "", studentName)) }} />
           </div>
           <Button
             onClick={onComplete}
             className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
           >
-            Selesai Hadam Nota! 🎒
+            {isCompleted ? "Nota Selesai ✓" : "Selesai Hadam Nota! 🎒"}
+          </Button>
+        </div>
+      );
+
+    case "AI_EXPLANATION":
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-400" /> {block.title || "Penerangan Pintar AI"}
+            </h3>
+            {(payload.markdown || payload.explanation || payload.text) && (
+              <Button
+                onClick={() => onSpeak(payload.markdown || payload.explanation || payload.text)}
+                className={`h-9 px-3 rounded-xl font-black text-xs ${
+                  isSpeaking ? "bg-rose-500 hover:bg-rose-600 text-white" : "bg-amber-400 hover:bg-amber-300 text-stone-950"
+                }`}
+              >
+                {isSpeaking ? <VolumeX className="w-4 h-4 mr-1" /> : <Volume2 className="w-4 h-4 mr-1" />}
+                {isSpeaking ? "Berhenti" : "Dengar"}
+              </Button>
+            )}
+          </div>
+          <div className="p-5 bg-gradient-to-br from-purple-950/40 via-stone-900 to-indigo-950/40 rounded-2xl border border-purple-500/30 text-xs sm:text-sm leading-relaxed font-bold space-y-3">
+            <div dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(payload.markdown || payload.explanation || payload.text || "", studentName)) }} />
+          </div>
+          <Button
+            onClick={onComplete}
+            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+          >
+            {isCompleted ? "Penerangan Selesai ✓" : "Selesai & Ambil +15 XP 🤖"}
+          </Button>
+        </div>
+      );
+
+    case "REFLECTION":
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
+              <Brain className="w-5 h-5 text-sky-400" /> {block.title || "Refleksi Kendiri"}
+            </h3>
+          </div>
+          <div className="p-5 bg-stone-900/90 rounded-2xl border border-sky-500/30 text-xs sm:text-sm font-bold space-y-3">
+            <p className="text-sky-300 font-black text-xs uppercase tracking-wider">💭 Soalan Refleksi</p>
+            <div dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(payload.prompt || payload.markdown || payload.text || "Apakah perkara utama yang anda pelajari dalam sesi ini?", studentName)) }} />
+          </div>
+          <Button
+            onClick={onComplete}
+            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+          >
+            {isCompleted ? "Refleksi Selesai ✓" : "Selesai Refleksi! 💭"}
+          </Button>
+        </div>
+      );
+
+    case "QUIZ":
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-rose-400" /> {block.title || "Ujian Modul"}
+            </h3>
+          </div>
+          <div className="p-5 bg-gradient-to-br from-amber-950/40 via-stone-900 to-rose-950/40 rounded-2xl border border-amber-500/30 text-center space-y-3">
+            <p className="text-xs font-bold text-stone-200">
+              {payload.instructions || "Selesaikan soalan kuiz untuk menguji kefahaman anda!"}
+            </p>
+          </div>
+          <Button
+            onClick={onComplete}
+            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+          >
+            {isCompleted ? "Kuiz Selesai ✓" : "Selesai Kuiz! 👑"}
           </Button>
         </div>
       );
@@ -163,7 +238,7 @@ export default function BlockRenderer({
           <YouTubeLesson
             videoUrl={payload.youtube_url || payload.search_query || payload.media_url || payload.video_url}
             onCompleted={onComplete}
-            isCompleted={false}
+            isCompleted={isCompleted}
           />
         </div>
       );

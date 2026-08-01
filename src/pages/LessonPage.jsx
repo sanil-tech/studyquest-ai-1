@@ -171,8 +171,40 @@ export default function LessonPage() {
     setActiveTab("map");
   };
 
-  const handleAdventureBlockComplete = async (blockId) => {
+  const handleAdventureBlockComplete = async (blockId, blockType) => {
+    if (!blockId) return;
+
+    if (completedBlockIds.includes(blockId)) {
+      return; // Already completed, prevent duplicate XP and reward process calls
+    }
+
     setCompletedBlockIds((prev) => Array.from(new Set([...prev, blockId])));
+
+    const typeKeyMap = {
+      TEXT_MARKDOWN: "lesson",
+      NOTE: "lesson",
+      TEXT: "lesson",
+      VIDEO_EMBED: "video",
+      VIDEO: "video",
+      MIND_MAP: "mindmap",
+      MINDMAP: "mindmap",
+      FLASHCARD_DECK: "flashcard",
+      FLASHCARD: "flashcard",
+      FLASHCARDS: "flashcard",
+      INTERACTIVE_GAME: "games",
+      GAME: "games",
+      ACTIVITY: "games",
+      QUIZ: "quiz"
+    };
+
+    const stageKey = typeKeyMap[(blockType || "").toUpperCase()] || "lesson";
+
+    setProgressState((prev) => ({
+      ...prev,
+      [`${stageKey}_completed`]: true,
+      xp_earned: prev.xp_earned + 25
+    }));
+
     const studentId = await getActiveStudentId();
     if (studentId) {
       await processReward(studentId, {
@@ -183,7 +215,7 @@ export default function LessonPage() {
         reason: "Misi Kembara Selesai"
       }).catch(() => {});
     }
-    setProgressState(prev => ({ ...prev, xp_earned: prev.xp_earned + 25 }));
+
     triggerConfetti();
   };
 
@@ -313,6 +345,8 @@ export default function LessonPage() {
             primaryAssessment={primaryAssessment}
             topicId={topicId}
             studentName={studentName}
+            completedBlockIds={completedBlockIds}
+            onBlockComplete={handleAdventureBlockComplete}
             progressState={progressState}
             activeTab={activeTab}
             setActiveTab={setActiveTab}

@@ -34,6 +34,8 @@ export function LessonAdventure({
   quizScore = 0,
   onCompleteBlock,
   studentName = "Pengembara",
+  isSpeaking = false,
+  onSpeak,
   quizComponent
 }) {
   const [viewState, setViewState] = useState("intro"); // 'intro' | 'map' | 'mission'
@@ -54,18 +56,19 @@ export function LessonAdventure({
     );
   }, [adventure, completedBlockIds, quizCompleted, quizScore]);
 
+  // Synchronize active mission with progress stats
   const activeMission = useMemo(() => {
-    if (!activeMissionId && progressStats.currentActiveMissionId) {
-      return (
-        progressStats.updatedMissions.find(
-          (m) => m.id === progressStats.currentActiveMissionId
-        ) || progressStats.updatedMissions[0]
-      );
+    if (activeMissionId) {
+      const found = progressStats.updatedMissions.find((m) => m.id === activeMissionId);
+      if (found) return found;
     }
-    return (
-      progressStats.updatedMissions.find((m) => m.id === activeMissionId) ||
-      progressStats.updatedMissions[0]
-    );
+    if (progressStats.currentActiveMissionId) {
+      const found = progressStats.updatedMissions.find(
+        (m) => m.id === progressStats.currentActiveMissionId
+      );
+      if (found) return found;
+    }
+    return progressStats.updatedMissions[0];
   }, [activeMissionId, progressStats]);
 
   const handleSelectMission = (mission) => {
@@ -77,9 +80,18 @@ export function LessonAdventure({
     if (mission.blocks && mission.blocks.length > 0) {
       mission.blocks.forEach((block) => {
         if (onCompleteBlock) {
-          onCompleteBlock(block.id);
+          onCompleteBlock(block.id, block.block_type);
         }
       });
+    }
+
+    // Automatically advance activeMissionId to next mission if available
+    const currentIdx = progressStats.updatedMissions.findIndex((m) => m.id === mission.id);
+    if (currentIdx >= 0 && currentIdx < progressStats.updatedMissions.length - 1) {
+      const nextMission = progressStats.updatedMissions[currentIdx + 1];
+      if (nextMission) {
+        setActiveMissionId(nextMission.id);
+      }
     }
   };
 
@@ -151,6 +163,10 @@ export function LessonAdventure({
               onComplete={handleCompleteMission}
               onBackToMap={() => setViewState("map")}
               studentName={studentName}
+              completedBlockIds={completedBlockIds}
+              onBlockComplete={onCompleteBlock}
+              isSpeaking={isSpeaking}
+              onSpeak={onSpeak}
               quizComponent={quizComponent}
             />
           </motion.div>

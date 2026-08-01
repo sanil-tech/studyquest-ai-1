@@ -23,6 +23,10 @@ export function MissionStage({
   onComplete,
   onBackToMap,
   studentName = "Pengembara",
+  completedBlockIds = [],
+  onBlockComplete,
+  isSpeaking = false,
+  onSpeak,
   quizComponent
 }) {
   const [showRewardModal, setShowRewardModal] = useState(false);
@@ -136,12 +140,17 @@ export function MissionStage({
           /* Normal Blocks View (Reusing BlockRenderer) */
           <div className="space-y-6">
             {blocks.map((block) => (
-              <div key={block.id} className="space-y-4">
+              <div key={block.id || block.title} className="space-y-4">
                 <BlockRenderer
                   block={block}
                   studentName={studentName}
+                  isSpeaking={isSpeaking}
+                  onSpeak={onSpeak}
+                  isCompleted={completedBlockIds.includes(block.id)}
                   onComplete={() => {
-                    // Trigger completion when student finishes block
+                    if (onBlockComplete) {
+                      onBlockComplete(block.id, block.block_type);
+                    }
                   }}
                 />
               </div>

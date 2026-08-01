@@ -15,6 +15,8 @@ export default function ClassicLessonView({
   primaryAssessment,
   topicId,
   studentName = "Pengembara",
+  completedBlockIds = [],
+  onBlockComplete,
   progressState,
   activeTab,
   setActiveTab,
@@ -91,7 +93,14 @@ export default function ClassicLessonView({
                 studentName={studentName}
                 isSpeaking={isSpeaking}
                 onSpeak={handleSpeech}
-                onComplete={() => handleStageComplete(block.block_type.toLowerCase(), 15)}
+                isCompleted={completedBlockIds.includes(block.id)}
+                onComplete={() => {
+                  if (onBlockComplete) {
+                    onBlockComplete(block.id, block.block_type);
+                  } else if (handleStageComplete) {
+                    handleStageComplete((block.block_type || "").toLowerCase(), 15);
+                  }
+                }}
               />
             </motion.div>
           );

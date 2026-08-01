@@ -18,7 +18,7 @@ import { AchievementCard } from "@/components/home/AchievementCard";
 import { AdventureJournalCard } from "@/components/home/AdventureJournalCard";
 
 // UI Components & Icons
-import { Compass, Sparkles, Loader2, ArrowLeft } from "lucide-react";
+import { Compass, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 

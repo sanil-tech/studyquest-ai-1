@@ -12,18 +12,22 @@
 const STAGE_MAPPINGS = {
   TEXT_MARKDOWN: { stage: "DISCOVER", icon: "📖", defaultTitle: "Terokai Konsep" },
   NOTE: { stage: "DISCOVER", icon: "📝", defaultTitle: "Nota Kembara" },
+  TEXT: { stage: "DISCOVER", icon: "📖", defaultTitle: "Terokai Konsep" },
   VIDEO_EMBED: { stage: "DISCOVER", icon: "🎬", defaultTitle: "Tonton & Elusif" },
   VIDEO: { stage: "DISCOVER", icon: "🎬", defaultTitle: "Tonton & Elusif" },
   INFOGRAPHIC: { stage: "DISCOVER", icon: "🎨", defaultTitle: "Peta Visual" },
   IMAGE: { stage: "DISCOVER", icon: "🖼️", defaultTitle: "Peta Visual" },
+  AI_EXPLANATION: { stage: "DISCOVER", icon: "🤖", defaultTitle: "Penerangan Pintar AI" },
 
   MINDMAP: { stage: "INTERACT", icon: "🧠", defaultTitle: "Peta Minda Interaktif" },
   MIND_MAP: { stage: "INTERACT", icon: "🧠", defaultTitle: "Peta Minda Interaktif" },
   FLASHCARD_DECK: { stage: "INTERACT", icon: "🎴", defaultTitle: "Kad Minda Memori" },
   FLASHCARD: { stage: "INTERACT", icon: "🎴", defaultTitle: "Kad Minda Memori" },
+  FLASHCARDS: { stage: "INTERACT", icon: "🎴", defaultTitle: "Kad Minda Memori" },
   INTERACTIVE_GAME: { stage: "INTERACT", icon: "🎮", defaultTitle: "Cabaran Permainan" },
   GAME: { stage: "INTERACT", icon: "🎮", defaultTitle: "Cabaran Permainan" },
   ACTIVITY: { stage: "INTERACT", icon: "⚡", defaultTitle: "Aktiviti Pembelajaran" },
+  REFLECTION: { stage: "INTERACT", icon: "💭", defaultTitle: "Refleksi Kendiri" },
 
   WORKSHEET: { stage: "PRACTICE", icon: "📑", defaultTitle: "Lembaran Kerja Pengembara" },
   QUIZ: { stage: "CHALLENGE", icon: "👑", defaultTitle: "Cabaran Boss Utama" }
