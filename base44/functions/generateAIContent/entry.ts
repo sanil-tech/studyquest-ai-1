@@ -132,23 +132,31 @@ const CONTENT_SCHEMAS: Record<string, any> = {
     type: "object",
     properties: {
       title: { type: "string", description: "Tajuk infografik" },
-      summary: { type: "string", description: "Ringkasan kesimpulan utama pelajaran" },
-      key_takeaways: { type: "array", items: { type: "string" }, description: "3-5 pengajaran utama" },
-      visual_layout: { type: "string", description: "Cadangan susun atur visual (peta minda, aliran, jadual, rajah)" },
-      sections: {
+      short_description: { type: "string", description: "Penerangan ringkas tumpuan visual" },
+      image_url: { type: "string", description: "URL imej infografik utama / ilustrasi pembelajaran" },
+      key_points: {
+        type: "array",
+        items: { type: "string" },
+        description: "3-5 poin pengajaran paling penting"
+      },
+      visual_labels: {
         type: "array",
         items: {
           type: "object",
           properties: {
-            heading: { type: "string" },
-            content: { type: "string" },
+            label: { type: "string", description: "Label atau tajuk elemen visual" },
+            detail: { type: "string", description: "Penerangan elemen" },
+            icon: { type: "string", description: "Emoji atau ikon pengenalan (cth: 💡, 📌, ⚡)" }
           },
-          required: ["heading", "content"],
+          required: ["label", "detail"]
         },
-        description: "Bahagian infografik",
+        description: "Mata fokus visual / label rajah"
       },
+      summary: { type: "string", description: "Ringkasan kesimpulan (backward compat)" },
+      key_takeaways: { type: "array", items: { type: "string" }, description: "Pengajaran utama (backward compat)" },
+      visual_layout: { type: "string", description: "Cadangan susun atur visual" }
     },
-    required: ["title", "summary", "key_takeaways"],
+    required: ["title", "short_description", "key_points", "visual_labels"],
   },
   worksheet: {
     type: "object",
@@ -307,29 +315,32 @@ Output mesti rasa seperti jurnal pembelajaran peribadi pelajar.`;
 };
 
 const buildInfographicPrompt = (topicName: string, subjectName: string, levelName: string, customContext?: string) => {
-  return `Anda ialah StudyQuest AI Content Creator untuk infografik pembelajaran KSSR/KSSM Malaysia.
+  return `Anda ialah StudyQuest AI Visual Content Creator untuk infografik pembelajaran KSSR/KSSM Malaysia.
 
-Tugas: Cipta infografik ringkasan untuk bahagian KESIMPULAN atau PETA MINDA pelajaran.
+Tugas: Cipta infografik visual-first learning card untuk topik ini.
 
 INPUT:
 Tahap: ${levelName}
 Subjek: ${subjectName}
-Topik: ${topicName}${customContext ? `\nKonteks: ${customContext}` : ""}
+Topik: ${topicName}${customContext ? `\nKonteks Tambahan: ${customContext}` : ""}
 
-KEPERLUAN INFOGRAFIK:
-1. Meringkaskan keseluruhan pelajaran dalam bentuk visual yang mudah difahami pelajar.
-2. Sertakan 3-5 pengajaran utama (key takeaways) yang paling penting.
-3. Cadangkan susun atur visual (peta minda, aliran, jadual, rajah) yang sesuai.
-4. Bahagikan kepada seksyen jelas dengan tajuk dan kandungan ringkas.
-5. Gunakan Bahasa Melayu mesra pelajar. Boleh gunakan placeholder {{nama}} untuk personalisasi.
+KEPERLUAN INFOGRAFIK VISUAL:
+1. Utamakan imej visual utama (image_url). Sediakan cadangan URL imej ilustrasi berkualiti atau Unsplash educational photo yang paling sesuai dengan ${topicName}.
+2. Sediakan tajuk menarik (title) dan penerangan ringkas (short_description).
+3. Sertakan 3-5 poin fokus utama (key_points).
+4. Sertakan 3-5 label visual (visual_labels) dengan tajuk label, penerangan detail, dan ikon emoji.
+5. Gunakan Bahasa Melayu mesra kanak-kanak. Boleh gunakan placeholder {{nama}} untuk personalisasi.
 
-JANA dalam format JSON:
+JANA dalam format JSON berikut:
 {
-  "title": "",
-  "summary": "Ringkasan satu perenggan",
-  "key_takeaways": [],
-  "visual_layout": "Cadangan susun atur visual",
-  "sections": [{"heading":"","content":""}]
+  "title": "Tajuk Kad Infografik",
+  "short_description": "Penerangan ringkas konsep utama...",
+  "image_url": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60",
+  "key_points": ["Poin utama 1", "Poin utama 2", "Poin utama 3"],
+  "visual_labels": [
+    { "label": "Elemen A", "detail": "Fungsi utama elemen A", "icon": "💡" },
+    { "label": "Elemen B", "detail": "Proses berlaku di B", "icon": "⚡" }
+  ]
 }`;
 };
 

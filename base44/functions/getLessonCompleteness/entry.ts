@@ -13,60 +13,97 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: "lesson_version_id diperlukan." }, { status: 400 });
     }
 
+    const lessonVersion = await base44.asServiceRole.entities.LessonVersion.get(lesson_version_id).catch(() => null);
+    const lessonId = lessonVersion?.lesson_id;
+
     const [
-      lessonVersion,
-      lessonContent,
-      flashcards,
-      questions,
-      activities,
-      teacherGuides,
-      aiExplanations,
-      commonMistakes,
-      lessonBlocks,
-      aiRequests,
+      lessonContentByVer,
+      lessonContentByLes,
+      flashcardsByVer,
+      flashcardsByLes,
+      questionsByVer,
+      questionsByLes,
+      activitiesByVer,
+      activitiesByLes,
+      teacherGuidesByVer,
+      teacherGuidesByLes,
+      aiExplanationsByVer,
+      aiExplanationsByLes,
+      commonMistakesByVer,
+      commonMistakesByLes,
+      lessonBlocksByVer,
+      lessonBlocksByLes,
+      aiRequestsByVer,
+      aiRequestsByLes,
     ] = await Promise.all([
-      base44.asServiceRole.entities.LessonVersion.get(lesson_version_id).catch(() => null),
       base44.asServiceRole.entities.LessonContent.filter({ lesson_version_id }).catch(() => []),
+      lessonId ? base44.asServiceRole.entities.LessonContent.filter({ lesson_id: lessonId }).catch(() => []) : [],
       base44.asServiceRole.entities.Flashcard.filter({ lesson_version_id }).catch(() => []),
+      lessonId ? base44.asServiceRole.entities.Flashcard.filter({ lesson_id: lessonId }).catch(() => []) : [],
       base44.asServiceRole.entities.QuestionBank.filter({ lesson_version_id }).catch(() => []),
+      lessonId ? base44.asServiceRole.entities.QuestionBank.filter({ lesson_id: lessonId }).catch(() => []) : [],
       base44.asServiceRole.entities.LearningActivity.filter({ lesson_version_id }).catch(() => []),
+      lessonId ? base44.asServiceRole.entities.LearningActivity.filter({ lesson_id: lessonId }).catch(() => []) : [],
       base44.asServiceRole.entities.TeacherGuide.filter({ lesson_version_id }).catch(() => []),
+      lessonId ? base44.asServiceRole.entities.TeacherGuide.filter({ lesson_id: lessonId }).catch(() => []) : [],
       base44.asServiceRole.entities.AIExplanation.filter({ lesson_version_id }).catch(() => []),
+      lessonId ? base44.asServiceRole.entities.AIExplanation.filter({ lesson_id: lessonId }).catch(() => []) : [],
       base44.asServiceRole.entities.CommonMistake.filter({ lesson_version_id }).catch(() => []),
+      lessonId ? base44.asServiceRole.entities.CommonMistake.filter({ lesson_id: lessonId }).catch(() => []) : [],
       base44.asServiceRole.entities.LessonBlock.filter({ lesson_version_id }).catch(() => []),
+      lessonId ? base44.asServiceRole.entities.LessonBlock.filter({ lesson_id: lessonId }).catch(() => []) : [],
       base44.asServiceRole.entities.AIContentRequest.filter({ lesson_version_id }).catch(() => []),
+      lessonId ? base44.asServiceRole.entities.AIContentRequest.filter({ lesson_id: lessonId }).catch(() => []) : [],
     ]);
 
-    // Helper to check if AIContentRequest exists with status completed/approved
+    const mergeUnique = (arr1: any[], arr2: any[]) => {
+      const map = new Map();
+      [...arr1, ...arr2].forEach((item) => {
+        if (item && item.id) map.set(item.id, item);
+      });
+      return Array.from(map.values());
+    };
+
+    const lessonContent = mergeUnique(lessonContentByVer, lessonContentByLes);
+    const flashcards = mergeUnique(flashcardsByVer, flashcardsByLes);
+    const questions = mergeUnique(questionsByVer, questionsByLes);
+    const activities = mergeUnique(activitiesByVer, activitiesByLes);
+    const teacherGuides = mergeUnique(teacherGuidesByVer, teacherGuidesByLes);
+    const aiExplanations = mergeUnique(aiExplanationsByVer, aiExplanationsByLes);
+    const commonMistakes = mergeUnique(commonMistakesByVer, commonMistakesByLes);
+    const lessonBlocks = mergeUnique(lessonBlocksByVer, lessonBlocksByLes);
+    const aiRequests = mergeUnique(aiRequestsByVer, aiRequestsByLes);
+
+    // Helper to check if AIContentRequest exists with status completed/approved or has generated content
     const hasAIReq = (types: string[]) =>
       aiRequests.some(
         (r: any) =>
-          (r.status === "completed" || r.status === "approved") &&
-          types.includes(r.content_type)
+          (r.status === "completed" || r.status === "approved" || !!r.generated_content) &&
+          types.includes((r.content_type || "").toLowerCase())
       );
 
     // 1. Notes
     const notesCount =
-      lessonContent.filter((c: any) => c.content_type === "notes" || c.content_type === "lesson_notes").length ||
+      lessonContent.filter((c: any) => ["notes", "lesson_notes", "text_markdown", "text"].includes((c.content_type || "").toLowerCase())).length ||
       (lessonVersion?.notes_content ? 1 : 0) ||
       (hasAIReq(["lesson_notes", "notes"]) ? 1 : 0);
     const hasNotes =
       notesCount > 0 ||
-      lessonContent.some((c: any) => c.content_type === "notes" || c.content_type === "lesson_notes") ||
+      lessonContent.some((c: any) => ["notes", "lesson_notes", "text_markdown", "text"].includes((c.content_type || "").toLowerCase())) ||
       !!lessonVersion?.notes_content ||
-      lessonBlocks.some((b: any) => ["TEXT_MARKDOWN", "NOTES", "TEXT"].includes((b.block_type || "").toUpperCase())) ||
+      lessonBlocks.some((b: any) => ["TEXT_MARKDOWN", "NOTES", "TEXT", "LESSON_NOTES"].includes((b.block_type || "").toUpperCase())) ||
       hasAIReq(["lesson_notes", "notes"]);
 
     // 2. Flashcard
     const flashcardCount =
       flashcards.length ||
-      lessonContent.filter((c: any) => c.content_type === "flashcard" || c.content_type === "flashcards").length ||
+      lessonContent.filter((c: any) => ["flashcard", "flashcards"].includes((c.content_type || "").toLowerCase())).length ||
       (hasAIReq(["flashcards", "flashcard"]) ? 5 : 0);
     const hasFlashcards = flashcardCount >= 5 || hasAIReq(["flashcards", "flashcard"]);
 
     // 3. Video
     const videoCount =
-      lessonContent.filter((c: any) => ["video", "video_script", "video_embed"].includes(c.content_type)).length ||
+      lessonContent.filter((c: any) => ["video", "video_script", "video_embed"].includes((c.content_type || "").toLowerCase())).length ||
       (lessonVersion?.video_url || lessonVersion?.video_script ? 1 : 0) ||
       (hasAIReq(["video_script", "video"]) ? 1 : 0);
     const hasVideo =
@@ -78,70 +115,70 @@ export default async function(req: Request): Promise<Response> {
 
     // 4. Mind Map
     const mindmapCount =
-      lessonContent.filter((c: any) => c.content_type === "mindmap").length ||
+      lessonContent.filter((c: any) => ["mindmap", "mind_map"].includes((c.content_type || "").toLowerCase())).length ||
       (lessonVersion?.mindmap_data || lessonVersion?.mind_map ? 1 : 0) ||
-      (hasAIReq(["mindmap"]) ? 1 : 0);
+      (hasAIReq(["mindmap", "mind_map"]) ? 1 : 0);
     const hasMindmap =
       mindmapCount > 0 ||
       !!lessonVersion?.mindmap_data ||
       !!lessonVersion?.mind_map ||
-      lessonBlocks.some((b: any) => (b.block_type || "").toUpperCase() === "MINDMAP") ||
-      hasAIReq(["mindmap"]);
+      lessonBlocks.some((b: any) => ["MINDMAP", "MIND_MAP"].includes((b.block_type || "").toUpperCase())) ||
+      hasAIReq(["mindmap", "mind_map"]);
 
     // 5. Infographic
     const infographicCount =
-      lessonContent.filter((c: any) => c.content_type === "infographic").length ||
-      lessonBlocks.filter((b: any) => (b.block_type || "").toUpperCase() === "INFOGRAPHIC").length ||
-      (hasAIReq(["infographic"]) ? 1 : 0);
+      lessonContent.filter((c: any) => ["infographic", "infographics"].includes((c.content_type || "").toLowerCase())).length ||
+      lessonBlocks.filter((b: any) => ["INFOGRAPHIC", "INFOGRAPHICS"].includes((b.block_type || "").toUpperCase())).length ||
+      (hasAIReq(["infographic", "infographics"]) ? 1 : 0);
     const hasInfographic =
       infographicCount > 0 ||
       !!lessonVersion?.infographic_url ||
-      lessonBlocks.some((b: any) => (b.block_type || "").toUpperCase() === "INFOGRAPHIC") ||
-      hasAIReq(["infographic"]);
+      lessonBlocks.some((b: any) => ["INFOGRAPHIC", "INFOGRAPHICS"].includes((b.block_type || "").toUpperCase())) ||
+      hasAIReq(["infographic", "infographics"]);
 
     // 6. Quiz
     const questionCount =
       questions.length ||
-      lessonContent.filter((c: any) => c.content_type === "quiz" || c.content_type === "questions").length ||
-      lessonBlocks.filter((b: any) => ["QUIZ", "QUESTIONS"].includes((b.block_type || "").toUpperCase())).length ||
+      lessonContent.filter((c: any) => ["quiz", "questions", "question", "assessment"].includes((c.content_type || "").toLowerCase())).length ||
+      lessonBlocks.filter((b: any) => ["QUIZ", "QUESTIONS", "QUESTION", "ASSESSMENT"].includes((b.block_type || "").toUpperCase())).length ||
       (hasAIReq(["questions", "quiz"]) ? 10 : 0);
     const hasQuestions = questionCount >= 10 || hasAIReq(["questions", "quiz"]);
 
     // 7. Interactive Activity
     const activityCount =
       activities.length ||
-      lessonContent.filter((c: any) => ["activity", "game", "interactive", "worksheet"].includes(c.content_type)).length ||
+      lessonContent.filter((c: any) => ["activity", "game", "interactive", "worksheet", "matching", "sorting"].includes((c.content_type || "").toLowerCase())).length ||
       lessonBlocks.filter((b: any) => ["INTERACTIVE_GAME", "GAME", "ACTIVITY", "INTERACTIVE", "WORKSHEET"].includes((b.block_type || "").toUpperCase())).length ||
-      (hasAIReq(["activity", "game", "interactive"]) ? 1 : 0);
-    const hasActivities = activityCount >= 1 || hasAIReq(["activity", "game", "interactive"]);
+      (hasAIReq(["activity", "game", "interactive", "worksheet"]) ? 1 : 0);
+    const hasActivities = activityCount >= 1 || hasAIReq(["activity", "game", "interactive", "worksheet"]);
 
     // 8. AI Explanation
     const explanationCount =
       aiExplanations.length ||
-      lessonContent.filter((c: any) => c.content_type === "explanation" || c.content_type === "ai_explanation").length ||
-      lessonBlocks.filter((b: any) => ["AI_EXPLANATION", "EXPLANATION"].includes((b.block_type || "").toUpperCase())).length ||
-      (hasAIReq(["explanation", "ai_explanation"]) ? 1 : 0);
+      lessonContent.filter((c: any) => ["explanation", "ai_explanation", "explanations"].includes((c.content_type || "").toLowerCase())).length ||
+      lessonBlocks.filter((b: any) => ["AI_EXPLANATION", "EXPLANATION", "EXPLANATIONS"].includes((b.block_type || "").toUpperCase())).length ||
+      (hasAIReq(["explanation", "ai_explanation", "explanations"]) ? 1 : 0);
     const hasExplanations =
       explanationCount >= 1 ||
-      hasAIReq(["explanation", "ai_explanation"]);
+      hasAIReq(["explanation", "ai_explanation", "explanations"]);
 
     // 9. Common Mistakes
     const mistakeCount =
       commonMistakes.length ||
-      lessonContent.filter((c: any) => c.content_type === "common_mistakes" || c.content_type === "common_mistake" || c.content_type === "mistakes").length ||
-      lessonBlocks.filter((b: any) => ["COMMON_MISTAKES", "MISTAKE"].includes((b.block_type || "").toUpperCase())).length ||
-      (hasAIReq(["common_mistakes", "common_mistake"]) ? 1 : 0);
+      lessonContent.filter((c: any) => ["common_mistakes", "common_mistake", "mistakes", "mistake"].includes((c.content_type || "").toLowerCase())).length ||
+      lessonBlocks.filter((b: any) => ["COMMON_MISTAKES", "COMMON_MISTAKE", "MISTAKES", "MISTAKE"].includes((b.block_type || "").toUpperCase())).length ||
+      (hasAIReq(["common_mistakes", "common_mistake", "mistakes"]) ? 1 : 0);
     const hasMistakes =
       mistakeCount >= 1 ||
-      hasAIReq(["common_mistakes", "common_mistake"]);
+      hasAIReq(["common_mistakes", "common_mistake", "mistakes"]);
 
     // 10. Teacher Guide
     const guideCount =
       teacherGuides.length ||
-      lessonContent.filter((c: any) => c.content_type === "teacher_guide").length ||
-      lessonBlocks.filter((b: any) => (b.block_type || "").toUpperCase() === "TEACHER_GUIDE").length ||
-      (hasAIReq(["teacher_guide"]) ? 1 : 0);
-    const hasTeacherGuide = guideCount >= 1 || hasAIReq(["teacher_guide"]);
+      lessonContent.filter((c: any) => ["teacher_guide", "teacher_guides"].includes((c.content_type || "").toLowerCase())).length ||
+      lessonBlocks.filter((b: any) => ["TEACHER_GUIDE", "TEACHER_GUIDES"].includes((b.block_type || "").toUpperCase())).length ||
+      (hasAIReq(["teacher_guide", "teacher_guides"]) ? 1 : 0);
+    const hasTeacherGuide = guideCount >= 1 || hasAIReq(["teacher_guide", "teacher_guides"]);
 
     const checks = {
       notes: hasNotes,

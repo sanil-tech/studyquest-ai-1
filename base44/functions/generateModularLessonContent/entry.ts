@@ -260,9 +260,31 @@ Jana JSON:
       },
       {
         lesson_version_id: versionId,
+        block_type: "INFOGRAPHIC",
+        title: "Infografik Visual",
+        order_number: 3,
+        payload: JSON.stringify({
+          title: `Kad Visual: ${topicName}`,
+          short_description: `Ringkasan visual dan poin fokus pembelajaran untuk ${topicName}.`,
+          image_url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60",
+          key_points: structRes.mindmap_branches?.map((b: any) => b.label) || [`Konsep Utama ${topicName}`, `Fakta Penting`],
+          visual_labels: structRes.mindmap_branches?.map((b: any, idx: number) => ({
+            label: b.label || `Fokus ${idx + 1}`,
+            detail: Array.isArray(b.children) ? b.children.join(", ") : "Penerangan elemen visual",
+            icon: ["💡", "⚡", "📌", "🔍", "🎯"][idx % 5]
+          })) || [
+            { label: "Konsep Utama", detail: `Definisi dan gambaran keseluruhan ${topicName}`, icon: "💡" },
+            { label: "Proses & Langkah", detail: "Aplikasi dan aliran konsep", icon: "⚡" }
+          ]
+        }),
+        status: "draft",
+        generation_metadata: blockMetadata,
+      },
+      {
+        lesson_version_id: versionId,
         block_type: "MIND_MAP",
         title: "Peta Minda",
-        order_number: 3,
+        order_number: 4,
         payload: JSON.stringify({ branches: structRes.mindmap_branches || [] }),
         status: "draft",
         generation_metadata: blockMetadata,
@@ -271,7 +293,7 @@ Jana JSON:
         lesson_version_id: versionId,
         block_type: "FLASHCARD_DECK",
         title: "Kad Kilat",
-        order_number: 4,
+        order_number: 5,
         payload: JSON.stringify({ cards: blocksRes.flashcards || [] }),
         status: "draft",
         generation_metadata: blockMetadata,
@@ -280,7 +302,7 @@ Jana JSON:
         lesson_version_id: versionId,
         block_type: "INTERACTIVE_GAME",
         title: "Permainan Padanan",
-        order_number: 5,
+        order_number: 6,
         payload: JSON.stringify(blocksRes.matching_game || {}),
         status: "draft",
         generation_metadata: blockMetadata,

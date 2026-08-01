@@ -221,23 +221,46 @@ export default function ContentPreview({ contentType, content }) {
       );
 
     case "infographic":
+      const imgUrl = c.image_url || c.media_url;
+      const descText = c.short_description || c.summary;
+      const pointsList = (Array.isArray(c.key_points) && c.key_points.length > 0) ? c.key_points : c.key_takeaways;
+      const labelsList = (Array.isArray(c.visual_labels) && c.visual_labels.length > 0) ? c.visual_labels : c.sections;
+
       return (
-        <Section icon={ImageIcon} title="Infografik">
-          <Card>
-            {c.title && <h5 className="text-sm font-bold text-primary mb-2">{c.title}</h5>}
-            {c.summary && <p className="text-sm bg-emerald-50 p-2 rounded border border-emerald-100 mb-2">{c.summary}</p>}
-            {Array.isArray(c.key_takeaways) && c.key_takeaways.length > 0 && (
-              <ul className="list-disc list-inside text-sm space-y-1 mb-2">
-                {c.key_takeaways.map((t, i) => <li key={i}>{t}</li>)}
-              </ul>
-            )}
-            {c.visual_layout && <p className="text-xs text-muted-foreground italic mb-2">🎨 {c.visual_layout}</p>}
-            {Array.isArray(c.sections) && c.sections.map((s, i) => (
-              <div key={i} className="mt-2 pt-2 border-t border-slate-100">
-                <p className="text-sm font-semibold text-primary">{s.heading}</p>
-                <p className="text-sm">{s.content}</p>
+        <Section icon={ImageIcon} title="Infografik (Kad Visual)">
+          <Card className="space-y-3">
+            {c.title && <h5 className="text-sm font-bold text-primary">{c.title}</h5>}
+            {imgUrl && (
+              <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-900">
+                <img src={imgUrl} alt={c.title || "Infografik"} className="max-h-56 mx-auto object-contain" />
               </div>
-            ))}
+            )}
+            {descText && <p className="text-xs bg-emerald-50 text-emerald-950 p-2.5 rounded-lg border border-emerald-100 font-medium">{descText}</p>}
+            {Array.isArray(pointsList) && pointsList.length > 0 && (
+              <div>
+                <p className="text-[11px] font-bold text-slate-500 uppercase mb-1">Poin Utama:</p>
+                <ul className="list-disc list-inside text-xs space-y-1">
+                  {pointsList.map((pt, i) => <li key={i} className="text-slate-700">{pt}</li>)}
+                </ul>
+              </div>
+            )}
+            {Array.isArray(labelsList) && labelsList.length > 0 && (
+              <div>
+                <p className="text-[11px] font-bold text-slate-500 uppercase mb-1">Fokus Visual:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {labelsList.map((lbl, i) => (
+                    <div key={i} className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-0.5">
+                      <p className="font-bold text-primary flex items-center gap-1">
+                        <span>{lbl.icon || "📌"}</span>
+                        <span>{lbl.label || lbl.heading}</span>
+                      </p>
+                      {(lbl.detail || lbl.content) && <p className="text-slate-600 text-[11px]">{lbl.detail || lbl.content}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {c.visual_layout && <p className="text-xs text-muted-foreground italic">🎨 Susun atur: {c.visual_layout}</p>}
           </Card>
         </Section>
       );

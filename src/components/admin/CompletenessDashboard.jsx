@@ -38,65 +38,61 @@ export default function CompletenessDashboard({ completeness }) {
       key: "notes",
       label: "Notes",
       met: !!checks.notes,
-      count: counts.notes ? "✓" : "✗",
+      count: checks.notes ? "✓" : "✗",
     },
     {
       key: "flashcards",
       label: "Flashcard",
       met: !!checks.flashcards,
-      count: `${counts.flashcards || 0} (min 5)`,
+      count: checks.flashcards ? (counts.flashcards ? `${counts.flashcards} (min 5)` : "✓ (min 5)") : `${counts.flashcards || 0} (min 5)`,
     },
     {
       key: "video",
       label: "Video",
       met: !!checks.video,
-      count: counts.video ? `${counts.video}` : (checks.video ? "✓" : "✗"),
+      count: checks.video ? (counts.video ? `${counts.video}` : "✓") : "✗",
     },
     {
       key: "mindmap",
       label: "Mind Map",
       met: !!checks.mindmap,
-      count: counts.mindmap ? `${counts.mindmap}` : (checks.mindmap ? "✓" : "✗"),
+      count: checks.mindmap ? (counts.mindmap ? `${counts.mindmap}` : "✓") : "✗",
     },
     {
       key: "infographic",
       label: "Infographic",
       met: !!checks.infographic,
-      count: counts.infographic ? `${counts.infographic}` : (checks.infographic ? "✓" : "✗"),
+      count: checks.infographic ? (counts.infographic ? `${counts.infographic}` : "✓") : "✗",
     },
     {
       key: "questions",
       label: "Quiz",
       met: !!checks.questions,
-      count: `${counts.questions || 0} (min 10)`,
+      count: checks.questions ? (counts.questions ? `${counts.questions} (min 10)` : "✓ (min 10)") : `${counts.questions || 0} (min 10)`,
     },
     {
       key: "activities",
       label: "Interactive Activity",
       met: !!checks.activities,
-      count: `${counts.activities || 0} (min 1)`,
+      count: checks.activities ? (counts.activities ? `${counts.activities} (min 1)` : "✓ (min 1)") : `${counts.activities || 0} (min 1)`,
     },
     {
       key: "explanations",
       label: "AI Explanation",
       met: !!(checks.explanations ?? checks.ai_explanation),
-      count: (counts.explanations || counts.ai_explanation)
-        ? `${counts.explanations || counts.ai_explanation}`
-        : ((checks.explanations || checks.ai_explanation) ? "✓" : "✗"),
+      count: (checks.explanations || checks.ai_explanation) ? ((counts.explanations || counts.ai_explanation) ? `${counts.explanations || counts.ai_explanation}` : "✓") : "✗",
     },
     {
       key: "common_mistakes",
       label: "Common Mistakes",
       met: !!checks.common_mistakes,
-      count: counts.common_mistakes
-        ? `${counts.common_mistakes}`
-        : (checks.common_mistakes ? "✓" : "✗"),
+      count: checks.common_mistakes ? (counts.common_mistakes ? `${counts.common_mistakes}` : "✓") : "✗",
     },
     {
       key: "teacher_guide",
       label: "Teacher Guide",
       met: !!checks.teacher_guide,
-      count: counts.teacher_guide ? "✓" : "✗",
+      count: checks.teacher_guide ? "✓" : "✗",
     },
   ];
 

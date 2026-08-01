@@ -226,6 +226,35 @@ Deno.serve(async (req) => {
             } catch {
               parsedPayload = { branches: [], markdown: b.content_markdown || "" };
             }
+          } else if (b.content_type === "infographic") {
+            let infoData: any = {};
+            if (typeof b.content_markdown === "string") {
+              try {
+                infoData = JSON.parse(b.content_markdown);
+              } catch {
+                infoData = { short_description: b.content_markdown, raw_markdown: b.content_markdown };
+              }
+            } else if (typeof b.content_markdown === "object" && b.content_markdown !== null) {
+              infoData = b.content_markdown;
+            }
+
+            const imgUrl = infoData.image_url || infoData.media_url || b.media_url || lessonVersion?.infographic_url || lesson?.infographic_url || "";
+            const title = infoData.title || b.title || "Infografik Visual";
+            const desc = infoData.short_description || infoData.summary || (typeof b.content_markdown === "string" ? b.content_markdown : "");
+            const points = infoData.key_points || infoData.key_takeaways || [];
+            const labels = infoData.visual_labels || (infoData.sections ? infoData.sections.map((s: any) => ({ label: s.heading, detail: s.content, icon: "📌" })) : []);
+
+            parsedPayload = {
+              image_url: imgUrl,
+              title: title,
+              short_description: desc,
+              key_points: points,
+              visual_labels: labels,
+              summary: desc,
+              key_takeaways: points,
+              media_url: imgUrl,
+              raw_markdown: typeof b.content_markdown === "string" ? b.content_markdown : ""
+            };
           } else if (b.content_type === "flashcard") {
             try {
               parsedPayload = { cards: typeof b.content_markdown === "string" ? JSON.parse(b.content_markdown) : (b.content_markdown || []) };
@@ -288,6 +317,24 @@ Deno.serve(async (req) => {
             youtube_url: vUrl,
             video_script: vScript,
             summary: parsedPayload.summary || parsedPayload.markdown || b.content_markdown || ""
+          };
+        } else if (bType === "INFOGRAPHIC") {
+          const imgUrl = parsedPayload.image_url || parsedPayload.media_url || b.media_url || lessonVersion?.infographic_url || lesson?.infographic_url || "";
+          const title = parsedPayload.title || b.title || "Infografik Visual";
+          const desc = parsedPayload.short_description || parsedPayload.summary || parsedPayload.markdown || "";
+          const points = parsedPayload.key_points || parsedPayload.key_takeaways || [];
+          const labels = parsedPayload.visual_labels || (parsedPayload.sections ? parsedPayload.sections.map((s: any) => ({ label: s.heading, detail: s.content, icon: "📌" })) : []);
+
+          parsedPayload = {
+            ...parsedPayload,
+            image_url: imgUrl,
+            title: title,
+            short_description: desc,
+            key_points: points,
+            visual_labels: labels,
+            summary: desc,
+            key_takeaways: points,
+            media_url: imgUrl
           };
         }
 

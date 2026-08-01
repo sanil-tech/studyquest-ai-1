@@ -137,26 +137,14 @@ export default async function(req: Request): Promise<Response> {
         ...commonFields,
       });
     } else if (content_type === "infographic") {
-      const parts: string[] = [];
-      if (content.title) parts.push(`# ${content.title}`);
-      if (content.summary) parts.push(`\n## 📌 Ringkasan\n${content.summary}`);
-      if (Array.isArray(content.key_takeaways) && content.key_takeaways.length) {
-        parts.push(`\n## ⭐ Pengajaran Utama\n${content.key_takeaways.map((t: string) => `- ${t}`).join("\n")}`);
-      }
-      if (content.visual_layout) parts.push(`\n## 🎨 Susun Atur Visual\n${content.visual_layout}`);
-      if (Array.isArray(content.sections) && content.sections.length) {
-        parts.push(`\n## 📊 Bahagian Infografik`);
-        content.sections.forEach((s: any, i: number) => {
-          parts.push(`\n### ${i + 1}. ${s.heading}\n${s.content || ""}`);
-        });
-      }
-      const infographicMarkdown = parts.length ? parts.join("\n") : JSON.stringify(content);
+      const infographicPayload = typeof content === "object" && content !== null ? content : { title: "Infografik", summary: String(content) };
+      const infographicMarkdown = JSON.stringify(infographicPayload);
       createdRecords = await base44.asServiceRole.entities.LessonContent.create({
         lesson_version_id,
         content_type: "infographic",
-        title: content.title || "Infografik (AI)",
+        title: infographicPayload.title || "Infografik (AI)",
         content_markdown: infographicMarkdown,
-        media_url: content.image_url || content.media_url || "",
+        media_url: infographicPayload.image_url || infographicPayload.media_url || "",
         sort_order: 4,
         created_by: user.id,
         status: "draft",

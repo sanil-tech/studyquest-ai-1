@@ -11,7 +11,6 @@ import {
   Gamepad2,
   Volume2,
   VolumeX,
-  Image as ImageIcon,
   HelpCircle,
   CheckCircle2,
   XCircle,
@@ -21,6 +20,7 @@ import { Button } from "@/components/ui/button";
 
 import Flashcards from "@/components/lesson/Flashcards";
 import MindMap from "@/components/lesson/MindMap";
+import InfographicBlock from "@/components/lesson/InfographicBlock";
 
 // ==========================================
 // TEXT FORMATTING UTILITIES
@@ -668,23 +668,13 @@ export default function BlockRenderer({
     case "INFOGRAPHIC":
     case "IMAGE":
       return (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-            <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
-              <ImageIcon className="w-5 h-5 text-pink-400" /> {blockTitle || "Infografik"}
-            </h3>
-          </div>
-          <div className="p-4 bg-black/40 rounded-2xl border border-stone-800 space-y-3">
-            {payload.image_url && <img src={payload.image_url} alt="Infographic" className="max-h-[50vh] mx-auto rounded-xl" />}
-            {payload.summary && <p className="text-xs text-stone-300 font-bold">{personalize(payload.summary, studentName)}</p>}
-          </div>
-          <Button
-            onClick={onComplete}
-            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
-          >
-            {isCompleted ? "Infografik Selesai ✓" : "Selesai Infografik! 📊"}
-          </Button>
-        </div>
+        <InfographicBlock
+          blockTitle={blockTitle}
+          payload={payload}
+          studentName={studentName}
+          onCompleted={onComplete}
+          isCompleted={isCompleted}
+        />
       );
 
     case "AUDIO_TTS":
