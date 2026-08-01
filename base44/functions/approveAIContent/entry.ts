@@ -156,6 +156,7 @@ export default async function(req: Request): Promise<Response> {
         content_type: "infographic",
         title: content.title || "Infografik (AI)",
         content_markdown: infographicMarkdown,
+        media_url: content.image_url || content.media_url || "",
         sort_order: 4,
         created_by: user.id,
         status: "draft",

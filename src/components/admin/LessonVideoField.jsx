@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Save, Youtube, CheckCircle2 } from "lucide-react";
 
-export default function LessonVideoField({ lessonVersionId }) {
+export default function LessonVideoField({ lessonVersionId, onSaveComplete }) {
   const [videoUrl, setVideoUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -27,6 +27,7 @@ export default function LessonVideoField({ lessonVersionId }) {
     try {
       await base44.entities.LessonVersion.update(lessonVersionId, { video_url: videoUrl.trim() });
       setSaved(true);
+      onSaveComplete?.();
       setTimeout(() => setSaved(false), 2000);
     } catch (e) {
       alert("Gagal menyimpan URL video.");

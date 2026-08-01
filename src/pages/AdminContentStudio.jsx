@@ -114,7 +114,7 @@ export default function AdminContentStudio() {
             <CardTitle className="text-base">Media & Video</CardTitle>
           </CardHeader>
           <CardContent>
-            <LessonVideoField lessonVersionId={selectedVersion} />
+            <LessonVideoField lessonVersionId={selectedVersion} onSaveComplete={fetchCompleteness} />
           </CardContent>
         </Card>
       )}
