@@ -212,11 +212,11 @@ Deno.serve(async (req) => {
           let blockType = "TEXT_MARKDOWN";
           if (b.content_type === "notes") blockType = "TEXT_MARKDOWN";
           else if (b.content_type === "mindmap") blockType = "MINDMAP";
-          else if (b.content_type === "video") blockType = "VIDEO_EMBED";
+          else if (b.content_type === "video" || b.content_type === "video_script" || b.content_type === "video_embed") blockType = "VIDEO";
           else if (b.content_type === "worksheet") blockType = "WORKSHEET";
           else if (b.content_type === "infographic") blockType = "INFOGRAPHIC";
           else if (b.content_type === "flashcard") blockType = "FLASHCARD_DECK";
-          else if (b.content_type === "activity" || b.content_type === "game") blockType = "INTERACTIVE_GAME";
+          else if (b.content_type === "activity" || b.content_type === "game" || b.content_type === "interactive") blockType = "INTERACTIVE_GAME";
           else blockType = b.content_type.toUpperCase();
 
           let parsedPayload: any = {};
@@ -232,6 +232,15 @@ Deno.serve(async (req) => {
             } catch {
               parsedPayload = { cards: [] };
             }
+          } else if (b.content_type === "video" || b.content_type === "video_script" || b.content_type === "video_embed") {
+            const vUrl = b.media_url || b.video_url || b.youtube_url || lesson.video_url || publishedVersion?.video_url || "";
+            const vScript = b.voice_script || b.content_markdown || "";
+            parsedPayload = {
+              video_url: vUrl,
+              youtube_url: vUrl,
+              video_script: vScript,
+              summary: b.content_markdown || vScript || ""
+            };
           } else {
             parsedPayload = {
               markdown: b.content_markdown || "",
@@ -243,24 +252,56 @@ Deno.serve(async (req) => {
               instructions: b.content_markdown || ""
             };
           }
+
+          let blockTitle = b.title || "";
+          if (blockType === "VIDEO" && (!blockTitle || blockTitle === "Skrip Video (AI)" || blockTitle === "Skrip Video")) {
+            blockTitle = "Taklimat Video";
+          }
+
           return {
             id: b.id,
             block_type: blockType,
-            title: b.title || "",
+            title: blockTitle,
             order_number: b.sort_order ?? 0,
             payload: parsedPayload,
           };
         }
+
         let parsedPayload = b.payload;
         if (typeof parsedPayload === 'string') {
           try { parsedPayload = JSON.parse(parsedPayload); } catch { /* keep raw string */ }
         }
+        if (!parsedPayload || typeof parsedPayload !== 'object') {
+          parsedPayload = {};
+        }
+
+        let bType = (b.block_type || "TEXT_MARKDOWN").toUpperCase();
+        if (bType === "VIDEO_EMBED" || bType === "VIDEO_SCRIPT") {
+          bType = "VIDEO";
+        }
+
+        if (bType === "VIDEO") {
+          const vUrl = parsedPayload.video_url || parsedPayload.youtube_url || parsedPayload.media_url || b.video_url || lesson.video_url || publishedVersion?.video_url || "";
+          const vScript = parsedPayload.video_script || parsedPayload.voice_script || parsedPayload.script || b.voice_script || b.content_markdown || "";
+          parsedPayload = {
+            video_url: vUrl,
+            youtube_url: vUrl,
+            video_script: vScript,
+            summary: parsedPayload.summary || parsedPayload.markdown || b.content_markdown || ""
+          };
+        }
+
+        let blockTitle = b.title || "";
+        if (bType === "VIDEO" && (!blockTitle || blockTitle === "Skrip Video (AI)" || blockTitle === "Skrip Video")) {
+          blockTitle = "Taklimat Video";
+        }
+
         return {
           id: b.id,
-          block_type: b.block_type,
-          title: b.title || '',
-          order_number: b.order_number,
-          payload: parsedPayload || {}
+          block_type: bType,
+          title: blockTitle,
+          order_number: b.order_number ?? 0,
+          payload: parsedPayload
         };
       })
       .sort((a: any, b: any) => (a.order_number || 0) - (b.order_number || 0));

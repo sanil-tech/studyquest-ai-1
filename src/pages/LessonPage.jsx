@@ -103,6 +103,15 @@ export default function LessonPage() {
         });
 
         if (res.data?.success && isMounted) {
+          console.log("[STUDYQUEST DATA FLOW AUDIT]", {
+            step: "1_getLearningPackage_response",
+            packageData: res.data,
+            student_context: res.data?.student_context,
+            content_blocks: res.data?.content_blocks,
+            video_url: res.data?.video_url,
+            assessments: res.data?.assessments,
+            activities: res.data?.activities || res.data?.activity
+          });
           setPackageData(res.data);
         }
       } catch (err) {

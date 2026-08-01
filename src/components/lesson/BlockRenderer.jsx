@@ -61,6 +61,8 @@ export const parseMarkdownToHTML = (text) => {
 // YOUTUBE VIDEO EMBED SUB-COMPONENT
 // ==========================================
 function YouTubeLesson({ videoUrl, onCompleted, isCompleted, scriptText, searchQuery, studentName }) {
+  const [showScript, setShowScript] = useState(false);
+
   const videoId = useMemo(() => {
     if (!videoUrl) return null;
     const str = String(videoUrl).trim();
@@ -70,17 +72,17 @@ function YouTubeLesson({ videoUrl, onCompleted, isCompleted, scriptText, searchQ
       return str;
     }
 
-    // 2. Check standard YouTube URL formats
+    // 2. Check standard YouTube URL formats: watch, youtu.be, shorts, embed
     const match = str.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/i);
-    return (match && match[1].length === 11) ? match[1] : null;
+    return (match && match[1] && match[1].length === 11) ? match[1] : null;
   }, [videoUrl]);
 
   if (!videoId) {
     return (
-      <div className="p-5 bg-stone-900/90 border-2 border-stone-800 rounded-2xl space-y-4">
+      <div className="p-5 bg-stone-900/90 border-2 border-stone-800 rounded-2xl space-y-4 text-left">
         {scriptText ? (
-          <div className="p-4 bg-amber-950/30 border border-amber-500/30 rounded-xl space-y-2 text-left">
-            <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider block">
+          <div className="p-4 bg-amber-950/30 border border-amber-500/30 rounded-xl space-y-2">
+            <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider block flex items-center gap-1.5">
               📜 Skrip & Taklimat Video
             </span>
             <div
@@ -116,7 +118,7 @@ function YouTubeLesson({ videoUrl, onCompleted, isCompleted, scriptText, searchQ
   }
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="space-y-4 w-full text-left">
       <div className="relative aspect-video w-full rounded-3xl overflow-hidden border-2 border-stone-700 bg-black shadow-2xl">
         <iframe
           src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`}
@@ -127,11 +129,113 @@ function YouTubeLesson({ videoUrl, onCompleted, isCompleted, scriptText, searchQ
         />
       </div>
 
+      {scriptText && (
+        <div className="bg-stone-900/80 border border-stone-800 rounded-2xl overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowScript((prev) => !prev)}
+            className="w-full p-3 bg-stone-800/60 hover:bg-stone-800 text-amber-300 font-black text-xs flex items-center justify-between transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              📜 {showScript ? "Sembunyikan Skrip Video" : "Lihat Skrip & Nota Video"}
+            </span>
+            <span className="text-stone-400 text-xs">{showScript ? "▲" : "▼"}</span>
+          </button>
+          {showScript && (
+            <div className="p-4 bg-amber-950/20 border-t border-stone-800 space-y-2">
+              <div
+                className="text-xs sm:text-sm text-stone-200 leading-relaxed font-semibold space-y-2"
+                dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(scriptText, studentName)) }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       <Button
         className="w-full bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs rounded-xl h-11 border-b-4 border-emerald-700 active:translate-y-1 transition-all"
         onClick={onCompleted}
       >
         {isCompleted ? "Selesai Video ✓" : "Selesai & Ambil +10 XP 🔥"}
+      </Button>
+    </div>
+  );
+}
+
+// ==========================================
+// INTERACTIVE GAME / ACTIVITY SUB-COMPONENT
+// ==========================================
+function InteractiveGameBlock({ blockType, blockTitle, payload, studentName, onCompleted, isCompleted }) {
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [completedItems, setCompletedItems] = useState({});
+
+  const instructions = personalize(
+    payload.instructions || payload.prompt || payload.markdown || payload.description || payload.text || "Selesaikan cabaran interaktif ini untuk menguji kefahaman anda!",
+    studentName
+  );
+
+  const options = Array.isArray(payload.options)
+    ? payload.options
+    : (Array.isArray(payload.items) ? payload.items : (Array.isArray(payload.choices) ? payload.choices : []));
+
+  const toggleItem = (idx) => {
+    setCompletedItems((prev) => ({ ...prev, [idx]: !prev[idx] }));
+  };
+
+  return (
+    <div className="space-y-4 text-center">
+      <div className="flex items-center justify-between border-b border-stone-800 pb-3 text-left">
+        <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
+          <Gamepad2 className="w-5 h-5 text-cyan-400" /> {blockTitle || "Aktiviti Interaktif"}
+        </h3>
+        <span className="px-2.5 py-1 bg-cyan-950 text-cyan-300 text-[10px] font-black uppercase rounded-full border border-cyan-500/30">
+          {(blockType || "INTERACTIVE").replace(/_/g, " ")}
+        </span>
+      </div>
+
+      <div className="p-5 sm:p-6 bg-gradient-to-br from-cyan-950/40 via-stone-900 to-indigo-950/40 border border-cyan-500/30 rounded-2xl space-y-4 text-left">
+        <div className="w-14 h-14 bg-cyan-500/20 text-cyan-300 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner border border-cyan-400/30">
+          🎮
+        </div>
+
+        <div
+          className="text-xs sm:text-sm text-stone-200 font-bold leading-relaxed space-y-2 text-center"
+          dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(instructions) }}
+        />
+
+        {options.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+            {options.map((opt, i) => {
+              const isDone = !!completedItems[i] || selectedOption === i;
+              const text = typeof opt === "object" ? (opt.text || opt.label || opt.title || JSON.stringify(opt)) : String(opt);
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    setSelectedOption(i);
+                    toggleItem(i);
+                  }}
+                  className={`p-3 rounded-xl text-xs font-bold transition-all text-left flex items-center justify-between border ${
+                    isDone
+                      ? "bg-emerald-900/80 border-emerald-500 text-emerald-200 shadow-md"
+                      : "bg-stone-800/80 hover:bg-stone-700/80 border-stone-700 text-amber-200"
+                  }`}
+                >
+                  <span>{personalize(text, studentName)}</span>
+                  {isDone && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <Button
+        onClick={onCompleted}
+        className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+      >
+        {isCompleted ? "Permainan Selesai ✓" : "Selesai Permainan & Ambil XP! 🎮"}
       </Button>
     </div>
   );
@@ -289,6 +393,12 @@ export default function BlockRenderer({
 }) {
   if (!block) return null;
 
+  console.log("[CONTENT BLOCK AUDIT]", {
+    type: block.block_type,
+    title: block.title,
+    payload: block.payload
+  });
+
   // Normalize block_type safely
   const blockType = (block.block_type || "").toUpperCase();
 
@@ -298,7 +408,8 @@ export default function BlockRenderer({
     : (block.payload || {});
 
   // Extract block title safely
-  const blockTitle = replaceStudentVariables(block.title || "", studentName);
+  const rawTitle = replaceStudentVariables(block.title || "", studentName);
+  const blockTitle = (!rawTitle || rawTitle === "Skrip Video (AI)" || rawTitle === "Skrip Video") ? "Taklimat Video" : rawTitle;
 
   switch (blockType) {
     case "TEXT_MARKDOWN":
@@ -536,50 +647,23 @@ export default function BlockRenderer({
     case "INTERACTIVE_GAME":
     case "GAME":
     case "ACTIVITY":
-    case "INTERACTIVE_PLACE_VALUE":
-    case "BOSS_CHALLENGE":
+    case "ACTIVITIES":
+    case "INTERACTIVE":
     case "DRAG_DROP":
     case "MATCHING_GAME":
-      {
-        const gameInstructions = personalize(payload.instructions || payload.prompt || payload.markdown || "Bermain sambil menguji kefahaman anda!", studentName);
-
-        return (
-          <div className="space-y-4 text-center">
-            <div className="flex items-center justify-between border-b border-stone-800 pb-3 text-left">
-              <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
-                <Gamepad2 className="w-5 h-5 text-cyan-400" /> {blockTitle || "Aktiviti Interaktif"}
-              </h3>
-              <span className="px-2.5 py-1 bg-cyan-950 text-cyan-300 text-[10px] font-black uppercase rounded-full border border-cyan-500/30">
-                {blockType.replace(/_/g, " ")}
-              </span>
-            </div>
-            <div className="p-6 bg-gradient-to-br from-cyan-950/40 via-stone-900 to-indigo-950/40 border border-cyan-500/30 rounded-2xl space-y-4">
-              <div className="w-16 h-16 bg-cyan-500/20 text-cyan-300 rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-inner border border-cyan-400/30">
-                🎮
-              </div>
-              <div
-                className="text-xs sm:text-sm text-stone-200 font-bold leading-relaxed space-y-2"
-                dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(gameInstructions) }}
-              />
-              {payload.options && Array.isArray(payload.options) && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
-                  {payload.options.map((opt, i) => (
-                    <div key={i} className="p-3 bg-stone-800/80 border border-stone-700 rounded-xl text-xs font-bold text-amber-200">
-                      {personalize(String(opt), studentName)}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <Button
-              onClick={onComplete}
-              className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
-            >
-              {isCompleted ? "Permainan Selesai ✓" : "Selesai Permainan! 🎮"}
-            </Button>
-          </div>
-        );
-      }
+    case "BOSS_CHALLENGE":
+    case "INTERACTIVE_PLACE_VALUE":
+    case "LESSON_ACTIVITY":
+      return (
+        <InteractiveGameBlock
+          blockType={blockType}
+          blockTitle={blockTitle}
+          payload={payload}
+          studentName={studentName}
+          onCompleted={onComplete}
+          isCompleted={isCompleted}
+        />
+      );
 
     case "INFOGRAPHIC":
     case "IMAGE":
@@ -646,12 +730,31 @@ export default function BlockRenderer({
       );
 
     default:
+      if (
+        blockType.includes("GAME") ||
+        blockType.includes("ACTIVIT") ||
+        blockType.includes("INTERACTIV") ||
+        blockType.includes("MATCH") ||
+        blockType.includes("DRAG") ||
+        blockType.includes("CHALLENGE")
+      ) {
+        return (
+          <InteractiveGameBlock
+            blockType={blockType}
+            blockTitle={blockTitle}
+            payload={payload}
+            studentName={studentName}
+            onCompleted={onComplete}
+            isCompleted={isCompleted}
+          />
+        );
+      }
       return (
-        <div className="p-6 bg-stone-900 border border-stone-800 rounded-2xl text-center space-y-2">
+        <div className="p-6 bg-stone-900 border border-stone-800 rounded-2xl text-center space-y-3">
           <HelpCircle className="w-8 h-8 text-amber-400 mx-auto" />
-          <p className="text-xs font-bold text-stone-300">Blok Kandungan Tidak Dikenali ({block.block_type})</p>
-          <Button onClick={onComplete} variant="outline" className="text-xs text-stone-200 border-stone-700">
-            Langkah Seterusnya
+          <p className="text-xs font-bold text-stone-200">Blok Kandungan ({block.block_type || "Modul"})</p>
+          <Button onClick={onComplete} className="w-full h-11 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs rounded-xl border-b-4 border-emerald-700">
+            Selesai & Teruskan ✓
           </Button>
         </div>
       );

@@ -59,8 +59,8 @@ const STAGE_MAPPINGS = {
 
   INTERACTIVE_PLACE_VALUE: { stage: "INTERACT", icon: "🎮", defaultTitle: "Aktiviti Nilai Tempat" },
   interactive_place_value: { stage: "INTERACT", icon: "🎮", defaultTitle: "Aktiviti Nilai Tempat" },
-  BOSS_CHALLENGE: { stage: "CHALLENGE", icon: "👑", defaultTitle: "Cabaran Boss Utama" },
-  boss_challenge: { stage: "CHALLENGE", icon: "👑", defaultTitle: "Cabaran Boss Utama" },
+  BOSS_CHALLENGE: { stage: "INTERACT", icon: "👑", defaultTitle: "Cabaran Interaktif" },
+  boss_challenge: { stage: "INTERACT", icon: "👑", defaultTitle: "Cabaran Interaktif" },
   DRAG_DROP: { stage: "INTERACT", icon: "🧩", defaultTitle: "Aktiviti Suai Padan" },
   drag_drop: { stage: "INTERACT", icon: "🧩", defaultTitle: "Aktiviti Suai Padan" },
   MATCHING_GAME: { stage: "INTERACT", icon: "🧩", defaultTitle: "Permainan Padanan" },
@@ -89,6 +89,31 @@ const STAGE_MAPPINGS = {
  * @returns {Object} Structured Adventure object with world, mascot, and missions
  */
 export function transformBlocksToMissions(contentBlocks = [], packageData = {}, studentName = "Pengembara") {
+  console.log("[STUDYQUEST DATA FLOW AUDIT]", {
+    step: "2_transformBlocksToMissions_input",
+    studentName,
+    studentNameSource: {
+      passedStudentName: studentName,
+      packageStudentContext: packageData?.student_context
+    },
+    rawContentBlocks: contentBlocks,
+    activitiesSource: {
+      packageActivities: packageData?.activities,
+      packageActivity: packageData?.activity,
+      blockActivities: contentBlocks?.filter(b => String(b.block_type).toUpperCase().includes("ACTIVIT"))
+    },
+    videoPayload: {
+      packageVideoUrl: packageData?.video_url,
+      packageYoutubeUrl: packageData?.youtube_url,
+      videoBlocks: contentBlocks?.filter(b => String(b.block_type).toUpperCase().includes("VIDEO"))
+    },
+    quizAssessmentId: {
+      assessments: packageData?.assessments,
+      primaryAssessmentId: packageData?.assessments?.[0]?.id,
+      quizBlock: contentBlocks?.filter(b => String(b.block_type).toUpperCase().includes("QUIZ"))
+    }
+  });
+
   const subjectDisplay = replaceStudentVariables(packageData?.subject_display || packageData?.subject || "Pembelajaran", studentName);
   const lessonTitle = replaceStudentVariables(packageData?.lesson_title || "Misi Utama", studentName);
   const topicName = replaceStudentVariables(packageData?.topic || lessonTitle, studentName);
@@ -134,51 +159,56 @@ export function transformBlocksToMissions(contentBlocks = [], packageData = {}, 
     }
   }
 
-  // 2. Deduplicate VIDEO_SCRIPT / VIDEO blocks & attach fallback packageData.video_url
+  // 2. Deduplicate VIDEO / VIDEO_SCRIPT blocks & attach fallback packageData.video_url
   const fallbackVideoUrl = packageData?.video_url || packageData?.youtube_url || null;
   const processedBlocks = [];
   let existingVideoBlock = null;
 
   rawBlocks.forEach((block) => {
-    const typeUpper = (block.block_type || "").toUpperCase();
+    let typeUpper = (block.block_type || "").toUpperCase();
+    if (typeUpper === "VIDEO_EMBED" || typeUpper === "VIDEO_SCRIPT" || typeUpper === "SCRIPT") {
+      typeUpper = "VIDEO";
+    }
 
-    if (typeUpper === "VIDEO" || typeUpper === "VIDEO_EMBED") {
+    if (typeUpper === "VIDEO") {
       const bPayload = typeof block.payload === "string"
-        ? (() => { try { return JSON.parse(block.payload); } catch { return { text: block.payload }; } })()
+        ? (() => { try { return JSON.parse(block.payload); } catch { return {}; } })()
         : (block.payload || {});
 
-      // Ensure video_url is present
-      if (!block.video_url && !bPayload.video_url && !bPayload.youtube_url && fallbackVideoUrl) {
-        bPayload.video_url = fallbackVideoUrl;
-      }
+      const vUrl = bPayload.video_url || bPayload.youtube_url || bPayload.media_url || block.video_url || fallbackVideoUrl || "";
+      const vScript = bPayload.video_script || bPayload.voice_script || bPayload.script || block.content_markdown || "";
 
-      existingVideoBlock = {
-        ...block,
-        video_url: block.video_url || bPayload.video_url || fallbackVideoUrl,
-        payload: bPayload
-      };
-      processedBlocks.push(existingVideoBlock);
-    } else if (typeUpper === "VIDEO_SCRIPT" || typeUpper === "SCRIPT") {
-      // If a video block already exists, merge the script into it and avoid duplicate mission!
       if (existingVideoBlock) {
-        const scriptText = block.content_markdown || (typeof block.payload === "object" ? (block.payload.script || block.payload.video_script || block.payload.text) : block.payload);
-        if (scriptText) {
-          existingVideoBlock.payload.video_script = scriptText;
+        // Merge into existing video block to avoid duplicate video missions!
+        if (!existingVideoBlock.payload.video_url && vUrl) {
+          existingVideoBlock.payload.video_url = vUrl;
+          existingVideoBlock.payload.youtube_url = vUrl;
+        }
+        if (!existingVideoBlock.payload.video_script && vScript) {
+          existingVideoBlock.payload.video_script = vScript;
+        }
+        if (!existingVideoBlock.payload.summary && (bPayload.summary || vScript)) {
+          existingVideoBlock.payload.summary = bPayload.summary || vScript;
         }
       } else {
-        // Standalone VIDEO_SCRIPT converted to a single VIDEO_EMBED block
-        const bPayload = typeof block.payload === "object" ? { ...block.payload } : { video_script: block.payload || block.content_markdown };
-        if (fallbackVideoUrl) bPayload.video_url = fallbackVideoUrl;
-        processedBlocks.push({
+        existingVideoBlock = {
           ...block,
-          block_type: "VIDEO_EMBED",
-          title: block.title || "Taklimat Video",
-          video_url: fallbackVideoUrl,
-          payload: bPayload
-        });
+          block_type: "VIDEO",
+          title: (!block.title || block.title === "Skrip Video (AI)" || block.title === "Skrip Video") ? "Taklimat Video" : block.title,
+          payload: {
+            video_url: vUrl,
+            youtube_url: vUrl,
+            video_script: vScript,
+            summary: bPayload.summary || vScript || ""
+          }
+        };
+        processedBlocks.push(existingVideoBlock);
       }
     } else {
-      processedBlocks.push(block);
+      processedBlocks.push({
+        ...block,
+        block_type: typeUpper
+      });
     }
   });
 
@@ -276,7 +306,7 @@ export function transformBlocksToMissions(contentBlocks = [], packageData = {}, 
     });
   }
 
-  return {
+  const result = {
     world: {
       name: worldName,
       theme: subjectDisplay.toLowerCase(),
@@ -298,6 +328,13 @@ export function transformBlocksToMissions(contentBlocks = [], packageData = {}, 
     totalCoinsAvailable: missions.reduce((sum, m) => sum + (m.reward?.coins || m.coinsReward || 0), 0),
     missions
   };
+
+  console.log("[STUDYQUEST DATA FLOW AUDIT]", {
+    step: "3_transformBlocksToMissions_output",
+    generatedMissions: result.missions
+  });
+
+  return result;
 }
 
 /**
