@@ -1,26 +1,107 @@
 import React from "react";
-import { CheckCircle2, AlertCircle, FileText, Layers, HelpCircle, Gamepad2, BookOpen } from "lucide-react";
+import {
+  CheckCircle2,
+  AlertCircle,
+  FileText,
+  Layers,
+  Video,
+  GitFork,
+  Image,
+  HelpCircle,
+  Gamepad2,
+  Sparkles,
+  AlertTriangle,
+  BookOpen,
+} from "lucide-react";
 
 const ICONS = {
   notes: FileText,
   flashcards: Layers,
+  video: Video,
+  mindmap: GitFork,
+  infographic: Image,
   questions: HelpCircle,
   activities: Gamepad2,
+  explanations: Sparkles,
+  common_mistakes: AlertTriangle,
   teacher_guide: BookOpen,
 };
 
 export default function CompletenessDashboard({ completeness }) {
   if (!completeness) return null;
 
+  const checks = completeness.checks || {};
+  const counts = completeness.counts || {};
+
   const items = [
-    { key: "notes", label: "Nota Pelajaran", met: completeness.checks?.notes, count: completeness.counts?.notes ? "✓" : "✗" },
-    { key: "flashcards", label: "Flashcards", met: completeness.checks?.flashcards, count: `${completeness.counts?.flashcards || 0} (min 5)` },
-    { key: "questions", label: "Soalan", met: completeness.checks?.questions, count: `${completeness.counts?.questions || 0} (min 10)` },
-    { key: "activities", label: "Aktiviti", met: completeness.checks?.activities, count: `${completeness.counts?.activities || 0} (min 1)` },
-    { key: "teacher_guide", label: "Panduan Guru", met: completeness.checks?.teacher_guide, count: completeness.counts?.teacher_guide ? "✓" : "✗" },
+    {
+      key: "notes",
+      label: "Notes",
+      met: !!checks.notes,
+      count: counts.notes ? "✓" : "✗",
+    },
+    {
+      key: "flashcards",
+      label: "Flashcard",
+      met: !!checks.flashcards,
+      count: `${counts.flashcards || 0} (min 5)`,
+    },
+    {
+      key: "video",
+      label: "Video",
+      met: !!checks.video,
+      count: counts.video ? `${counts.video}` : (checks.video ? "✓" : "✗"),
+    },
+    {
+      key: "mindmap",
+      label: "Mind Map",
+      met: !!checks.mindmap,
+      count: counts.mindmap ? `${counts.mindmap}` : (checks.mindmap ? "✓" : "✗"),
+    },
+    {
+      key: "infographic",
+      label: "Infographic",
+      met: !!checks.infographic,
+      count: counts.infographic ? `${counts.infographic}` : (checks.infographic ? "✓" : "✗"),
+    },
+    {
+      key: "questions",
+      label: "Quiz",
+      met: !!checks.questions,
+      count: `${counts.questions || 0} (min 10)`,
+    },
+    {
+      key: "activities",
+      label: "Interactive Activity",
+      met: !!checks.activities,
+      count: `${counts.activities || 0} (min 1)`,
+    },
+    {
+      key: "explanations",
+      label: "AI Explanation",
+      met: !!(checks.explanations ?? checks.ai_explanation),
+      count: (counts.explanations || counts.ai_explanation)
+        ? `${counts.explanations || counts.ai_explanation}`
+        : ((checks.explanations || checks.ai_explanation) ? "✓" : "✗"),
+    },
+    {
+      key: "common_mistakes",
+      label: "Common Mistakes",
+      met: !!checks.common_mistakes,
+      count: counts.common_mistakes
+        ? `${counts.common_mistakes}`
+        : (checks.common_mistakes ? "✓" : "✗"),
+    },
+    {
+      key: "teacher_guide",
+      label: "Teacher Guide",
+      met: !!checks.teacher_guide,
+      count: counts.teacher_guide ? "✓" : "✗",
+    },
   ];
 
-  const pct = completeness.completion_percentage || 0;
+  const metCount = items.filter((item) => item.met).length;
+  const pct = Math.round((metCount / items.length) * 100);
 
   return (
     <div className="space-y-4">
@@ -41,7 +122,7 @@ export default function CompletenessDashboard({ completeness }) {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {items.map((item) => {
-          const Icon = ICONS[item.key];
+          const Icon = ICONS[item.key] || HelpCircle;
           return (
             <div
               key={item.key}

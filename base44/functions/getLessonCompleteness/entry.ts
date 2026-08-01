@@ -13,31 +13,121 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: "lesson_version_id diperlukan." }, { status: 400 });
     }
 
-    const [lessonContent, flashcards, questions, activities, teacherGuides, aiRequests] = await Promise.all([
-      base44.asServiceRole.entities.LessonContent.filter({ lesson_version_id }),
-      base44.asServiceRole.entities.Flashcard.filter({ lesson_version_id }),
-      base44.asServiceRole.entities.QuestionBank.filter({ lesson_version_id }),
-      base44.asServiceRole.entities.LearningActivity.filter({ lesson_version_id }),
-      base44.asServiceRole.entities.TeacherGuide.filter({ lesson_version_id }),
-      base44.asServiceRole.entities.AIContentRequest.filter({ lesson_version_id }),
+    const [
+      lessonVersion,
+      lessonContent,
+      flashcards,
+      questions,
+      activities,
+      teacherGuides,
+      aiExplanations,
+      commonMistakes,
+      lessonBlocks,
+      aiRequests,
+    ] = await Promise.all([
+      base44.asServiceRole.entities.LessonVersion.get(lesson_version_id).catch(() => null),
+      base44.asServiceRole.entities.LessonContent.filter({ lesson_version_id }).catch(() => []),
+      base44.asServiceRole.entities.Flashcard.filter({ lesson_version_id }).catch(() => []),
+      base44.asServiceRole.entities.QuestionBank.filter({ lesson_version_id }).catch(() => []),
+      base44.asServiceRole.entities.LearningActivity.filter({ lesson_version_id }).catch(() => []),
+      base44.asServiceRole.entities.TeacherGuide.filter({ lesson_version_id }).catch(() => []),
+      base44.asServiceRole.entities.AIExplanation.filter({ lesson_version_id }).catch(() => []),
+      base44.asServiceRole.entities.CommonMistake.filter({ lesson_version_id }).catch(() => []),
+      base44.asServiceRole.entities.LessonBlock.filter({ lesson_version_id }).catch(() => []),
+      base44.asServiceRole.entities.AIContentRequest.filter({ lesson_version_id }).catch(() => []),
     ]);
 
-    const hasNotes = lessonContent.some((c: any) => c.content_type === "notes");
-    const flashcardCount = flashcards.length;
-    const questionCount = questions.length;
-    const activityCount = activities.length;
-    const hasTeacherGuide = teacherGuides.length > 0;
+    // 1. Notes
+    const notesCount =
+      lessonContent.filter((c: any) => c.content_type === "notes").length ||
+      (lessonVersion?.notes_content ? 1 : 0);
+    const hasNotes =
+      notesCount > 0 ||
+      lessonContent.some((c: any) => c.content_type === "notes") ||
+      !!lessonVersion?.notes_content ||
+      lessonBlocks.some((b: any) => ["TEXT_MARKDOWN", "NOTES", "TEXT"].includes((b.block_type || "").toUpperCase()));
+
+    // 2. Flashcard
+    const flashcardCount =
+      flashcards.length ||
+      lessonContent.filter((c: any) => c.content_type === "flashcard" || c.content_type === "flashcards").length;
+    const hasFlashcards = flashcardCount >= 5;
+
+    // 3. Video
+    const videoCount =
+      lessonContent.filter((c: any) => ["video", "video_script", "video_embed"].includes(c.content_type)).length ||
+      (lessonVersion?.video_url || lessonVersion?.video_script ? 1 : 0);
+    const hasVideo =
+      videoCount > 0 ||
+      !!lessonVersion?.video_url ||
+      !!lessonVersion?.video_script ||
+      lessonBlocks.some((b: any) => ["VIDEO", "VIDEO_EMBED", "VIDEO_SCRIPT"].includes((b.block_type || "").toUpperCase()));
+
+    // 4. Mind Map
+    const mindmapCount =
+      lessonContent.filter((c: any) => c.content_type === "mindmap").length ||
+      (lessonVersion?.mindmap_data ? 1 : 0);
+    const hasMindmap =
+      mindmapCount > 0 ||
+      !!lessonVersion?.mindmap_data ||
+      lessonBlocks.some((b: any) => (b.block_type || "").toUpperCase() === "MINDMAP");
+
+    // 5. Infographic
+    const infographicCount =
+      lessonContent.filter((c: any) => c.content_type === "infographic").length ||
+      lessonBlocks.filter((b: any) => (b.block_type || "").toUpperCase() === "INFOGRAPHIC").length;
+    const hasInfographic = infographicCount > 0;
+
+    // 6. Quiz
+    const questionCount =
+      questions.length ||
+      lessonContent.filter((c: any) => c.content_type === "quiz" || c.content_type === "questions").length ||
+      lessonBlocks.filter((b: any) => ["QUIZ", "QUESTIONS"].includes((b.block_type || "").toUpperCase())).length;
+    const hasQuestions = questionCount >= 10;
+
+    // 7. Interactive Activity
+    const activityCount =
+      activities.length ||
+      lessonContent.filter((c: any) => ["activity", "game", "interactive", "worksheet"].includes(c.content_type)).length ||
+      lessonBlocks.filter((b: any) => ["INTERACTIVE_GAME", "GAME", "ACTIVITY", "INTERACTIVE", "WORKSHEET"].includes((b.block_type || "").toUpperCase())).length;
+    const hasActivities = activityCount >= 1;
+
+    // 8. AI Explanation
+    const explanationCount =
+      aiExplanations.length ||
+      lessonContent.filter((c: any) => c.content_type === "explanation" || c.content_type === "ai_explanation").length ||
+      lessonBlocks.filter((b: any) => ["AI_EXPLANATION", "EXPLANATION"].includes((b.block_type || "").toUpperCase())).length;
+    const hasExplanations = explanationCount >= 1;
+
+    // 9. Common Mistakes
+    const mistakeCount =
+      commonMistakes.length ||
+      lessonContent.filter((c: any) => c.content_type === "common_mistakes" || c.content_type === "mistakes").length ||
+      lessonBlocks.filter((b: any) => ["COMMON_MISTAKES", "MISTAKE"].includes((b.block_type || "").toUpperCase())).length;
+    const hasMistakes = mistakeCount >= 1;
+
+    // 10. Teacher Guide
+    const guideCount =
+      teacherGuides.length ||
+      lessonContent.filter((c: any) => c.content_type === "teacher_guide").length ||
+      lessonBlocks.filter((b: any) => (b.block_type || "").toUpperCase() === "TEACHER_GUIDE").length;
+    const hasTeacherGuide = guideCount >= 1;
 
     const checks = {
       notes: hasNotes,
-      flashcards: flashcardCount >= 5,
-      questions: questionCount >= 10,
-      activities: activityCount >= 1,
+      flashcards: hasFlashcards,
+      video: hasVideo,
+      mindmap: hasMindmap,
+      infographic: hasInfographic,
+      questions: hasQuestions,
+      activities: hasActivities,
+      explanations: hasExplanations,
+      common_mistakes: hasMistakes,
       teacher_guide: hasTeacherGuide,
     };
 
     const completedCount = Object.values(checks).filter(Boolean).length;
-    const completionPercentage = Math.round((completedCount / 5) * 100);
+    const completionPercentage = Math.round((completedCount / 10) * 100);
 
     const pendingReview = aiRequests.filter((r: any) => r.status === "completed" || r.status === "generating" || r.status === "requested");
     const approved = aiRequests.filter((r: any) => r.status === "approved");
@@ -48,20 +138,29 @@ export default async function(req: Request): Promise<Response> {
       completion_percentage: completionPercentage,
       checks,
       counts: {
-        notes: hasNotes,
+        notes: notesCount,
         flashcards: flashcardCount,
+        video: videoCount,
+        mindmap: mindmapCount,
+        infographic: infographicCount,
         questions: questionCount,
         activities: activityCount,
-        teacher_guide: hasTeacherGuide,
+        explanations: explanationCount,
+        common_mistakes: mistakeCount,
+        teacher_guide: guideCount,
         lesson_content_total: lessonContent.length,
       },
       content_breakdown: {
-        notes: lessonContent.filter((c: any) => c.content_type === "notes").length,
-        video: lessonContent.filter((c: any) => c.content_type === "video").length,
-        infographic: lessonContent.filter((c: any) => c.content_type === "infographic").length,
-        mindmap: lessonContent.filter((c: any) => c.content_type === "mindmap").length,
-        audio: lessonContent.filter((c: any) => c.content_type === "audio").length,
-        worksheet: lessonContent.filter((c: any) => c.content_type === "worksheet").length,
+        notes: notesCount,
+        video: videoCount,
+        infographic: infographicCount,
+        mindmap: mindmapCount,
+        flashcards: flashcardCount,
+        questions: questionCount,
+        activities: activityCount,
+        explanations: explanationCount,
+        common_mistakes: mistakeCount,
+        teacher_guide: guideCount,
       },
       ai_requests: {
         total: aiRequests.length,
