@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
     const versionId = publishedVersion?.id || null;
 
     // ------------------------------------------------------------------
-    // 4. TIER 2 BATCH FETCH: Subject, SP Code, Blocks (Content/Blocks), Assessments, AIExplanations
+    // 4. TIER 2 BATCH FETCH: Subject, SP Code, Blocks, Assessments, AIExplanations
     // ------------------------------------------------------------------
     const subjectId = topic?.subject_id;
     const [subject, learningStandard, blocks, assessments, explanations] = await Promise.all([
@@ -212,22 +212,35 @@ Deno.serve(async (req) => {
           let blockType = "TEXT_MARKDOWN";
           if (b.content_type === "notes") blockType = "TEXT_MARKDOWN";
           else if (b.content_type === "mindmap") blockType = "MINDMAP";
-          else if (b.content_type === "video") blockType = "VIDEO";
+          else if (b.content_type === "video") blockType = "VIDEO_EMBED";
           else if (b.content_type === "worksheet") blockType = "WORKSHEET";
+          else if (b.content_type === "infographic") blockType = "INFOGRAPHIC";
+          else if (b.content_type === "flashcard") blockType = "FLASHCARD_DECK";
+          else if (b.content_type === "activity" || b.content_type === "game") blockType = "INTERACTIVE_GAME";
           else blockType = b.content_type.toUpperCase();
 
           let parsedPayload: any = {};
           if (b.content_type === "mindmap") {
             try {
-              parsedPayload = { branches: typeof b.content_markdown === "string" ? JSON.parse(b.content_markdown) : b.content_markdown };
+              parsedPayload = { branches: typeof b.content_markdown === "string" ? JSON.parse(b.content_markdown) : (b.content_markdown || []) };
             } catch {
-              parsedPayload = { markdown: b.content_markdown || "" };
+              parsedPayload = { branches: [], markdown: b.content_markdown || "" };
+            }
+          } else if (b.content_type === "flashcard") {
+            try {
+              parsedPayload = { cards: typeof b.content_markdown === "string" ? JSON.parse(b.content_markdown) : (b.content_markdown || []) };
+            } catch {
+              parsedPayload = { cards: [] };
             }
           } else {
             parsedPayload = {
               markdown: b.content_markdown || "",
               voice_script: b.voice_script || "",
               media_url: b.media_url || "",
+              image_url: b.media_url || "",
+              youtube_url: b.media_url || "",
+              summary: b.content_markdown || "",
+              instructions: b.content_markdown || ""
             };
           }
           return {

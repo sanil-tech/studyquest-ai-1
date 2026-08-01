@@ -116,6 +116,8 @@ export default function BlockRenderer({
 
   switch (block.block_type) {
     case "TEXT_MARKDOWN":
+    case "NOTE":
+    case "TEXT":
       return (
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
@@ -150,6 +152,7 @@ export default function BlockRenderer({
       );
 
     case "VIDEO_EMBED":
+    case "VIDEO":
       return (
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
@@ -158,7 +161,7 @@ export default function BlockRenderer({
             </h3>
           </div>
           <YouTubeLesson
-            videoUrl={payload.youtube_url || payload.search_query}
+            videoUrl={payload.youtube_url || payload.search_query || payload.media_url || payload.video_url}
             onCompleted={onComplete}
             isCompleted={false}
           />
@@ -166,6 +169,7 @@ export default function BlockRenderer({
       );
 
     case "MIND_MAP":
+    case "MINDMAP":
       return (
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
@@ -186,6 +190,8 @@ export default function BlockRenderer({
       );
 
     case "FLASHCARD_DECK":
+    case "FLASHCARD":
+    case "FLASHCARDS":
       return (
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
@@ -204,6 +210,8 @@ export default function BlockRenderer({
       );
 
     case "INTERACTIVE_GAME":
+    case "GAME":
+    case "ACTIVITY":
       return (
         <div className="space-y-4 text-center">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3 text-left">
@@ -225,6 +233,7 @@ export default function BlockRenderer({
       );
 
     case "INFOGRAPHIC":
+    case "IMAGE":
       return (
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
@@ -258,6 +267,31 @@ export default function BlockRenderer({
             className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
           >
             Selesai Audio! 🎧
+          </Button>
+        </div>
+      );
+
+    case "WORKSHEET":
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-indigo-400" /> {block.title || "Lembaran Kerja"}
+            </h3>
+          </div>
+          <div className="max-h-[50vh] overflow-y-auto p-4 bg-black/40 rounded-2xl border border-stone-800 text-xs sm:text-sm leading-relaxed font-bold space-y-3">
+            {payload.media_url && (
+              <a href={payload.media_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-xl mb-3">
+                📄 Muat Turun Lembaran Kerja
+              </a>
+            )}
+            <div dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(payload.markdown || "", studentName)) }} />
+          </div>
+          <Button
+            onClick={onComplete}
+            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+          >
+            Selesai Lembaran Kerja! 📝
           </Button>
         </div>
       );

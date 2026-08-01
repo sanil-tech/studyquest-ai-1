@@ -142,6 +142,68 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginAsDemo = (demoRole = 'parent') => {
+    let demoUser;
+    if (demoRole === 'admin') {
+      demoUser = {
+        id: "demo_admin_user_2026",
+        email: "admin@studyquest.edu.my",
+        full_name: "Pentadbir StudyQuest (Admin)",
+        nickname: "Admin",
+        role: "parent",
+        app_role: "admin",
+        is_admin: true,
+        profile_completed: true,
+      };
+    } else if (demoRole === 'student') {
+      demoUser = {
+        id: "demo_student_user_2026",
+        email: "student@studyquest.edu.my",
+        username: "corry_1234",
+        student_id: "SQ-8F3K92",
+        full_name: "Corry Pelajar Demo",
+        nickname: "Corry",
+        role: "student",
+        app_role: "student",
+        is_admin: false,
+        profile_completed: true,
+      };
+    } else {
+      demoUser = {
+        id: "demo_parent_user_2026",
+        email: "ibu.bapa@studyquest.edu.my",
+        full_name: "Ibu Bapa Demo",
+        nickname: "Ibu Bapa",
+        role: "parent",
+        app_role: "parent",
+        is_admin: false,
+        profile_completed: true,
+      };
+    }
+
+    const sessionData = {
+      userId: demoUser.id,
+      username: demoUser.username || demoUser.email,
+      student_id: demoUser.student_id,
+      token: `demo_session_${demoUser.id}_${Date.now()}`
+    };
+
+    localStorage.setItem("studyquest_session", JSON.stringify(sessionData));
+    localStorage.setItem("studyquest_user", JSON.stringify(demoUser));
+    
+    if (demoRole === 'student') {
+      localStorage.setItem("active_student_id", demoUser.id);
+      localStorage.setItem("active_student_name", demoUser.nickname);
+    }
+
+    setUser(demoUser);
+    setIsAuthenticated(true);
+    setIsLoadingAuth(false);
+    setAuthChecked(true);
+
+    return demoUser;
+  };
+
   const logout = (shouldRedirect = true) => {
     localStorage.removeItem('studyquest_session');
     localStorage.removeItem('studyquest_user');
@@ -158,14 +220,26 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     
     if (shouldRedirect) {
-      base44.auth.logout(window.location.href);
+      try {
+        base44.auth.logout(window.location.href);
+      } catch (e) {
+        window.location.href = "/login";
+      }
     } else {
-      base44.auth.logout();
+      try {
+        base44.auth.logout();
+      } catch (e) {
+        setUser(null);
+      }
     }
   };
 
   const navigateToLogin = () => {
-    base44.auth.redirectToLogin(window.location.href);
+    try {
+      base44.auth.redirectToLogin(window.location.href);
+    } catch (e) {
+      window.location.href = "/login";
+    }
   };
 
   return (
@@ -180,7 +254,8 @@ export const AuthProvider = ({ children }) => {
       logout,
       navigateToLogin,
       checkUserAuth,
-      checkAppState
+      checkAppState,
+      loginAsDemo
     }}>
       {children}
     </AuthContext.Provider>

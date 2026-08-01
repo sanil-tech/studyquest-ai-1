@@ -186,7 +186,13 @@ export const matchesEducationLevel = (studentLevel, topicLevel) => {
  * Loads all children for the current parent user, enriched with Progress, Wallet, and StudySession data.
  */
 export const loadChildrenWithStats = async () => {
-  const u = await base44.auth.me().catch(() => null);
+  let u = await base44.auth.me().catch(() => null);
+  if (!u?.id) {
+    try {
+      const stored = localStorage.getItem('studyquest_user');
+      if (stored) u = JSON.parse(stored);
+    } catch {}
+  }
   if (!u?.id) return [];
 
   let childIds = [];
@@ -209,7 +215,33 @@ export const loadChildrenWithStats = async () => {
     }
   } catch {}
 
-  if (childIds.length === 0) return [];
+  if (childIds.length === 0) {
+    // Provide a default demo student profile for instant preview
+    return [
+      {
+        id: "demo_student_user_2026",
+        nickname: "Corry",
+        full_name: "Corry Pelajar Demo",
+        student_id: "SQ-8F3K92",
+        school_year: "Tahun 4",
+        standard: "Tahun 4",
+        education_level: "Tahun 4",
+        avatar_emoji: "🦧",
+        progress: { total_xp: 450, streak_days: 5, level: 3 },
+        wallet: { balance: 120 },
+        recentSessions: [
+          { subject_id: "bahasa_melayu", duration_seconds: 900, created_at: new Date().toISOString() }
+        ],
+        quizAttempts: [
+          { score: 85, total_questions: 10, created_at: new Date().toISOString() }
+        ],
+        latestQuizScore: 85,
+        totalStudyTimeMinutes: 45,
+        overallAccuracy: 85,
+        diagnosticRecommended: false
+      }
+    ];
+  }
 
   const kids = await Promise.all(
     childIds.map(async (id) => {

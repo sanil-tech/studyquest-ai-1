@@ -18,8 +18,11 @@ export default function RoleRoute({ allowedRoles }) {
     );
   }
 
-  // No role set yet — send to RoleSetup
-  if (!user?.app_role || !["student", "parent"].includes(user.app_role)) {
+  const role = user?.app_role || user?.role;
+  const isAdmin = user?.role === "admin" || user?.app_role === "admin" || user?.is_admin === true;
+
+  // No role set yet — send to RoleSetup unless admin
+  if (!isAdmin && (!role || !["student", "parent"].includes(role))) {
     return <Navigate to="/role-setup" replace />;
   }
 
@@ -29,13 +32,14 @@ export default function RoleRoute({ allowedRoles }) {
     localStorage.getItem("selected_child_id")
   );
 
-  // Permit access if role matches OR if parent is operating in active child session mode
+  // Permit access if role matches OR if parent is operating in active child session mode OR user is admin
   const isAllowed =
-    allowedRoles.includes(user.app_role) ||
-    (user.app_role === "parent" && allowedRoles.includes("student") && hasActiveChildSession);
+    isAdmin ||
+    allowedRoles.includes(role) ||
+    (role === "parent" && allowedRoles.includes("student") && hasActiveChildSession);
 
   if (!isAllowed) {
-    return <Navigate to={user.app_role === "parent" ? "/parent" : "/"} replace />;
+    return <Navigate to={role === "parent" || isAdmin ? "/parent" : "/"} replace />;
   }
 
   return <Outlet />;

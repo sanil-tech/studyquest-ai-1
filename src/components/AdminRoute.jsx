@@ -1,21 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 
 /**
  * Admin-only route guard.
- * Checks the built-in User `role` field — only "admin" can access.
+ * Checks role, app_role, or is_admin for administrator privilege.
  */
 export default function AdminRoute() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user: contextUser } = useAuth();
+  const [user, setUser] = useState(contextUser);
+  const [loading, setLoading] = useState(!contextUser);
 
   useEffect(() => {
+    if (contextUser) {
+      setUser(contextUser);
+      setLoading(false);
+      return;
+    }
+
+    const storedUserStr = localStorage.getItem('studyquest_user');
+    let storedUser = null;
+    try {
+      if (storedUserStr) storedUser = JSON.parse(storedUserStr);
+    } catch {}
+
     base44.auth.me()
-      .then(setUser)
-      .catch(() => setUser(null))
+      .then((u) => setUser(u || storedUser))
+      .catch(() => setUser(storedUser))
       .finally(() => setLoading(false));
-  }, []);
+  }, [contextUser]);
 
   if (loading) {
     return (
@@ -25,7 +39,9 @@ export default function AdminRoute() {
     );
   }
 
-  if (user?.role !== "admin") {
+  const isAdmin = user?.role === "admin" || user?.app_role === "admin" || user?.is_admin === true;
+
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 

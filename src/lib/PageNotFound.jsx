@@ -5,7 +5,36 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function PageNotFound({}) {
     const location = useLocation();
-    const pageName = location.pathname.substring(1);
+    const isAuthPath = location.pathname.includes('auth/login') || location.pathname.includes('api/apps/auth');
+
+    if (isAuthPath) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+                <div className="max-w-md w-full text-center space-y-6 bg-white p-8 rounded-2xl border border-slate-200 shadow-md">
+                    <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
+                        🔐
+                    </div>
+                    <div className="space-y-2">
+                        <h2 className="text-xl font-bold text-slate-800">
+                            Log Masuk Pratinjau
+                        </h2>
+                        <p className="text-sm text-slate-600 leading-relaxed">
+                            Log masuk Google/OAuth memerlukan sambungan pelayan terus. Dalam persekitaran pratinjau ini, sila gunakan <span className="font-semibold text-indigo-600">Log Masuk 1-Klik Demo</span>.
+                        </p>
+                    </div>
+
+                    <div className="pt-2">
+                        <button 
+                            onClick={() => window.location.href = '/login'} 
+                            className="w-full py-3 px-4 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-sm transition-colors"
+                        >
+                            🚀 Buka Portal Log Masuk Demo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const { data: authData, isFetched } = useQuery({
         queryKey: ['user'],

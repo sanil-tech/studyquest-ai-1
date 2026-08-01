@@ -31,16 +31,29 @@ Deno.serve(async (req) => {
         const lesson = lessons[0];
         const lessonId = lesson.id;
 
-        // Fetch all modular content in parallel
-        const [notesArr, mindmapArr, questions, feedback, mistakes, explanations, subtopics] = await Promise.all([
+        // Fetch published LessonVersion and associated LessonContent
+        let publishedVersionId: string | null = lesson.published_version_id || null;
+        if (!publishedVersionId) {
+          const versions = await base44.asServiceRole.entities.LessonVersion.filter({ lesson_id: lessonId, status: "published" }).catch(() => []);
+          if (versions.length > 0) publishedVersionId = versions[0].id;
+        }
+
+        // Fetch all modular content & published LessonContent in parallel
+        const [lessonContents, notesArr, mindmapArr, questions, feedback, mistakes, explanations, subtopics] = await Promise.all([
+          publishedVersionId ? base44.asServiceRole.entities.LessonContent.filter({ lesson_version_id: publishedVersionId, status: "published" }).catch(() => []) : [],
           base44.asServiceRole.entities.LessonNotes.filter({ lesson_id: lessonId }),
           base44.asServiceRole.entities.MindMap.filter({ lesson_id: lessonId }),
-          base44.asServiceRole.entities.QuestionBank.filter({ lesson_id: lessonId }),
+          publishedVersionId
+            ? base44.asServiceRole.entities.QuestionBank.filter({ lesson_version_id: publishedVersionId, status: "published" }).catch(() => [])
+            : base44.asServiceRole.entities.QuestionBank.filter({ lesson_id: lessonId }),
           base44.asServiceRole.entities.FeedbackMessage.filter({ lesson_id: lessonId }),
           base44.asServiceRole.entities.CommonMistake.filter({ lesson_id: lessonId }),
           base44.asServiceRole.entities.AIExplanation.filter({ lesson_id: lessonId }),
           base44.asServiceRole.entities.Subtopic.filter({ topic_id: topicId }),
         ]);
+
+        const publishedNotes = lessonContents.find((c: any) => c.content_type === "notes");
+        const publishedMindmap = lessonContents.find((c: any) => c.content_type === "mindmap");
 
         // Fetch options for all questions
         const questionIds = questions.map((q: any) => q.question_id);
@@ -83,6 +96,9 @@ Deno.serve(async (req) => {
         const notes = notesArr[0] || null;
         const mindmap = mindmapArr[0] || null;
 
+        const notesText = publishedNotes?.content_markdown || notes?.notes_markdown || "";
+        const mindmapJson = publishedMindmap?.content_markdown || mindmap?.branches_json || "[]";
+
         // Sort subtopics by sort_order
         const sortedSubtopics = subtopics.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
 
@@ -94,12 +110,12 @@ Deno.serve(async (req) => {
           topic_name: lesson.topic_name || "",
           subject_name: lesson.subject_name || "",
           video_url: lesson.video_url || "",
-          notes_content: notes ? {
-            text: notes.notes_markdown || "",
-            image: notes.notes_image_url || "",
+          notes_content: notesText ? {
+            text: notesText,
+            image: notes?.notes_image_url || "",
           } : null,
           infographic_url: mindmap?.infographic_url || "",
-          mindmap_json: mindmap?.branches_json || "[]",
+          mindmap_json: mindmapJson,
           questions_json: JSON.stringify(questionsJson),
           feedback_library_json: JSON.stringify(feedback.map((f: any) => ({
             type: f.feedback_type,

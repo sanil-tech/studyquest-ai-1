@@ -1,0 +1,208 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StudyQuest AdventurePackage Contract",
+  "description": "AI Output Specification for transforming curriculum topics into complete StudyQuest Learning Adventures.",
+  "type": "object",
+  "required": [
+    "world",
+    "adventure_story",
+    "otan_companion",
+    "mission_journey",
+    "assessment",
+    "completion_report"
+  ],
+  "properties": {
+    "world": {
+      "type": "object",
+      "required": ["world_name", "world_icon", "theme", "description"],
+      "properties": {
+        "world_name": {
+          "type": "string",
+          "description": "Nama Dunia Pembelajaran KSSR (contoh: Dunia Matematik, Alam Sains)",
+          "example": "Dunia Matematik"
+        },
+        "world_icon": {
+          "type": "string",
+          "description": "Emoji ikon perwakilan dunia",
+          "example": "🌎"
+        },
+        "theme": {
+          "type": "string",
+          "description": "Tema visual & suasana kembara (contoh: Pengembaraan Hutan Angka)",
+          "example": "Pengembaraan Hutan Angka"
+        },
+        "description": {
+          "type": "string",
+          "description": "Penerangan ringkas persekitaran dunia pembelajaran",
+          "example": "Terokai rahsia tempat nilai puluh dan sa di rimba bersama Otan 🦧"
+        }
+      }
+    },
+    "adventure_story": {
+      "type": "object",
+      "required": ["title", "introduction", "problem", "mission_goal"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Tajuk utama pengembaraan",
+          "example": "Misteri Rumah Puluh & Sa"
+        },
+        "introduction": {
+          "type": "string",
+          "description": "Penceritaan pengenalan mesra kanak-kanak Tahun 1-6",
+          "example": "Di Hutan Angka, nombor 10 hingga 99 memerlukan rumah khas untuk menetap!"
+        },
+        "problem": {
+          "type": "string",
+          "description": "Masalah utama yang perlu diselesaikan oleh Pengembara",
+          "example": "Kunci Rumah Puluh hilang dan angka bercampur aduk!"
+        },
+        "mission_goal": {
+          "type": "string",
+          "description": "Matlamat akhir kembara",
+          "example": "Bantu Otan mengumpul kunci tempat nilai untuk membuka Rumah Puluh."
+        }
+      }
+    },
+    "otan_companion": {
+      "type": "object",
+      "required": ["greeting", "encouragement", "hint_messages", "celebration_messages"],
+      "properties": {
+        "greeting": {
+          "type": "string",
+          "description": "Ucapan aluan mesra Otan sewaktu memulakan misi",
+          "example": "Hai Pengembara! Otan sedia membantu kamu meneroka hari ini!"
+        },
+        "encouragement": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Koleksi dialog galakan Otan apabila murid mengalami kesukaran"
+        },
+        "hint_messages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Petunjuk pintar Otan mengikut peringkat pembelajaran"
+        },
+        "celebration_messages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Pujian dan kejayaan yang diucapkan Otan selepas menyelesaikan misi"
+        }
+      }
+    },
+    "mission_journey": {
+      "type": "array",
+      "minItems": 4,
+      "description": "Laluan misi berperingkat (DISCOVER, INTERACT, PRACTICE, CHALLENGE)",
+      "items": {
+        "type": "object",
+        "required": [
+          "mission_id",
+          "title",
+          "stage",
+          "objective",
+          "content_blocks",
+          "activity_type",
+          "reward"
+        ],
+        "properties": {
+          "mission_id": {
+            "type": "string",
+            "example": "misi-1-discover"
+          },
+          "title": {
+            "type": "string",
+            "example": "Penemuan Kumpulan 10"
+          },
+          "stage": {
+            "type": "string",
+            "enum": ["DISCOVER", "INTERACT", "PRACTICE", "CHALLENGE"],
+            "description": "Peringkat misi mengikut taksonomi pembelajaran StudyQuest"
+          },
+          "objective": {
+            "type": "string",
+            "example": "Mengenal pasti kumpulan 10 item sebagai 1 puluh."
+          },
+          "content_blocks": {
+            "type": "array",
+            "description": "Blok kandungan pembelajaran serasi BlockRenderer.jsx",
+            "items": {
+              "type": "object"
+            }
+          },
+          "activity_type": {
+            "type": "string",
+            "example": "interactive_visual"
+          },
+          "reward": {
+            "type": "object",
+            "required": ["xp", "coins"],
+            "properties": {
+              "xp": { "type": "number", "example": 50 },
+              "coins": { "type": "number", "example": 15 },
+              "badge": { "type": "string", "example": "Pembantu Otan" }
+            }
+          }
+        }
+      }
+    },
+    "assessment": {
+      "type": "object",
+      "required": ["quiz", "ai_explanation", "mastery_condition"],
+      "properties": {
+        "quiz": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["question", "options", "correct_index", "explanation"],
+            "properties": {
+              "question": { "type": "string" },
+              "options": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "correct_index": { "type": "integer" },
+              "explanation": { "type": "string" }
+            }
+          }
+        },
+        "ai_explanation": {
+          "type": "string",
+          "description": "Rumusan pedagogi dan pencerahan fakta utama oleh AI"
+        },
+        "mastery_condition": {
+          "type": "object",
+          "required": ["min_accuracy", "pass_score"],
+          "properties": {
+            "min_accuracy": { "type": "number", "example": 0.75 },
+            "pass_score": { "type": "number", "example": 80 }
+          }
+        }
+      }
+    },
+    "completion_report": {
+      "type": "object",
+      "required": ["skills_mastered", "improvement_area", "next_recommended_adventure"],
+      "properties": {
+        "skills_mastered": {
+          "type": "array",
+          "items": { "type": "string" },
+          "example": ["Nilai Tempat (Puluh & Sa)", "Cerakinan Nombor"]
+        },
+        "improvement_area": {
+          "type": "string",
+          "example": "Latihan tambahan penambahan tanpa mengumpul semula"
+        },
+        "next_recommended_adventure": {
+          "type": "object",
+          "required": ["world_name", "adventure_title", "topic_slug"],
+          "properties": {
+            "world_name": { "type": "string" },
+            "adventure_title": { "type": "string" },
+            "topic_slug": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

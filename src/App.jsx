@@ -37,8 +37,10 @@ const PremiumPage = React.lazy(() => import('@/pages/PremiumPage'));
 
 // Lazy-loaded Student & Learning Pages
 const StudentDashboard = React.lazy(() => import('@/pages/StudentDashboard'));
+const AdventureHome = React.lazy(() => import('@/pages/AdventureHome'));
 const StudyPage = React.lazy(() => import('@/pages/StudyPage'));
 const LessonPage = React.lazy(() => import('@/pages/LessonPage'));
+const AdventurePreviewPage = React.lazy(() => import('@/pages/AdventurePreviewPage'));
 const QuizPage = React.lazy(() => import('@/pages/QuizPage'));
 const QuizResult = React.lazy(() => import('@/pages/QuizResult'));
 const WalletPage = React.lazy(() => import('@/pages/WalletPage'));
@@ -135,6 +137,8 @@ const AuthenticatedApp = () => {
             <Route element={<ProfileCompleteRoute />}>
               <Route element={<RoleRoute allowedRoles={["student", "parent"]} />}>
                 <Route path="/dashboard" element={<StudentDashboard />} />
+                <Route path="/adventure-home" element={<AdventureHome />} />
+                <Route path="/adventure" element={<AdventureHome />} />
                 
                 {/* Standard Study Routes */}
                 <Route path="/study" element={<StudyPage />} />
@@ -145,6 +149,7 @@ const AuthenticatedApp = () => {
                 <Route path="/lessons" element={<StudyPage />} />
                 <Route path="/lessons/:subjectId" element={<StudyPage />} />
                 <Route path="/lesson/:subjectId/:topicId" element={<LessonPage />} />
+                <Route path="/adventure-sandbox" element={<AdventurePreviewPage />} />
 
                 <Route path="/quiz/:quizId" element={<QuizPage />} />
                 <Route path="/quiz-result/:attemptId" element={<QuizResult />} />

@@ -1,5 +1,5 @@
 // src/pages/LessonPage.jsx
-// Student Lesson Viewer — Powered strictly by getLearningPackage & BlockRenderer
+// Student Lesson Viewer — Controller for Adventure & Classic Modes
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -12,16 +12,16 @@ import {
   Loader2,
   Trophy,
   Compass,
-  BookOpen,
   ChevronLeft,
-  MapPin
+  Sparkles,
+  BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 
-import LessonProgress from "@/components/lesson/LessonProgress";
-import BlockRenderer, { bersihkanTeksUntukSuara } from "@/components/lesson/BlockRenderer";
+import ClassicLessonView from "@/components/lesson/ClassicLessonView";
+import { LessonAdventure } from "@/components/adventure/LessonAdventure";
+import { bersihkanTeksUntukSuara } from "@/components/lesson/BlockRenderer";
 
 // ==========================================
 // SUBJECT WORLD THEMES
@@ -65,6 +65,13 @@ export default function LessonPage() {
   const [activeTab, setActiveTab] = useState("map");
   const [isSpeaking, setIsSpeaking] = useState(false);
 
+  // Learning Mode State: "adventure" | "classic"
+  const [learningMode, setLearningMode] = useState(() => {
+    return localStorage.getItem("studyquest_learning_mode") || "adventure";
+  });
+
+  const [completedBlockIds, setCompletedBlockIds] = useState([]);
+
   const [progressState, setProgressState] = useState({
     video_completed: false,
     lesson_completed: false,
@@ -77,6 +84,11 @@ export default function LessonPage() {
 
   const sessionStartRef = useRef(Date.now());
   const sessionIdRef = useRef(null);
+
+  const handleModeChange = (mode) => {
+    setLearningMode(mode);
+    localStorage.setItem("studyquest_learning_mode", mode);
+  };
 
   // 1. Fetch unified Learning Package via single API endpoint
   useEffect(() => {
@@ -159,6 +171,22 @@ export default function LessonPage() {
     setActiveTab("map");
   };
 
+  const handleAdventureBlockComplete = async (blockId) => {
+    setCompletedBlockIds((prev) => Array.from(new Set([...prev, blockId])));
+    const studentId = await getActiveStudentId();
+    if (studentId) {
+      await processReward(studentId, {
+        activityType: "lesson_complete",
+        referenceId: `${topicId}_${blockId}`,
+        referenceName: `${packageData?.lesson?.title || "Misi"} - Block ${blockId}`,
+        subjectName: packageData?.curriculum_context?.subject_name,
+        reason: "Misi Kembara Selesai"
+      }).catch(() => {});
+    }
+    setProgressState(prev => ({ ...prev, xp_earned: prev.xp_earned + 25 }));
+    triggerConfetti();
+  };
+
   const handleSpeech = (text) => {
     if (!("speechSynthesis" in window)) return;
     if (isSpeaking) {
@@ -192,11 +220,11 @@ export default function LessonPage() {
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* TOP HUD BAR */}
-        <div className="bg-stone-900/90 border-2 border-stone-700/80 rounded-3xl p-4 shadow-xl flex items-center justify-between backdrop-blur-md">
+        <div className="bg-stone-900/90 border-2 border-stone-700/80 rounded-3xl p-4 shadow-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 backdrop-blur-md">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(`/study/${subjectId}`)}
-              className="p-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-2xl transition-all border border-stone-600 active:scale-95"
+              className="p-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-2xl transition-all border border-stone-600 active:scale-95 shrink-0"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -204,113 +232,96 @@ export default function LessonPage() {
               <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${worldTheme.badgeBg}`}>
                 {packageData?.curriculum_context?.subject_name || "Subjek"}
               </span>
-              <h1 className="text-sm sm:text-base font-black text-white mt-1 flex items-center gap-1.5">
-                <Compass className="w-4 h-4 text-amber-400" /> {packageData?.lesson?.title || "Misi Pembelajaran"}
+              <h1 className="text-sm sm:text-base font-black text-white mt-1 flex items-center gap-1.5 truncate">
+                <Compass className="w-4 h-4 text-amber-400 shrink-0" /> {packageData?.lesson?.title || "Misi Pembelajaran"}
               </h1>
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-amber-400 to-lime-400 px-4 py-2 rounded-2xl text-stone-950 font-black text-xs sm:text-sm shadow-md flex items-center gap-1.5">
-            <Leaf className="w-4 h-4 fill-stone-950" /> {progressState.xp_earned} XP
+          <div className="flex items-center justify-between sm:justify-end gap-3">
+            {/* MODE SWITCHER CONTROLLER */}
+            <div className="bg-stone-950 p-1 rounded-2xl border border-stone-800 flex items-center gap-1">
+              <button
+                onClick={() => handleModeChange("adventure")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                  learningMode === "adventure"
+                    ? "bg-amber-500 text-stone-950 shadow-md"
+                    : "text-stone-400 hover:text-stone-200"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Mod Kembara
+              </button>
+              <button
+                onClick={() => handleModeChange("classic")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                  learningMode === "classic"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-stone-400 hover:text-stone-200"
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                Mod Klasik
+              </button>
+            </div>
+
+            {/* XP BADGE */}
+            <div className="bg-gradient-to-r from-amber-400 to-lime-400 px-3 py-1.5 rounded-2xl text-stone-950 font-black text-xs shadow-md flex items-center gap-1.5 shrink-0">
+              <Leaf className="w-4 h-4 fill-stone-950" /> {progressState.xp_earned} XP
+            </div>
           </div>
         </div>
 
-        {/* DYNAMIC STAGE NAVIGATION BAR */}
-        <div className="bg-stone-900/80 border border-stone-700/60 rounded-2xl p-2 flex items-center justify-around overflow-x-auto gap-1 shadow-md">
-          <button
-            onClick={() => setActiveTab("map")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-              activeTab === "map" ? "bg-amber-400 text-stone-950 shadow-sm" : "text-stone-300 hover:bg-stone-800"
-            }`}
-          >
-            <MapPin className="w-3.5 h-3.5" /> Peta
-          </button>
+        {/* MAIN MODE VIEW CONTENT */}
+        {learningMode === "adventure" ? (
+          /* ADVENTURE MODE EXPERIENCE */
+          <LessonAdventure
+            packageData={packageData}
+            contentBlocks={sortedBlocks}
+            completedBlockIds={completedBlockIds}
+            quizCompleted={progressState.quiz_completed}
+            quizScore={progressState.quiz_completed ? 100 : 0}
+            onCompleteBlock={handleAdventureBlockComplete}
+            studentName={studentName}
+            quizComponent={
+              <div className="bg-gradient-to-br from-amber-950 to-stone-900 rounded-3xl p-6 sm:p-8 border-2 border-amber-500/40 shadow-2xl text-center space-y-4">
+                <Trophy className="w-14 h-14 text-amber-400 mx-auto animate-bounce" />
+                <h3 className="text-xl font-black text-amber-200">⚔️ Ujian Kemahiran Boss</h3>
+                <p className="text-xs text-stone-300 font-bold">Jawab soalan penilaian untuk melengkapkan modul ini!</p>
 
-          {sortedBlocks.map((block) => (
-            <button
-              key={block.id}
-              onClick={() => setActiveTab(block.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                activeTab === block.id ? "bg-emerald-400 text-stone-950 shadow-sm" : "text-stone-300 hover:bg-stone-800"
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" /> {block.title || block.block_type}
-            </button>
-          ))}
-
-          <button
-            onClick={() => setActiveTab("quiz")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-              activeTab === "quiz" ? "bg-rose-400 text-stone-950 shadow-sm" : "text-stone-300 hover:bg-stone-800"
-            }`}
-          >
-            <Trophy className="w-3.5 h-3.5" /> Ujian
-          </button>
-        </div>
-
-        {/* CONTENT DYNAMIC STAGES */}
-        <AnimatePresence mode="wait">
-          {/* MAP ROADMAP STAGE */}
-          {activeTab === "map" && (
-            <motion.div key="map" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-              <LessonProgress
-                steps={{
-                  video: progressState.video_completed,
-                  lesson: progressState.lesson_completed,
-                  flashcard: progressState.flashcard_completed,
-                  mindmap: progressState.mindmap_completed,
-                  games: progressState.games_completed,
-                  quiz: progressState.quiz_completed
-                }}
-                onStepClick={(key) => {
-                  const targetBlock = sortedBlocks.find(b => b.block_type.toLowerCase().includes(key));
-                  if (targetBlock) setActiveTab(targetBlock.id);
-                  else if (key === "quiz") setActiveTab("quiz");
-                }}
-              />
-            </motion.div>
-          )}
-
-          {/* DYNAMIC CONTENT BLOCK STAGES VIA BLOCKRENDERER */}
-          {sortedBlocks.map((block) => {
-            if (activeTab !== block.id) return null;
-            return (
-              <motion.div key={block.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-stone-900/90 rounded-3xl p-6 border-2 border-stone-800 shadow-xl space-y-4">
-                <BlockRenderer
-                  block={block}
-                  studentName={studentName}
-                  isSpeaking={isSpeaking}
-                  onSpeak={handleSpeech}
-                  onComplete={() => handleStageComplete(block.block_type.toLowerCase(), 15)}
-                />
-              </motion.div>
-            );
-          })}
-
-          {/* QUIZ ASSESSMENT STAGE */}
-          {activeTab === "quiz" && (
-            <motion.div key="quiz" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-gradient-to-br from-amber-950 to-stone-900 rounded-3xl p-8 border-2 border-amber-500/40 shadow-2xl text-center space-y-4">
-              <Trophy className="w-14 h-14 text-amber-400 mx-auto animate-bounce" />
-              <h3 className="text-xl font-black text-amber-200">⚔️ Ujian Kemahiran Boss</h3>
-              <p className="text-xs text-stone-300 font-bold">Jawab soalan penilaian untuk melengkapkan modul ini!</p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto pt-2">
-                <Button
-                  onClick={() => navigate(`/quiz/${primaryAssessment?.id || topicId}?limit=10&mode=practice`)}
-                  className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs py-4 rounded-xl border-b-4 border-amber-600"
-                >
-                  ⚡ Latihan (10 Soalan)
-                </Button>
-                <Button
-                  onClick={() => navigate(`/quiz/${primaryAssessment?.id || topicId}?limit=20&mode=mastery`)}
-                  className="bg-orange-500 hover:bg-orange-400 text-stone-950 font-black text-xs py-4 rounded-xl border-b-4 border-orange-700"
-                >
-                  ⚔️ Ujian Mahir (20 Soalan)
-                </Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto pt-2">
+                  <Button
+                    onClick={() => navigate(`/quiz/${primaryAssessment?.id || topicId}?limit=10&mode=practice`)}
+                    className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs py-4 rounded-xl border-b-4 border-amber-600"
+                  >
+                    ⚡ Latihan (10 Soalan)
+                  </Button>
+                  <Button
+                    onClick={() => navigate(`/quiz/${primaryAssessment?.id || topicId}?limit=20&mode=mastery`)}
+                    className="bg-orange-500 hover:bg-orange-400 text-stone-950 font-black text-xs py-4 rounded-xl border-b-4 border-orange-700"
+                  >
+                    ⚔️ Ujian Mahir (20 Soalan)
+                  </Button>
+                </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            }
+          />
+        ) : (
+          /* CLASSIC LMS TAB-BASED EXPERIENCE */
+          <ClassicLessonView
+            sortedBlocks={sortedBlocks}
+            primaryAssessment={primaryAssessment}
+            topicId={topicId}
+            studentName={studentName}
+            progressState={progressState}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            handleStageComplete={handleStageComplete}
+            handleSpeech={handleSpeech}
+            isSpeaking={isSpeaking}
+            navigate={navigate}
+          />
+        )}
 
       </div>
     </div>
