@@ -2,13 +2,16 @@
 // Quiz Evaluation Page — Powered strictly by getLearningPackage
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import QuizRunner from "@/components/quiz/QuizRunner";
 import { ChevronLeft, Loader2, Compass } from "lucide-react";
 
 export default function QuizPage() {
   const { quizId, assessmentId } = useParams();
+  const [searchParams] = useSearchParams();
+  const topicParam = searchParams.get("topic");
+  const versionParam = searchParams.get("version");
   const targetAssessmentId = assessmentId || quizId;
   const navigate = useNavigate();
 
@@ -23,23 +26,30 @@ export default function QuizPage() {
         setLoading(true);
         setError(null);
 
-        let res = null;
-        try {
-          res = await base44.functions.invoke("getLearningPackage", {
-            assessment_id: targetAssessmentId
-          });
-        } catch (e1) {
+        const primaryTopicId = topicParam || targetAssessmentId;
+        const attempts = [
+          { topic_id: primaryTopicId, ...(versionParam ? { lesson_version_id: versionParam } : {}) },
+          { topic_id: targetAssessmentId },
+          { assessment_id: targetAssessmentId },
+          { lesson_version_id: targetAssessmentId }
+        ];
+
+        let resData = null;
+        for (const params of attempts) {
+          if (!params.topic_id && !params.assessment_id && !params.lesson_version_id) continue;
           try {
-            res = await base44.functions.invoke("getLearningPackage", {
-              topic_id: targetAssessmentId
-            });
-          } catch (e2) {
-            console.warn("getLearningPackage topic fallback failed:", e2);
+            const res = await base44.functions.invoke("getLearningPackage", params);
+            if (res?.data?.success && (res.data.assessments?.length || res.data.quiz?.length)) {
+              resData = res.data;
+              break;
+            }
+          } catch (e) {
+            console.warn("getLearningPackage attempt failed:", params, e);
           }
         }
 
-        if (res?.data?.success && (res.data.assessments?.length || res.data.quiz?.length) && isMounted) {
-          setPackageData(res.data);
+        if (resData && isMounted) {
+          setPackageData(resData);
           return;
         }
 
@@ -78,7 +88,7 @@ export default function QuizPage() {
       }
     };
 
-    if (targetAssessmentId) {
+    if (targetAssessmentId || topicParam) {
       loadPackage();
     } else {
       setLoading(false);
@@ -86,7 +96,7 @@ export default function QuizPage() {
     }
 
     return () => { isMounted = false; };
-  }, [targetAssessmentId]);
+  }, [targetAssessmentId, topicParam, versionParam]);
 
   const activeAssessment = packageData?.assessments?.[0] || (
     packageData?.quiz?.length ? {

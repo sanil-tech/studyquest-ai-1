@@ -386,13 +386,13 @@ export default function LessonPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto pt-2">
                   <Button
-                    onClick={() => navigate(`/quiz/${primaryAssessment?.id || topicId}?limit=10&mode=practice`)}
+                    onClick={() => navigate(`/quiz/${topicId || primaryAssessment?.id}?topic=${topicId || ''}&version=${versionId || ''}&limit=10&mode=practice`)}
                     className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs py-4 rounded-xl border-b-4 border-amber-600"
                   >
                     ⚡ Latihan (10 Soalan)
                   </Button>
                   <Button
-                    onClick={() => navigate(`/quiz/${primaryAssessment?.id || topicId}?limit=20&mode=mastery`)}
+                    onClick={() => navigate(`/quiz/${topicId || primaryAssessment?.id}?topic=${topicId || ''}&version=${versionId || ''}&limit=20&mode=mastery`)}
                     className="bg-orange-500 hover:bg-orange-400 text-stone-950 font-black text-xs py-4 rounded-xl border-b-4 border-orange-700"
                   >
                     ⚔️ Ujian Mahir (20 Soalan)
