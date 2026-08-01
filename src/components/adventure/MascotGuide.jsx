@@ -1,6 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Lightbulb, X } from "lucide-react";
+import { replaceStudentVariables } from "@/lib/personalize";
 
 /**
  * MascotGuide Component
@@ -11,6 +12,7 @@ import { Sparkles, Lightbulb, X } from "lucide-react";
  * @param {string} props.message - Message or tip text from Otan
  * @param {string} props.emotion - Emotion/state ('excited' | 'curious' | 'thinking' | 'encourage' | 'encouraging' | 'happy' | 'celebrate' | 'proud')
  * @param {boolean} props.visible - Toggle visibility
+ * @param {string} props.studentName - Student name for variable replacement
  * @param {Function} props.onClose - Optional close callback
  * @param {Function} props.onRequestHint - Optional callback to trigger AI hint
  */
@@ -18,10 +20,13 @@ export function MascotGuide({
   message = "Selamat bertualang, Pengembara!",
   emotion = "happy",
   visible = true,
+  studentName = "Pengembara",
   onClose,
   onRequestHint
 }) {
   if (!visible) return null;
+
+  const formattedMessage = replaceStudentVariables(message, studentName);
 
   const getEmotionConfig = () => {
     switch (emotion) {
@@ -119,7 +124,7 @@ export function MascotGuide({
             )}
           </div>
           <p className="text-xs sm:text-sm font-semibold text-amber-50 leading-relaxed font-sans">
-            "{message}"
+            "{formattedMessage}"
           </p>
 
           {onRequestHint && (

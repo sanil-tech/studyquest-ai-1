@@ -13,24 +13,57 @@ const STAGE_MAPPINGS = {
   TEXT_MARKDOWN: { stage: "DISCOVER", icon: "📖", defaultTitle: "Terokai Konsep" },
   NOTE: { stage: "DISCOVER", icon: "📝", defaultTitle: "Nota Kembara" },
   TEXT: { stage: "DISCOVER", icon: "📖", defaultTitle: "Terokai Konsep" },
+  text_markdown: { stage: "DISCOVER", icon: "📖", defaultTitle: "Terokai Konsep" },
+  note: { stage: "DISCOVER", icon: "📝", defaultTitle: "Nota Kembara" },
+  text: { stage: "DISCOVER", icon: "📖", defaultTitle: "Terokai Konsep" },
+
   VIDEO_EMBED: { stage: "DISCOVER", icon: "🎬", defaultTitle: "Tonton & Elusif" },
   VIDEO: { stage: "DISCOVER", icon: "🎬", defaultTitle: "Tonton & Elusif" },
+  video_embed: { stage: "DISCOVER", icon: "🎬", defaultTitle: "Tonton & Elusif" },
+  video: { stage: "DISCOVER", icon: "🎬", defaultTitle: "Tonton & Elusif" },
+
   INFOGRAPHIC: { stage: "DISCOVER", icon: "🎨", defaultTitle: "Peta Visual" },
   IMAGE: { stage: "DISCOVER", icon: "🖼️", defaultTitle: "Peta Visual" },
+  infographic: { stage: "DISCOVER", icon: "🎨", defaultTitle: "Peta Visual" },
+  image: { stage: "DISCOVER", icon: "🖼️", defaultTitle: "Peta Visual" },
+
   AI_EXPLANATION: { stage: "DISCOVER", icon: "🤖", defaultTitle: "Penerangan Pintar AI" },
+  ai_explanation: { stage: "DISCOVER", icon: "🤖", defaultTitle: "Penerangan Pintar AI" },
 
   MINDMAP: { stage: "INTERACT", icon: "🧠", defaultTitle: "Peta Minda Interaktif" },
   MIND_MAP: { stage: "INTERACT", icon: "🧠", defaultTitle: "Peta Minda Interaktif" },
+  mindmap: { stage: "INTERACT", icon: "🧠", defaultTitle: "Peta Minda Interaktif" },
+  mind_map: { stage: "INTERACT", icon: "🧠", defaultTitle: "Peta Minda Interaktif" },
+
   FLASHCARD_DECK: { stage: "INTERACT", icon: "🎴", defaultTitle: "Kad Minda Memori" },
   FLASHCARD: { stage: "INTERACT", icon: "🎴", defaultTitle: "Kad Minda Memori" },
   FLASHCARDS: { stage: "INTERACT", icon: "🎴", defaultTitle: "Kad Minda Memori" },
+  flashcard: { stage: "INTERACT", icon: "🎴", defaultTitle: "Kad Minda Memori" },
+
   INTERACTIVE_GAME: { stage: "INTERACT", icon: "🎮", defaultTitle: "Cabaran Permainan" },
   GAME: { stage: "INTERACT", icon: "🎮", defaultTitle: "Cabaran Permainan" },
   ACTIVITY: { stage: "INTERACT", icon: "⚡", defaultTitle: "Aktiviti Pembelajaran" },
+  interactive_game: { stage: "INTERACT", icon: "🎮", defaultTitle: "Cabaran Permainan" },
+  game: { stage: "INTERACT", icon: "🎮", defaultTitle: "Cabaran Permainan" },
+  activity: { stage: "INTERACT", icon: "⚡", defaultTitle: "Aktiviti Pembelajaran" },
+
+  INTERACTIVE_PLACE_VALUE: { stage: "INTERACT", icon: "🎮", defaultTitle: "Aktiviti Nilai Tempat" },
+  interactive_place_value: { stage: "INTERACT", icon: "🎮", defaultTitle: "Aktiviti Nilai Tempat" },
+  BOSS_CHALLENGE: { stage: "CHALLENGE", icon: "👑", defaultTitle: "Cabaran Boss Utama" },
+  boss_challenge: { stage: "CHALLENGE", icon: "👑", defaultTitle: "Cabaran Boss Utama" },
+  DRAG_DROP: { stage: "INTERACT", icon: "🧩", defaultTitle: "Aktiviti Suai Padan" },
+  drag_drop: { stage: "INTERACT", icon: "🧩", defaultTitle: "Aktiviti Suai Padan" },
+  MATCHING_GAME: { stage: "INTERACT", icon: "🧩", defaultTitle: "Permainan Padanan" },
+  matching_game: { stage: "INTERACT", icon: "🧩", defaultTitle: "Permainan Padanan" },
+
   REFLECTION: { stage: "INTERACT", icon: "💭", defaultTitle: "Refleksi Kendiri" },
+  reflection: { stage: "INTERACT", icon: "💭", defaultTitle: "Refleksi Kendiri" },
 
   WORKSHEET: { stage: "PRACTICE", icon: "📑", defaultTitle: "Lembaran Kerja Pengembara" },
-  QUIZ: { stage: "CHALLENGE", icon: "👑", defaultTitle: "Cabaran Boss Utama" }
+  worksheet: { stage: "PRACTICE", icon: "📑", defaultTitle: "Lembaran Kerja Pengembara" },
+
+  QUIZ: { stage: "CHALLENGE", icon: "👑", defaultTitle: "Cabaran Boss Utama" },
+  quiz: { stage: "CHALLENGE", icon: "👑", defaultTitle: "Cabaran Boss Utama" }
 };
 
 /**

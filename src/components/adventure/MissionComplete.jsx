@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, Award, ArrowRight, Sparkles } from "lucide-react";
 import confetti from "canvas-confetti";
+import { replaceStudentVariables } from "@/lib/personalize";
 
 /**
  * MissionComplete Component
@@ -36,7 +37,7 @@ export function MissionComplete({
     }
   }, []);
 
-  const missionTitle = mission?.title || "Misi Pembelajaran";
+  const missionTitle = replaceStudentVariables(mission?.title || "Misi Pembelajaran", studentName);
   const badgeTitle = badge || mission?.reward?.badge || (mission?.stage === "CHALLENGE" ? "Master Boss" : null);
   const xpGained = reward?.xp || mission?.reward?.xp || 50;
   const coinsGained = reward?.coins || mission?.reward?.coins || 15;

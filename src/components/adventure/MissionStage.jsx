@@ -100,6 +100,7 @@ export function MissionStage({
       <MascotGuide
         message={counsel.message}
         emotion={counsel.emotion}
+        studentName={studentName}
         onRequestHint={handleHintRequest}
       />
 
