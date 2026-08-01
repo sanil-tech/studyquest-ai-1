@@ -3,6 +3,7 @@ import BlockRenderer from "../lesson/BlockRenderer";
 import { MascotGuide } from "./MascotGuide";
 import { MissionComplete } from "./MissionComplete";
 import { getOtanTip, getOtanDialogue, calculateAdventureReward } from "../../lib/adventureEngine";
+import { replaceStudentVariables } from "@/lib/personalize";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 
 /**
@@ -91,7 +92,7 @@ export function MissionStage({
             {mission.icon || "🌟"} {stageName}
           </span>
           <span className="text-xs font-bold text-stone-300 hidden sm:inline">
-            {mission.title}
+            {replaceStudentVariables(mission.title || "", studentName)}
           </span>
         </div>
       </div>
@@ -115,7 +116,7 @@ export function MissionStage({
                   👑 Misi Kejuaraan Boss
                 </span>
                 <h2 className="text-lg font-black text-stone-100">
-                  {mission.title}
+                  {replaceStudentVariables(mission.title || "", studentName)}
                 </h2>
               </div>
               <span className="text-xs font-bold bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/30">

@@ -63,7 +63,15 @@ export const parseMarkdownToHTML = (text) => {
 function YouTubeLesson({ videoUrl, onCompleted, isCompleted, scriptText, searchQuery, studentName }) {
   const videoId = useMemo(() => {
     if (!videoUrl) return null;
-    const match = String(videoUrl).match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/i);
+    const str = String(videoUrl).trim();
+
+    // 1. Check direct 11-character video ID
+    if (/^[a-zA-Z0-9_-]{11}$/.test(str)) {
+      return str;
+    }
+
+    // 2. Check standard YouTube URL formats
+    const match = str.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/i);
     return (match && match[1].length === 11) ? match[1] : null;
   }, [videoUrl]);
 
@@ -409,10 +417,23 @@ export default function BlockRenderer({
 
     case "VIDEO_EMBED":
     case "VIDEO":
+    case "VIDEO_SCRIPT":
       {
-        const directVideoUrl = payload.youtube_url || payload.video_url || payload.media_url || payload.embed_url || payload.url || (payload.youtube_id ? `https://www.youtube.com/watch?v=${payload.youtube_id}` : null) || (payload.video_id ? `https://www.youtube.com/watch?v=${payload.video_id}` : null);
+        const directVideoUrl =
+          block.video_url ||
+          block.youtube_url ||
+          block.url ||
+          payload.youtube_url ||
+          payload.video_url ||
+          payload.media_url ||
+          payload.embed_url ||
+          payload.url ||
+          (payload.youtube_id ? `https://www.youtube.com/watch?v=${payload.youtube_id}` : null) ||
+          (payload.video_id ? `https://www.youtube.com/watch?v=${payload.video_id}` : null) ||
+          (typeof block.payload === "string" && block.payload.trim().startsWith("http") ? block.payload.trim() : null) ||
+          (typeof block.content_markdown === "string" && (block.content_markdown.includes("youtu") || block.content_markdown.startsWith("http")) ? block.content_markdown.trim() : null);
 
-        const videoScript = payload.video_script || payload.script || payload.voice_script || payload.description || payload.summary || payload.markdown || payload.text;
+        const videoScript = payload.video_script || payload.script || payload.voice_script || payload.description || payload.summary || payload.markdown || payload.text || block.content_markdown;
 
         return (
           <div className="space-y-4">

@@ -6,7 +6,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { getActiveStudentId } from "@/lib/rewardSystem";
 import { processReward } from "@/lib/rewardEngine";
-import { personalize } from "@/lib/personalize";
+import { personalize, resolveStudentName } from "@/lib/personalize";
+import { useAuth } from "@/lib/AuthContext";
 import {
   Leaf,
   Loader2,
@@ -123,7 +124,69 @@ export default function LessonPage() {
 
   const assessments = packageData?.assessments || [];
   const primaryAssessment = assessments[0] || null;
-  const studentName = packageData?.student_context?.display_name || "Pengembara";
+
+  // Resolve active student context & user info
+  const { user: currentUser } = useAuth();
+  const [activeStudentData, setActiveStudentData] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchActiveStudent = async () => {
+      let childObj = null;
+      try {
+        const cachedStr = localStorage.getItem("active_child");
+        if (cachedStr) childObj = JSON.parse(cachedStr);
+      } catch {}
+
+      const studentId = await getActiveStudentId(currentUser);
+      if (childObj && (childObj.id === studentId || childObj._id === studentId)) {
+        if (isMounted) setActiveStudentData(childObj);
+      } else if (studentId && studentId !== currentUser?.id) {
+        try {
+          const u = await base44.entities.User.get(studentId);
+          if (u && isMounted) setActiveStudentData(u);
+        } catch {
+          if (isMounted) setActiveStudentData(childObj || currentUser);
+        }
+      } else if (childObj) {
+        if (isMounted) setActiveStudentData(childObj);
+      } else {
+        if (isMounted) setActiveStudentData(currentUser);
+      }
+    };
+
+    fetchActiveStudent();
+    return () => { isMounted = false; };
+  }, [currentUser]);
+
+  const studentData = useMemo(() => {
+    let cachedChild = null;
+    try {
+      const cachedStr = localStorage.getItem("active_child");
+      if (cachedStr) cachedChild = JSON.parse(cachedStr);
+    } catch {}
+    return activeStudentData || cachedChild || packageData?.student_context || currentUser;
+  }, [activeStudentData, packageData, currentUser]);
+
+  const studentNickname = useMemo(() => {
+    return studentData?.nickname || studentData?.display_name || null;
+  }, [studentData]);
+
+  const personalizedName = useMemo(() => {
+    return resolveStudentName(studentData, currentUser);
+  }, [studentData, currentUser]);
+
+  // Audit console log as requested
+  useEffect(() => {
+    console.log({
+      studentData,
+      studentNickname,
+      currentUser,
+      personalizedName
+    });
+  }, [studentData, studentNickname, currentUser, personalizedName]);
+
+  const studentName = personalizedName;
 
   // Session duration calculator
   const getElapsedMinutes = useCallback(() => {
@@ -226,7 +289,7 @@ export default function LessonPage() {
       setIsSpeaking(false);
       return;
     }
-    const cleanText = bersihkanTeksUntukSuara(personalize(text, studentName));
+    const cleanText = bersihkanTeksUntukSuara(personalize(text, studentName, currentUser));
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = "ms-MY";
     utterance.rate = 0.9;

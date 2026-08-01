@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Lock, Star, Compass, Play, Flame, Sparkles, Trophy } from "lucide-react";
+import { replaceStudentVariables } from "@/lib/personalize";
 
 /**
  * AdventureMap Component
@@ -12,20 +13,22 @@ import { Lock, Star, Compass, Play, Flame, Sparkles, Trophy } from "lucide-react
  * @param {Object} props.progress - Progress stats (percent, completedCount, totalCount)
  * @param {Function} props.onSelectMission - Callback when student selects a mission node
  * @param {string} props.activeMissionId - Currently selected or active mission ID
+ * @param {string} props.studentName - Personalized student name
  */
 export function AdventureMap({
   adventure,
   progress = {},
   onSelectMission,
-  activeMissionId
+  activeMissionId,
+  studentName = "Pengembara"
 }) {
   if (!adventure || !Array.isArray(adventure.missions)) {
     return null;
   }
 
   const missions = adventure.missions;
-  const worldName = adventure.world?.name || adventure.worldName || "Dunia Matematik";
-  const adventureTitle = adventure.adventure?.title || adventure.adventureTitle || "Rumah Puluh Adventure";
+  const worldName = replaceStudentVariables(adventure.world?.name || adventure.worldName || "Dunia Matematik", studentName);
+  const adventureTitle = replaceStudentVariables(adventure.adventure?.title || adventure.adventureTitle || "Misi Adventure", studentName);
   const percent = progress.percent || 0;
 
   // Find active mission (selected or first unlocked & incomplete mission)
@@ -128,10 +131,10 @@ export function AdventureMap({
           <div className="space-y-1">
             <h2 className="text-xl sm:text-2xl font-black text-amber-100 flex items-center gap-2">
               <span>{getNodeIcon(activeMission.stage, activeMission.icon)}</span>
-              {activeMission.title}
+              {replaceStudentVariables(activeMission.title, studentName)}
             </h2>
             <p className="text-xs sm:text-sm text-stone-300 font-medium leading-relaxed">
-              {activeMission.description}
+              {replaceStudentVariables(activeMission.description, studentName)}
             </p>
           </div>
 
@@ -223,7 +226,7 @@ export function AdventureMap({
                         {mission.stage === "CHALLENGE" ? "🏰 Boss Quest" : `Misi ${index + 1}`}
                       </span>
                       <h4 className="text-sm font-black text-stone-100">
-                        {mission.title}
+                        {replaceStudentVariables(mission.title, studentName)}
                       </h4>
                     </div>
                   </div>

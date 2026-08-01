@@ -23,15 +23,54 @@ export default function QuizPage() {
         setLoading(true);
         setError(null);
 
-        const res = await base44.functions.invoke("getLearningPackage", {
-          assessment_id: targetAssessmentId
-        });
-
-        if (res.data?.success && isMounted) {
-          setPackageData(res.data);
-        } else if (isMounted) {
-          setError(res.data?.error || "Gagal memuatkan soalan ujian.");
+        let res = null;
+        try {
+          res = await base44.functions.invoke("getLearningPackage", {
+            assessment_id: targetAssessmentId
+          });
+        } catch (e1) {
+          try {
+            res = await base44.functions.invoke("getLearningPackage", {
+              topic_id: targetAssessmentId
+            });
+          } catch (e2) {
+            console.warn("getLearningPackage topic fallback failed:", e2);
+          }
         }
+
+        if (res?.data?.success && (res.data.assessments?.length || res.data.quiz?.length) && isMounted) {
+          setPackageData(res.data);
+          return;
+        }
+
+        // Direct Entity Fallback if function invoke yielded no assessment
+        try {
+          const quizList = await base44.entities.Quiz.filter({ id: targetAssessmentId }).catch(() => []);
+          if (quizList.length > 0 && isMounted) {
+            const q = quizList[0];
+            let questions = [];
+            if (typeof q.payload === "string") {
+              try { questions = JSON.parse(q.payload); } catch { questions = []; }
+            } else if (Array.isArray(q.payload?.questions)) {
+              questions = q.payload.questions;
+            } else if (Array.isArray(q.questions)) {
+              questions = q.questions;
+            }
+            setPackageData({
+              success: true,
+              assessments: [{
+                id: q.id,
+                title: q.title || "Ujian Minda",
+                questions: questions
+              }]
+            });
+            return;
+          }
+        } catch (e3) {
+          console.warn("Direct Quiz fetch error:", e3);
+        }
+
+        if (isMounted) setError("Gagal memuatkan soalan ujian.");
       } catch (err) {
         if (isMounted) setError("Ralat rangkaian semasa memuatkan ujian.");
       } finally {
@@ -49,7 +88,13 @@ export default function QuizPage() {
     return () => { isMounted = false; };
   }, [targetAssessmentId]);
 
-  const activeAssessment = packageData?.assessments?.[0] || null;
+  const activeAssessment = packageData?.assessments?.[0] || (
+    packageData?.quiz?.length ? {
+      id: targetAssessmentId,
+      title: packageData?.lesson_title || "Penilaian Minda",
+      questions: packageData.quiz
+    } : null
+  );
   const studentName = packageData?.student_context?.display_name || "Pengembara";
 
   if (loading) {

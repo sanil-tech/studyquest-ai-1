@@ -43,8 +43,8 @@ export function LessonAdventure({
 
   // Transform content blocks into structured Adventure object
   const adventure = useMemo(() => {
-    return transformBlocksToMissions(contentBlocks, packageData);
-  }, [contentBlocks, packageData]);
+    return transformBlocksToMissions(contentBlocks, packageData, studentName);
+  }, [contentBlocks, packageData, studentName]);
 
   // Compute overall mission progress
   const progressStats = useMemo(() => {
@@ -136,6 +136,7 @@ export function LessonAdventure({
             <MascotGuide
               message={adventure.mascot?.greeting || `Hai Pengembara ${studentName}! Otan sedia bertualang bersama kamu!`}
               emotion={progressStats.isFullyMastered ? "proud" : "happy"}
+              studentName={studentName}
             />
 
             {/* Interactive Quest Map */}
@@ -147,6 +148,7 @@ export function LessonAdventure({
               progress={progressStats}
               onSelectMission={handleSelectMission}
               activeMissionId={activeMission?.id}
+              studentName={studentName}
             />
           </motion.div>
         ) : (

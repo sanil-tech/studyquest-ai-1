@@ -1,4 +1,6 @@
 // src/lib/adventureEngine.js
+import { replaceStudentVariables } from "./personalize";
+
 /**
  * StudyQuest Learning Adventure Engine
  * 
@@ -21,6 +23,8 @@ const STAGE_MAPPINGS = {
   VIDEO: { stage: "DISCOVER", icon: "🎬", defaultTitle: "Tonton & Elusif" },
   video_embed: { stage: "DISCOVER", icon: "🎬", defaultTitle: "Tonton & Elusif" },
   video: { stage: "DISCOVER", icon: "🎬", defaultTitle: "Tonton & Elusif" },
+  VIDEO_SCRIPT: { stage: "DISCOVER", icon: "🎬", defaultTitle: "Tonton & Elusif" },
+  video_script: { stage: "DISCOVER", icon: "🎬", defaultTitle: "Tonton & Elusif" },
 
   INFOGRAPHIC: { stage: "DISCOVER", icon: "🎨", defaultTitle: "Peta Visual" },
   IMAGE: { stage: "DISCOVER", icon: "🖼️", defaultTitle: "Peta Visual" },
@@ -43,9 +47,15 @@ const STAGE_MAPPINGS = {
   INTERACTIVE_GAME: { stage: "INTERACT", icon: "🎮", defaultTitle: "Cabaran Permainan" },
   GAME: { stage: "INTERACT", icon: "🎮", defaultTitle: "Cabaran Permainan" },
   ACTIVITY: { stage: "INTERACT", icon: "⚡", defaultTitle: "Aktiviti Pembelajaran" },
+  ACTIVITIES: { stage: "INTERACT", icon: "⚡", defaultTitle: "Aktiviti Pembelajaran" },
   interactive_game: { stage: "INTERACT", icon: "🎮", defaultTitle: "Cabaran Permainan" },
   game: { stage: "INTERACT", icon: "🎮", defaultTitle: "Cabaran Permainan" },
   activity: { stage: "INTERACT", icon: "⚡", defaultTitle: "Aktiviti Pembelajaran" },
+  activities: { stage: "INTERACT", icon: "⚡", defaultTitle: "Aktiviti Pembelajaran" },
+  INTERACTIVE: { stage: "INTERACT", icon: "🎮", defaultTitle: "Aktiviti Interaktif" },
+  interactive: { stage: "INTERACT", icon: "🎮", defaultTitle: "Aktiviti Interaktif" },
+  LESSON_ACTIVITY: { stage: "INTERACT", icon: "⚡", defaultTitle: "Aktiviti Pembelajaran" },
+  lesson_activity: { stage: "INTERACT", icon: "⚡", defaultTitle: "Aktiviti Pembelajaran" },
 
   INTERACTIVE_PLACE_VALUE: { stage: "INTERACT", icon: "🎮", defaultTitle: "Aktiviti Nilai Tempat" },
   interactive_place_value: { stage: "INTERACT", icon: "🎮", defaultTitle: "Aktiviti Nilai Tempat" },
@@ -61,6 +71,10 @@ const STAGE_MAPPINGS = {
 
   WORKSHEET: { stage: "PRACTICE", icon: "📑", defaultTitle: "Lembaran Kerja Pengembara" },
   worksheet: { stage: "PRACTICE", icon: "📑", defaultTitle: "Lembaran Kerja Pengembara" },
+  PRACTICE: { stage: "PRACTICE", icon: "📑", defaultTitle: "Latihan Pengukuhan" },
+  practice: { stage: "PRACTICE", icon: "📑", defaultTitle: "Latihan Pengukuhan" },
+  EXERCISE: { stage: "PRACTICE", icon: "📑", defaultTitle: "Latihan Pengukuhan" },
+  exercise: { stage: "PRACTICE", icon: "📑", defaultTitle: "Latihan Pengukuhan" },
 
   QUIZ: { stage: "CHALLENGE", icon: "👑", defaultTitle: "Cabaran Boss Utama" },
   quiz: { stage: "CHALLENGE", icon: "👑", defaultTitle: "Cabaran Boss Utama" }
@@ -71,13 +85,15 @@ const STAGE_MAPPINGS = {
  * 
  * @param {Array} contentBlocks - Array of block items from getLearningPackage
  * @param {Object} packageData - Full package object from getLearningPackage
+ * @param {string} studentName - Current personalized student name
  * @returns {Object} Structured Adventure object with world, mascot, and missions
  */
-export function transformBlocksToMissions(contentBlocks = [], packageData = {}) {
-  const subjectDisplay = packageData?.subject_display || packageData?.subject || "Pembelajaran";
-  const lessonTitle = packageData?.lesson_title || "Misi Utama";
-  const topicName = packageData?.topic || lessonTitle;
-  const description = packageData?.lesson_description || `Kembara interaktif bagi menguasai ${topicName}.`;
+export function transformBlocksToMissions(contentBlocks = [], packageData = {}, studentName = "Pengembara") {
+  const subjectDisplay = replaceStudentVariables(packageData?.subject_display || packageData?.subject || "Pembelajaran", studentName);
+  const lessonTitle = replaceStudentVariables(packageData?.lesson_title || "Misi Utama", studentName);
+  const topicName = replaceStudentVariables(packageData?.topic || lessonTitle, studentName);
+  const rawDescription = packageData?.lesson_description || `Kembara interaktif bagi menguasai ${topicName}.`;
+  const description = replaceStudentVariables(rawDescription, studentName);
 
   const worldName = `Dunia ${subjectDisplay}`;
   
@@ -86,32 +102,111 @@ export function transformBlocksToMissions(contentBlocks = [], packageData = {}) 
     avatar: "🦧",
     role: "Rakan Pengembaraan Pengembara",
     personality: "Mesra, Ceria, Suka Membantu, Memberi Galakan",
-    greeting: `Hai Pengembara! Otan jumpa misi baru untuk kamu di ${worldName}!`
+    greeting: replaceStudentVariables(`Hai ${studentName}! Otan jumpa misi baru untuk kamu di ${worldName}!`, studentName)
   };
+
+  // 1. Gather all potential blocks
+  const rawBlocks = [...(Array.isArray(contentBlocks) ? contentBlocks : [])];
+
+  // Fold packageData.activities / packageData.activity into blocks if missing
+  if (packageData?.activities && Array.isArray(packageData.activities) && packageData.activities.length > 0) {
+    packageData.activities.forEach((act, idx) => {
+      const exists = rawBlocks.some(b => b.id === act.id || String(b.block_type).toUpperCase().includes("ACTIVIT"));
+      if (!exists) {
+        rawBlocks.push({
+          id: act.id || `activity-${idx + 1}`,
+          block_type: "ACTIVITY",
+          title: act.title || "Aktiviti Pembelajaran Interaktif",
+          payload: act
+        });
+      }
+    });
+  } else if (packageData?.activity && typeof packageData.activity === "object") {
+    const act = packageData.activity;
+    const exists = rawBlocks.some(b => b.id === act.id || String(b.block_type).toUpperCase().includes("ACTIVIT"));
+    if (!exists) {
+      rawBlocks.push({
+        id: act.id || `activity-1`,
+        block_type: "ACTIVITY",
+        title: act.title || "Aktiviti Pembelajaran Interaktif",
+        payload: act
+      });
+    }
+  }
+
+  // 2. Deduplicate VIDEO_SCRIPT / VIDEO blocks & attach fallback packageData.video_url
+  const fallbackVideoUrl = packageData?.video_url || packageData?.youtube_url || null;
+  const processedBlocks = [];
+  let existingVideoBlock = null;
+
+  rawBlocks.forEach((block) => {
+    const typeUpper = (block.block_type || "").toUpperCase();
+
+    if (typeUpper === "VIDEO" || typeUpper === "VIDEO_EMBED") {
+      const bPayload = typeof block.payload === "string"
+        ? (() => { try { return JSON.parse(block.payload); } catch { return { text: block.payload }; } })()
+        : (block.payload || {});
+
+      // Ensure video_url is present
+      if (!block.video_url && !bPayload.video_url && !bPayload.youtube_url && fallbackVideoUrl) {
+        bPayload.video_url = fallbackVideoUrl;
+      }
+
+      existingVideoBlock = {
+        ...block,
+        video_url: block.video_url || bPayload.video_url || fallbackVideoUrl,
+        payload: bPayload
+      };
+      processedBlocks.push(existingVideoBlock);
+    } else if (typeUpper === "VIDEO_SCRIPT" || typeUpper === "SCRIPT") {
+      // If a video block already exists, merge the script into it and avoid duplicate mission!
+      if (existingVideoBlock) {
+        const scriptText = block.content_markdown || (typeof block.payload === "object" ? (block.payload.script || block.payload.video_script || block.payload.text) : block.payload);
+        if (scriptText) {
+          existingVideoBlock.payload.video_script = scriptText;
+        }
+      } else {
+        // Standalone VIDEO_SCRIPT converted to a single VIDEO_EMBED block
+        const bPayload = typeof block.payload === "object" ? { ...block.payload } : { video_script: block.payload || block.content_markdown };
+        if (fallbackVideoUrl) bPayload.video_url = fallbackVideoUrl;
+        processedBlocks.push({
+          ...block,
+          block_type: "VIDEO_EMBED",
+          title: block.title || "Taklimat Video",
+          video_url: fallbackVideoUrl,
+          payload: bPayload
+        });
+      }
+    } else {
+      processedBlocks.push(block);
+    }
+  });
 
   const missions = [];
   let missionCounter = 1;
 
   // Process content blocks into missions
-  if (Array.isArray(contentBlocks) && contentBlocks.length > 0) {
-    contentBlocks.forEach((block) => {
+  if (processedBlocks.length > 0) {
+    processedBlocks.forEach((block) => {
       const typeInfo = STAGE_MAPPINGS[block.block_type] || {
         stage: "DISCOVER",
         icon: "🌟",
         defaultTitle: "Misi Modul"
       };
 
-      const missionTitle = block.title || typeInfo.defaultTitle;
+      const rawTitle = block.title || typeInfo.defaultTitle;
+      const cleanTitle = replaceStudentVariables(rawTitle, studentName);
+      const missionTitle = `Misi ${missionCounter}: ${cleanTitle}`;
       const xp = getXpRewardForStage(typeInfo.stage);
       const coins = getCoinsRewardForStage(typeInfo.stage);
 
       missions.push({
         id: `mission-${missionCounter}`,
         number: missionCounter,
-        title: `Misi ${missionCounter}: ${missionTitle}`,
+        title: missionTitle,
         stage: typeInfo.stage,
         icon: typeInfo.icon,
-        description: getMissionDescription(typeInfo.stage, missionTitle),
+        description: replaceStudentVariables(getMissionDescription(typeInfo.stage, cleanTitle), studentName),
         status: missionCounter === 1 ? "active" : "locked",
         blocks: [block],
         quizItems: [],
@@ -137,10 +232,10 @@ export function transformBlocksToMissions(contentBlocks = [], packageData = {}) 
     missions.push({
       id: `mission-boss`,
       number: missionCounter,
-      title: `👑 Misi Boss: Ujian Kejuaraan ${topicName}`,
+      title: replaceStudentVariables(`👑 Misi Boss: Ujian Kejuaraan ${topicName}`, studentName),
       stage: "CHALLENGE",
       icon: "👑",
-      description: "Buktikan penguasaan topik ini untuk menewaskan cabaran boss dan mendapat ganjaran kejuaraan!",
+      description: replaceStudentVariables("Buktikan penguasaan topik ini untuk menewaskan cabaran boss dan mendapat ganjaran kejuaraan!", studentName),
       status: isOnlyMission ? "active" : "locked",
       blocks: [],
       quizItems: quizItems,
@@ -162,10 +257,10 @@ export function transformBlocksToMissions(contentBlocks = [], packageData = {}) 
     missions.push({
       id: `mission-1`,
       number: 1,
-      title: `Misi 1: Modul Kembara ${lessonTitle}`,
+      title: replaceStudentVariables(`Misi 1: Modul Kembara ${lessonTitle}`, studentName),
       stage: "DISCOVER",
       icon: "🌟",
-      description: "Mulai perjalanan kembara untuk menguasai topik ini.",
+      description: replaceStudentVariables("Mulai perjalanan kembara untuk menguasai topik ini.", studentName),
       status: "active",
       blocks: [],
       quizItems: [],
