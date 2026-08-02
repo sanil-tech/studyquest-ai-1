@@ -41,6 +41,11 @@ export default function AdminContentStudio() {
   const [loadingCompleteness, setLoadingCompleteness] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishResult, setPublishResult] = useState(null);
+  
+  // Preview Approval Workflow States
+  const [previewChecklist, setPreviewChecklist] = useState({ content: false, interactive: false, reward: false });
+  const [previewApproved, setPreviewApproved] = useState(false);
+  const [approvingPreview, setApprovingPreview] = useState(false);
 
   // Curriculum State (Phase 1 & 4)
   const [subject, setSubject] = useState("Matematik");
@@ -168,7 +173,29 @@ export default function AdminContentStudio() {
     }
   };
 
-  // Step 6: Publish with Quality Shield
+  // Step 6: Preview and Publish Workflow
+  const handlePreview = () => {
+    window.open(`/lesson/preview/preview?preview=true&lesson_version_id=${selectedVersion}`, "_blank");
+  };
+
+  const handleApprovePreview = async () => {
+    setApprovingPreview(true);
+    try {
+      const res = await base44.functions.invoke("approveLessonPreview", {
+        lesson_version_id: selectedVersion,
+        preview_status: "APPROVED",
+        preview_checklist_completed: true
+      });
+      if (res.data?.success) {
+        setPreviewApproved(true);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setApprovingPreview(false);
+    }
+  };
+
   const handlePublish = async () => {
     setPublishing(true);
     setPublishResult(null);
@@ -653,10 +680,47 @@ export default function AdminContentStudio() {
                   Modul yang diterbitkan akan terus muncul dalam Dashboard Pembelajaran Murid. Perisai Kualiti AI akan memastikan skor kualiti mencapai sekurang-kurangnya 80% sebelum menerbit.
                 </p>
 
+                <div className="bg-stone-950 p-4 rounded-2xl border border-stone-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-stone-300">Pratonton Pelajar (Wajib)</span>
+                    <button
+                      onClick={handlePreview}
+                      disabled={qualityReport?.quality_score < 80}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-black text-[10px] rounded-xl flex items-center gap-1.5 transition-all"
+                    >
+                      <Eye className="w-3.5 h-3.5" /> Buka Pratonton
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-xs font-bold text-stone-400">
+                      <input type="checkbox" checked={previewChecklist.content} onChange={e => setPreviewChecklist(p => ({...p, content: e.target.checked}))} className="rounded text-amber-500" />
+                      Semua blok kandungan dan arahan jelas
+                    </label>
+                    <label className="flex items-center gap-2 text-xs font-bold text-stone-400">
+                      <input type="checkbox" checked={previewChecklist.interactive} onChange={e => setPreviewChecklist(p => ({...p, interactive: e.target.checked}))} className="rounded text-amber-500" />
+                      Aktiviti interaktif (kuiz, dll) berfungsi dengan baik
+                    </label>
+                    <label className="flex items-center gap-2 text-xs font-bold text-stone-400">
+                      <input type="checkbox" checked={previewChecklist.reward} onChange={e => setPreviewChecklist(p => ({...p, reward: e.target.checked}))} className="rounded text-amber-500" />
+                      Format mematuhi standard DSKP KPM
+                    </label>
+                  </div>
+
+                  <button
+                    onClick={handleApprovePreview}
+                    disabled={approvingPreview || previewApproved || !previewChecklist.content || !previewChecklist.interactive || !previewChecklist.reward}
+                    className="w-full h-10 bg-emerald-600 hover:bg-emerald-500 disabled:bg-stone-800 text-white disabled:text-stone-500 font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all"
+                  >
+                    {approvingPreview ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    {previewApproved ? "Pratonton Telah Diluluskan ✅" : "Luluskan Pratonton Ini"}
+                  </button>
+                </div>
+
                 <button
                   onClick={handlePublish}
-                  disabled={publishing}
-                  className="w-full sm:w-auto h-12 px-8 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs rounded-xl border-b-4 border-emerald-700 active:translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                  disabled={publishing || !previewApproved}
+                  className="w-full sm:w-auto h-12 px-8 bg-amber-500 hover:bg-amber-400 disabled:bg-stone-800 text-stone-950 disabled:text-stone-500 font-black text-xs rounded-xl border-b-4 disabled:border-b-0 border-amber-700 active:translate-y-0.5 transition-all flex items-center justify-center gap-2"
                 >
                   {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   <span>Terbitkan Modul DSKP Kepada Murid</span>

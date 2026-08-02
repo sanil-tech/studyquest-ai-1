@@ -3,7 +3,7 @@
 // Phase 1-4 Upgrades: Progress journey bar (🐢 Misi X/Y · Z%), DSKP phase badges, Suku Mascot encouragement bubbles 🐢, sequential block unlocking ("Teruskan Misi ➡️"), and Mission Completion Celebration.
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { getActiveStudentId } from "@/lib/rewardSystem";
 import { processReward } from "@/lib/rewardEngine";
@@ -45,6 +45,10 @@ const WORLD_THEMES = {
 export default function LessonPage() {
   const { subjectId, topicId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const isPreviewMode = searchParams.get("preview") === "true";
+  const previewVersionId = searchParams.get("lesson_version_id") || searchParams.get("versionId");
 
   const [packageData, setPackageData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -94,7 +98,9 @@ export default function LessonPage() {
         setLoading(true);
         const res = await base44.functions.invoke("getLearningPackage", {
           topic_id: topicId,
-          subject_id: subjectId
+          subject_id: subjectId,
+          preview: isPreviewMode,
+          lesson_version_id: previewVersionId
         });
 
         if (res.data?.success && isMounted) {
@@ -175,24 +181,27 @@ export default function LessonPage() {
 
     const nextCompleted = Array.from(new Set([...completedBlockIds, blockId]));
     setCompletedBlockIds(nextCompleted);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(nextCompleted));
-    } catch {}
+    
+    if (!isPreviewMode) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(nextCompleted));
+      } catch {}
 
-    setProgressState((prev) => ({
-      ...prev,
-      xp_earned: prev.xp_earned + 25
-    }));
+      setProgressState((prev) => ({
+        ...prev,
+        xp_earned: prev.xp_earned + 25
+      }));
 
-    const studentId = await getActiveStudentId();
-    if (studentId) {
-      await processReward(studentId, {
-        activityType: "lesson_complete",
-        referenceId: `${topicId}_${blockId}`,
-        referenceName: `${packageData?.lesson?.title || "Misi"} - Block ${blockId}`,
-        subjectName: packageData?.curriculum_context?.subject_name,
-        reason: "Misi Kembara Selesai"
-      }).catch(() => {});
+      const studentId = await getActiveStudentId();
+      if (studentId) {
+        await processReward(studentId, {
+          activityType: "lesson_complete",
+          referenceId: `${topicId}_${blockId}`,
+          referenceName: `${packageData?.lesson?.title || "Misi"} - Block ${blockId}`,
+          subjectName: packageData?.curriculum_context?.subject_name,
+          reason: "Misi Kembara Selesai"
+        }).catch(() => {});
+      }
     }
 
     triggerConfetti();
@@ -229,6 +238,17 @@ export default function LessonPage() {
   return (
     <div className={`min-h-screen ${worldTheme.bgGradient} font-sans text-stone-100 pb-24 px-4 py-6 text-left`}>
       <div className="max-w-4xl mx-auto space-y-5">
+      
+        {isPreviewMode && (
+          <div className="bg-amber-500 text-stone-950 px-4 py-2.5 rounded-2xl font-black text-xs flex items-center justify-between shadow-lg mb-4 border border-amber-400">
+            <span className="flex items-center gap-2">
+              <span>👁</span> <strong>MOD PRATONTON ADMIN:</strong> Pelajaran belum diterbitkan. Simpanan kemajuan & ganjaran dinyahaktifkan.
+            </span>
+            <span className="bg-stone-950 text-amber-300 px-2 py-0.5 rounded-lg text-[10px] uppercase">
+              Mod Pratonton
+            </span>
+          </div>
+        )}
 
         {/* TOP HUD BAR */}
         <div className="bg-stone-900/90 border-2 border-stone-700/80 rounded-3xl p-4 shadow-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 backdrop-blur-md">
