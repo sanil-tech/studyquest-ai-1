@@ -76,6 +76,21 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoadingAuth(true);
       
+      if (appParams.token) {
+        try {
+          const currentUser = await base44.auth.me();
+          if (currentUser) {
+            setUser(currentUser);
+            setIsAuthenticated(true);
+            setIsLoadingAuth(false);
+            setAuthChecked(true);
+            return;
+          }
+        } catch (meError) {
+          console.warn('base44.auth.me() check failed:', meError);
+        }
+      }
+
       const sessionData = localStorage.getItem('studyquest_session');
       const storedUser = localStorage.getItem('studyquest_user');
       
@@ -107,23 +122,8 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem('studyquest_user');
         }
       }
-      
-      if (appParams.token) {
-        try {
-          const currentUser = await base44.auth.me();
-          if (currentUser) {
-            setUser(currentUser);
-            setIsAuthenticated(true);
-          } else {
-            setIsAuthenticated(false);
-          }
-        } catch (meError) {
-          console.warn('base44.auth.me() check failed:', meError);
-          setIsAuthenticated(false);
-        }
-      } else {
-        setIsAuthenticated(false);
-      }
+
+      setIsAuthenticated(false);
       
       setIsLoadingAuth(false);
       setAuthChecked(true);

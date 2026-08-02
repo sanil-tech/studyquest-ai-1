@@ -21,16 +21,18 @@ export default function Home() {
     );
   }
 
+  const userRole = user?.app_role || user?.role;
+
   // Admin — go to Admin Dashboard
-  if (user?.role === "admin" || user?.app_role === "admin") {
+  if (user?.role === "admin" || user?.app_role === "admin" || user?.is_admin) {
     return <Navigate to="/admin" replace />;
   }
 
   // No role set — go to RoleSetup
-  if (!user?.app_role || !["student", "parent"].includes(user.app_role)) {
+  if (!userRole || !["student", "parent", "pelajar"].includes(userRole)) {
     return <Navigate to="/role-setup" replace />;
   }
 
   // Redirect based on role
-  return <Navigate to={user.app_role === "parent" ? "/parent" : "/dashboard"} replace />;
+  return <Navigate to={userRole === "parent" ? "/parent" : "/dashboard"} replace />;
 }

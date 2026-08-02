@@ -653,7 +653,8 @@ export default function AdminContentStudio() {
                       handleEvaluateQuality();
                       setActiveStep(5);
                     }}
-                    className="h-10 px-6 bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs rounded-xl border-b-2 border-amber-600 flex items-center gap-1.5"
+                    disabled={blocks.length === 0}
+                    className="h-10 px-6 bg-amber-400 hover:bg-amber-300 disabled:bg-stone-800 disabled:text-stone-500 text-stone-950 font-black text-xs rounded-xl border-b-2 border-amber-600 disabled:border-stone-800 flex items-center gap-1.5"
                   >
                     <span>Seterusnya: Audit Kualiti AI</span> <ChevronRight className="w-4 h-4" />
                   </button>

@@ -40,7 +40,7 @@ export default function AppLayout() {
       .catch(() => {});
   }, [user, location]);
 
-  const isParent = user?.app_role === "parent";
+  const isParent = (user?.app_role || user?.role) === "parent";
 
   // Core fix: mode is driven by the ViewModeContext, not stale localStorage flags
   const isChildMode = activeViewMode === "child_mode" && !!selectedChildProfile;

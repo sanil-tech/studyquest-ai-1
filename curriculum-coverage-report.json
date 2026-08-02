@@ -1,0 +1,14 @@
+{
+  "frameworks_audited": ["KSSR_SEMAKAN", "KSSM"],
+  "total_sk_count": 7,
+  "total_sp_count": 7,
+  "sp_breakdown": {
+    "KSSR_SEMAKAN": 5,
+    "KSSM": 2
+  },
+  "current_lesson_coverage": {
+    "covered_sp": 3,
+    "missing_sp": 4,
+    "coverage_percentage": 42.85
+  }
+}

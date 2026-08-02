@@ -23,7 +23,7 @@ export default function RoleSetup() {
     setSaving(true);
     try {
       const u = await base44.auth.me();
-      await base44.auth.updateMe({ app_role: selectedRole });
+      await base44.auth.updateMe({ app_role: selectedRole, role: selectedRole });
 
       if (selectedRole === "student") {
         const wallets = await base44.entities.Wallet.filter({ student_id: u.id });

@@ -1,0 +1,24 @@
+{
+  "audit_timestamp": "2026-08-02T23:45:00Z",
+  "summary": {
+    "total_lessons": 13,
+    "draft_lessons": 9,
+    "approved_lessons": 2,
+    "published_lessons": 4,
+    "student_accessible_lessons": 4,
+    "missing_sp_coverage": 4
+  },
+  "published_sp_list": ["1.4.1", "1.4.2", "2.1.1", "1.5.1"],
+  "golden_path_verification": {
+    "sp_code": "1.5.1",
+    "status": "VERIFIED_PASSED",
+    "steps_verified": [
+      "admin_generate",
+      "approve_preview",
+      "publish_version",
+      "student_access",
+      "assessment_completion",
+      "mastery_update"
+    ]
+  }
+}

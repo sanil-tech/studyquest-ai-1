@@ -40,12 +40,21 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    // Clear any stale local student/demo session
+    localStorage.removeItem('studyquest_session');
+    localStorage.removeItem('studyquest_user');
+    localStorage.removeItem('active_child_session');
+    localStorage.removeItem('selected_child_id');
+    localStorage.removeItem('active_student_id');
+    localStorage.removeItem('active_child');
+
     try {
       await base44.auth.loginViaEmailPassword(email, password);
       const user = await base44.auth.me();
-      if (user?.app_role === "parent") {
+      const userRole = user?.app_role || user?.role;
+      if (userRole === "parent") {
         window.location.href = "/parent";
-      } else if (user?.app_role === "admin" || user?.role === "admin" || user?.is_admin) {
+      } else if (userRole === "admin" || user?.is_admin) {
         window.location.href = "/admin";
       } else {
         window.location.href = "/dashboard";

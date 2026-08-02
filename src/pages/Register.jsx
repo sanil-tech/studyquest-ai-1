@@ -263,7 +263,7 @@ export default function Register() {
     setError("");
     try {
       const u = await base44.auth.me();
-      await base44.auth.updateMe({ app_role: role });
+      await base44.auth.updateMe({ app_role: role, role: role });
 
       // Create wallet and progress for students
       if (role === "student") {
