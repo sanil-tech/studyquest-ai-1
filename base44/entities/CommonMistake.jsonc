@@ -43,10 +43,15 @@
       "type": "string",
       "description": "User ID of admin who approved this common mistake for publishing"
     },
-    "approved_at": {
+    "status": {
       "type": "string",
-      "format": "date-time",
-      "description": "When this common mistake was approved"
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default": "draft",
+      "description": "Common mistake lifecycle status"
     }
   },
   "required": [

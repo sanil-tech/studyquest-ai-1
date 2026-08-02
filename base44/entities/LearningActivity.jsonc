@@ -65,7 +65,8 @@
       "type": "string",
       "enum": [
         "draft",
-        "published"
+        "published",
+        "archived"
       ],
       "default": "draft",
       "description": "Activity lifecycle status"

@@ -79,31 +79,61 @@ Deno.serve(async (req) => {
       db.entities.RewardRule.filter({ is_active: true }).catch(() => []),
     ]);
 
-    // Resolve published LessonVersion
+    // SAFE LESSONVERSION RESOLUTION: ONLY allow published LessonVersions
     let publishedVersion: any = null;
     if (lesson.published_version_id) {
-      publishedVersion = await db.entities.LessonVersion.get(lesson.published_version_id).catch(() => null);
-    }
-    if (!publishedVersion && versions.length > 0) {
-      publishedVersion = versions.find((v: any) => v.status === "published" || v.workflow_status === "PUBLISHED") ||
-                         versions.sort((a: any, b: any) => (b.version_number || 0) - (a.version_number || 0))[0];
+      const v = await db.entities.LessonVersion.get(lesson.published_version_id).catch(() => null);
+      if (v && (v.status === "published" || v.review_status === "published")) {
+        publishedVersion = v;
+      }
     }
 
-    const versionId = publishedVersion?.id || null;
+    if (!publishedVersion && Array.isArray(versions) && versions.length > 0) {
+      const publishedOnly = versions.filter(
+        (v: any) => v.status === "published" || v.review_status === "published" || v.workflow_status === "PUBLISHED"
+      );
+      if (publishedOnly.length > 0) {
+        publishedVersion = publishedOnly.sort(
+          (a: any, b: any) => (b.version_number || 0) - (a.version_number || 0)
+        )[0];
+      }
+    }
+
+    if (!publishedVersion) {
+      return Response.json(
+        { success: false, error: "Tiada versi pelajaran yang diterbitkan." },
+        { status: 404, headers: resHeaders }
+      );
+    }
+
+    const versionId = publishedVersion.id;
 
     // ------------------------------------------------------------------
-    // 4. TIER 2 BATCH FETCH: Subject, SP Code, Blocks, Assessments, AIExplanations
+    // 4. TIER 2 BATCH FETCH: 7-Entity Published Content Parity
     // ------------------------------------------------------------------
     const subjectId = topic?.subject_id;
-    const [subject, learningStandard, blocks, assessments, explanations] = await Promise.all([
+    const [
+      subject,
+      learningStandard,
+      lessonContent,
+      lessonBlocks,
+      flashcards,
+      activities,
+      teacherGuides,
+      explanations,
+      commonMistakes,
+      assessments
+    ] = await Promise.all([
       subjectId ? db.entities.Subject.get(subjectId).catch(() => null) : null,
       topic?.learning_standard_id ? db.entities.LearningStandard.get(topic.learning_standard_id).catch(() => null) : null,
-      versionId ? Promise.all([
-        db.entities.LessonContent.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
-        db.entities.LessonBlock.filter({ lesson_version_id: versionId, status: "published" }).catch(() => [])
-      ]).then(([lc, lb]) => [...lc, ...lb]) : [],
+      db.entities.LessonContent.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
+      db.entities.LessonBlock.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
+      db.entities.Flashcard.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
+      db.entities.LearningActivity.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
+      db.entities.TeacherGuide.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
+      db.entities.AIExplanation.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
+      db.entities.CommonMistake.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
       db.entities.Assessment.filter({ lesson_id: lessonId, workflow_status: "PUBLISHED" }).catch(() => []),
-      versionId ? db.entities.AIExplanation.filter({ lesson_version_id: versionId }).catch(() => []) : [],
     ]);
 
     // Ensure target assessment is present if requested directly
@@ -118,7 +148,13 @@ Deno.serve(async (req) => {
     const assessmentIds = finalAssessments.map((a: any) => a.id);
     let questions: any[] = [];
     if (assessmentIds.length > 0) {
-      questions = await db.entities.QuestionBank.filter({ assessment_id: { $in: assessmentIds } }).catch(() => []);
+      const qByAsm = await db.entities.QuestionBank.filter({ assessment_id: { $in: assessmentIds } }).catch(() => []);
+      const qByVer = await db.entities.QuestionBank.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []);
+      const qMap = new Map();
+      [...qByAsm, ...qByVer].forEach((q: any) => { if (q && q.id) qMap.set(q.id, q); });
+      questions = Array.from(qMap.values());
+    } else {
+      questions = await db.entities.QuestionBank.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []);
     }
 
     const questionIds = questions.map((q: any) => q.question_id || q.id);
@@ -128,7 +164,7 @@ Deno.serve(async (req) => {
     }
 
     // ------------------------------------------------------------------
-    // 6. IN-MEMORY ASSEMBLY & SHIELDING
+    // 6. IN-MEMORY ASSEMBLY & SECURITY SHIELDING
     // ------------------------------------------------------------------
 
     // Group Options by question_id (SECURITY: Omit is_correct and correctness metadata)
@@ -148,11 +184,11 @@ Deno.serve(async (req) => {
       optionsMap[k].sort((a, b) => a.sort_order - b.sort_order);
     });
 
-    // Assemble Questions (SECURITY: Sanitized for client-side pre-quiz retrieval)
+    // Assemble Questions (SECURITY: Sanitized for client-side retrieval — NEVER expose correct_answer / is_correct)
     const assembledQuestionsMap: Record<string, any[]> = {};
     for (const q of questions) {
       const qKey = q.question_id || q.id;
-      const asmId = q.assessment_id;
+      const asmId = q.assessment_id || 'default_assessment';
       if (!assembledQuestionsMap[asmId]) assembledQuestionsMap[asmId] = [];
 
       // Fallback: parse options_json string if options table is empty
@@ -205,8 +241,11 @@ Deno.serve(async (req) => {
       questions: assembledQuestionsMap[a.id] || []
     }));
 
+    // Combine raw blocks & standalone entities into unified content_blocks array
+    const rawCombinedBlocks = [...(lessonContent || []), ...(lessonBlocks || [])];
+
     // Format & Parse LessonBlocks / LessonContent
-    const formattedBlocks = (blocks || [])
+    const formattedBlocks = rawCombinedBlocks
       .map((b: any) => {
         if (b.content_type) {
           let blockType = "TEXT_MARKDOWN";
@@ -238,7 +277,7 @@ Deno.serve(async (req) => {
               infoData = b.content_markdown;
             }
 
-            const imgUrl = infoData.image_url || infoData.media_url || b.media_url || lessonVersion?.infographic_url || lesson?.infographic_url || "";
+            const imgUrl = infoData.image_url || infoData.media_url || b.media_url || publishedVersion?.infographic_url || lesson?.infographic_url || "";
             const title = infoData.title || b.title || "Infografik Visual";
             const desc = infoData.short_description || infoData.summary || (typeof b.content_markdown === "string" ? b.content_markdown : "");
             const points = infoData.key_points || infoData.key_takeaways || [];
@@ -319,7 +358,7 @@ Deno.serve(async (req) => {
             summary: parsedPayload.summary || parsedPayload.markdown || b.content_markdown || ""
           };
         } else if (bType === "INFOGRAPHIC") {
-          const imgUrl = parsedPayload.image_url || parsedPayload.media_url || b.media_url || lessonVersion?.infographic_url || lesson?.infographic_url || "";
+          const imgUrl = parsedPayload.image_url || parsedPayload.media_url || b.media_url || publishedVersion?.infographic_url || lesson?.infographic_url || "";
           const title = parsedPayload.title || b.title || "Infografik Visual";
           const desc = parsedPayload.short_description || parsedPayload.summary || parsedPayload.markdown || "";
           const points = parsedPayload.key_points || parsedPayload.key_takeaways || [];
@@ -353,6 +392,112 @@ Deno.serve(async (req) => {
       })
       .sort((a: any, b: any) => (a.order_number || 0) - (b.order_number || 0));
 
+    // Append standalone Flashcard deck to formattedBlocks if present and not already added
+    if (Array.isArray(flashcards) && flashcards.length > 0) {
+      const hasFlashcardBlock = formattedBlocks.some((b: any) => b.block_type === "FLASHCARD_DECK" || b.block_type === "FLASHCARD");
+      if (!hasFlashcardBlock) {
+        formattedBlocks.push({
+          id: `flashcard-deck-${versionId}`,
+          block_type: "FLASHCARD_DECK",
+          title: "Kad Minda Memori",
+          order_number: 1.5,
+          payload: {
+            cards: flashcards.map((f: any) => ({
+              id: f.id,
+              front: f.front || f.front_text || "",
+              back: f.back || f.back_text || "",
+              explanation: f.explanation || ""
+            }))
+          }
+        });
+      }
+    }
+
+    // Append standalone LearningActivities to formattedBlocks if present
+    if (Array.isArray(activities) && activities.length > 0) {
+      activities.forEach((act: any, idx: number) => {
+        const hasActBlock = formattedBlocks.some((b: any) => b.id === act.id);
+        if (!hasActBlock) {
+          formattedBlocks.push({
+            id: act.id || `activity-${idx + 1}`,
+            block_type: "INTERACTIVE_GAME",
+            title: act.title || "Aktiviti Pembelajaran Interaktif",
+            order_number: 2.5 + idx * 0.1,
+            payload: {
+              activity_type: act.activity_type || "matching",
+              instructions: act.instructions || "",
+              activity_data: act.activity_data_json || "{}"
+            }
+          });
+        }
+      });
+    }
+
+    // Append TeacherGuide to formattedBlocks if present
+    if (Array.isArray(teacherGuides) && teacherGuides.length > 0) {
+      const tg = teacherGuides[0];
+      const hasTg = formattedBlocks.some((b: any) => b.block_type === "TEACHER_GUIDE");
+      if (!hasTg) {
+        formattedBlocks.push({
+          id: tg.id || `teacher-guide-${versionId}`,
+          block_type: "TEACHER_GUIDE",
+          title: "Panduan Pembelajaran Guru",
+          order_number: 0.5,
+          payload: {
+            learning_objective: tg.learning_objective || "",
+            teaching_strategy: tg.teaching_strategy || "",
+            success_criteria: tg.success_criteria || "",
+            suggested_activity: tg.suggested_activity || ""
+          }
+        });
+      }
+    }
+
+    // Append AIExplanations to formattedBlocks if present
+    if (Array.isArray(explanations) && explanations.length > 0) {
+      const hasExp = formattedBlocks.some((b: any) => b.block_type === "AI_EXPLANATION");
+      if (!hasExp) {
+        formattedBlocks.push({
+          id: `ai-explanations-${versionId}`,
+          block_type: "AI_EXPLANATION",
+          title: "Penerangan Pintar AI",
+          order_number: 0.8,
+          payload: {
+            explanations: explanations.map((e: any) => ({
+              concept: e.concept || "",
+              explanation: e.explanation || "",
+              example: e.example || "",
+              analogy: e.analogy || ""
+            }))
+          }
+        });
+      }
+    }
+
+    // Append CommonMistakes to formattedBlocks if present
+    if (Array.isArray(commonMistakes) && commonMistakes.length > 0) {
+      const hasCm = formattedBlocks.some((b: any) => b.block_type === "COMMON_MISTAKES");
+      if (!hasCm) {
+        formattedBlocks.push({
+          id: `common-mistakes-${versionId}`,
+          block_type: "COMMON_MISTAKES",
+          title: "Kesilapan Lazim",
+          order_number: 2.8,
+          payload: {
+            mistakes: commonMistakes.map((m: any) => ({
+              mistake: m.mistake || "",
+              correction: m.correction || "",
+              explanation: m.explanation || "",
+              recommended_activity: m.recommended_activity || ""
+            }))
+          }
+        });
+      }
+    }
+
+    // Sort final content blocks sequentially
+    formattedBlocks.sort((a: any, b: any) => (a.order_number || 0) - (b.order_number || 0));
+
     // Assemble Optional Student Context
     const activeProgress = progressList?.[0] || {};
     const activeWallet = walletList?.[0] || {};
@@ -383,7 +528,7 @@ Deno.serve(async (req) => {
     };
 
     // ------------------------------------------------------------------
-    // 7. FINAL LEARNING PACKAGE PAYLOAD CONTRACT
+    // 7. UNIFIED LEARNING PACKAGE PAYLOAD CONTRACT
     // ------------------------------------------------------------------
     return Response.json({
       success: true,
@@ -401,15 +546,25 @@ Deno.serve(async (req) => {
       lesson: {
         id: lessonId,
         title: lesson.title || topic?.name || 'Pelajaran',
-        status: lesson.content_status || 'published'
+        status: publishedVersion.status || 'published'
       },
       version: {
         id: versionId,
-        version_number: publishedVersion?.version_number || 1,
-        published_at: publishedVersion?.published_at || publishedVersion?.updated_at || new Date().toISOString()
+        version_number: publishedVersion.version_number || 1,
+        published_at: publishedVersion.published_at || publishedVersion.updated_at || new Date().toISOString()
       },
       content_blocks: formattedBlocks,
       assessments: assembledAssessments,
+      learning_entities: {
+        lesson_content: lessonContent,
+        blocks: lessonBlocks,
+        flashcards: flashcards,
+        questions: questions,
+        activities: activities,
+        teacher_guides: teacherGuides,
+        explanations: explanations,
+        common_mistakes: commonMistakes
+      },
       assessment_context: assessmentContext,
       student_context: studentContext,
       rewards: {

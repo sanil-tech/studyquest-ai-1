@@ -644,6 +644,52 @@ export default function BlockRenderer({
         );
       }
 
+    case "TEACHER_GUIDE":
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-indigo-400" /> {blockTitle || "Panduan Pembelajaran Guru"}
+            </h3>
+          </div>
+          <div className="p-5 bg-stone-900/90 border border-stone-800 rounded-2xl space-y-3 text-xs sm:text-sm font-semibold text-stone-200">
+            {payload.learning_objective && <p><strong>🎯 Objektif:</strong> {personalize(payload.learning_objective, studentName)}</p>}
+            {payload.teaching_strategy && <p><strong>💡 Strategi:</strong> {personalize(payload.teaching_strategy, studentName)}</p>}
+            {payload.success_criteria && <p><strong>✨ Kriteria Kejayaan:</strong> {personalize(payload.success_criteria, studentName)}</p>}
+            {payload.suggested_activity && <p><strong>🧩 Cadangan Aktiviti:</strong> {personalize(payload.suggested_activity, studentName)}</p>}
+          </div>
+          <Button onClick={onComplete} className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all">
+            {isCompleted ? "Panduan Selesai ✓" : "Selesai & Teruskan! 📚"}
+          </Button>
+        </div>
+      );
+
+    case "COMMON_MISTAKES":
+      {
+        const mistakesList = Array.isArray(payload.mistakes) ? payload.mistakes : [];
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <h3 className="text-base font-black text-rose-400 flex items-center gap-2">
+                <XCircle className="w-5 h-5 text-rose-400" /> {blockTitle || "Kesilapan Lazim & Pembetulan"}
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {mistakesList.map((m, idx) => (
+                <div key={idx} className="p-4 bg-stone-900/90 border border-rose-500/30 rounded-2xl space-y-2 text-xs sm:text-sm">
+                  <p className="text-rose-300 font-black">⚠️ Kesilapan: {personalize(m.mistake, studentName)}</p>
+                  <p className="text-emerald-300 font-bold">✅ Pembetulan: {personalize(m.correction, studentName)}</p>
+                  {m.explanation && <p className="text-stone-300 font-semibold">{personalize(m.explanation, studentName)}</p>}
+                </div>
+              ))}
+            </div>
+            <Button onClick={onComplete} className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all">
+              {isCompleted ? "Kesilapan Lazim Selesai ✓" : "Faham Kesilapan & Teruskan! ⚠️"}
+            </Button>
+          </div>
+        );
+      }
+
     case "INTERACTIVE_GAME":
     case "GAME":
     case "ACTIVITY":

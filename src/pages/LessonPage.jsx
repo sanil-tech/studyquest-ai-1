@@ -71,7 +71,16 @@ export default function LessonPage() {
     return localStorage.getItem("studyquest_learning_mode") || "adventure";
   });
 
-  const [completedBlockIds, setCompletedBlockIds] = useState([]);
+  const storageKey = useMemo(() => `studyquest_completed_blocks_${topicId || subjectId || 'default'}`, [topicId, subjectId]);
+
+  const [completedBlockIds, setCompletedBlockIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const [progressState, setProgressState] = useState({
     video_completed: false,
@@ -103,15 +112,6 @@ export default function LessonPage() {
         });
 
         if (res.data?.success && isMounted) {
-          console.log("[STUDYQUEST DATA FLOW AUDIT]", {
-            step: "1_getLearningPackage_response",
-            packageData: res.data,
-            student_context: res.data?.student_context,
-            content_blocks: res.data?.content_blocks,
-            video_url: res.data?.video_url,
-            assessments: res.data?.assessments,
-            activities: res.data?.activities || res.data?.activity
-          });
           setPackageData(res.data);
         }
       } catch (err) {
@@ -134,39 +134,8 @@ export default function LessonPage() {
   const assessments = packageData?.assessments || [];
   const primaryAssessment = assessments[0] || null;
 
-  // Resolve active student context & user info
+  // Resolve active student context directly from packageData / auth context (No redundant entity queries)
   const { user: currentUser } = useAuth();
-  const [activeStudentData, setActiveStudentData] = useState(null);
-
-  useEffect(() => {
-    let isMounted = true;
-    const fetchActiveStudent = async () => {
-      let childObj = null;
-      try {
-        const cachedStr = localStorage.getItem("active_child");
-        if (cachedStr) childObj = JSON.parse(cachedStr);
-      } catch {}
-
-      const studentId = await getActiveStudentId(currentUser);
-      if (childObj && (childObj.id === studentId || childObj._id === studentId)) {
-        if (isMounted) setActiveStudentData(childObj);
-      } else if (studentId && studentId !== currentUser?.id) {
-        try {
-          const u = await base44.entities.User.get(studentId);
-          if (u && isMounted) setActiveStudentData(u);
-        } catch {
-          if (isMounted) setActiveStudentData(childObj || currentUser);
-        }
-      } else if (childObj) {
-        if (isMounted) setActiveStudentData(childObj);
-      } else {
-        if (isMounted) setActiveStudentData(currentUser);
-      }
-    };
-
-    fetchActiveStudent();
-    return () => { isMounted = false; };
-  }, [currentUser]);
 
   const studentData = useMemo(() => {
     let cachedChild = null;
@@ -174,8 +143,8 @@ export default function LessonPage() {
       const cachedStr = localStorage.getItem("active_child");
       if (cachedStr) cachedChild = JSON.parse(cachedStr);
     } catch {}
-    return activeStudentData || cachedChild || packageData?.student_context || currentUser;
-  }, [activeStudentData, packageData, currentUser]);
+    return cachedChild || packageData?.student_context || currentUser;
+  }, [packageData, currentUser]);
 
   const studentNickname = useMemo(() => {
     return studentData?.nickname || studentData?.display_name || null;
@@ -250,7 +219,13 @@ export default function LessonPage() {
       return; // Already completed, prevent duplicate XP and reward process calls
     }
 
-    setCompletedBlockIds((prev) => Array.from(new Set([...prev, blockId])));
+    setCompletedBlockIds((prev) => {
+      const next = Array.from(new Set([...prev, blockId]));
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
 
     const typeKeyMap = {
       TEXT_MARKDOWN: "lesson",

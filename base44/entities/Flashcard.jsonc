@@ -65,10 +65,15 @@
       "type": "string",
       "description": "User ID of admin who approved this flashcard for publishing"
     },
-    "approved_at": {
+    "status": {
       "type": "string",
-      "format": "date-time",
-      "description": "When this flashcard was approved"
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default": "draft",
+      "description": "Flashcard lifecycle status"
     }
   },
   "required": [

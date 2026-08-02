@@ -63,10 +63,15 @@
       "type": "string",
       "description": "User ID of admin who approved this guide for publishing"
     },
-    "approved_at": {
+    "status": {
       "type": "string",
-      "format": "date-time",
-      "description": "When this guide was approved"
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default": "draft",
+      "description": "Teacher guide lifecycle status"
     }
   },
   "required": [

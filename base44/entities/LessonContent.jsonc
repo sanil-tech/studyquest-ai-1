@@ -51,7 +51,8 @@
       "type": "string",
       "enum": [
         "draft",
-        "published"
+        "published",
+        "archived"
       ],
       "default": "draft",
       "description": "Content lifecycle status"

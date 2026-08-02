@@ -34,6 +34,12 @@ const STAGE_MAPPINGS = {
   AI_EXPLANATION: { stage: "DISCOVER", icon: "🤖", defaultTitle: "Penerangan Pintar AI" },
   ai_explanation: { stage: "DISCOVER", icon: "🤖", defaultTitle: "Penerangan Pintar AI" },
 
+  TEACHER_GUIDE: { stage: "DISCOVER", icon: "📚", defaultTitle: "Panduan Pembelajaran" },
+  teacher_guide: { stage: "DISCOVER", icon: "📚", defaultTitle: "Panduan Pembelajaran" },
+
+  COMMON_MISTAKES: { stage: "INTERACT", icon: "⚠️", defaultTitle: "Kesilapan Lazim" },
+  common_mistakes: { stage: "INTERACT", icon: "⚠️", defaultTitle: "Kesilapan Lazim" },
+
   MINDMAP: { stage: "INTERACT", icon: "🧠", defaultTitle: "Peta Minda Interaktif" },
   MIND_MAP: { stage: "INTERACT", icon: "🧠", defaultTitle: "Peta Minda Interaktif" },
   mindmap: { stage: "INTERACT", icon: "🧠", defaultTitle: "Peta Minda Interaktif" },

@@ -1,5 +1,5 @@
 // base44/functions/publishLessonVersion/entry.ts
-// Validates lesson completeness and publishes a LessonVersion.
+// Validates lesson completeness using modular architecture and publishes a LessonVersion.
 // Students can ONLY access published LessonVersions.
 //
 // AI CONTENT SAFETY RULE:
@@ -8,11 +8,7 @@
 //   Example: v1 published → generate v2 draft → approve → publish v2 → v1 archived.
 
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
-
-// Minimum requirements for a complete lesson package
-const MIN_FLASHCARDS = 5;
-const MIN_QUESTIONS = 10;
-const MIN_ACTIVITIES = 1;
+import { evaluateLessonCompleteness } from "../../shared/lessonCompletenessEvaluator.ts";
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -36,68 +32,103 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ success: false, error: "lesson_version_id diperlukan." }, { status: 400 });
     }
 
-    // 2. Fetch LessonVersion
-    const lessonVersion = await base44.asServiceRole.entities.LessonVersion.get(lesson_version_id).catch(() => null);
-    if (!lessonVersion) {
-      return Response.json({ success: false, error: "LessonVersion tidak dijumpai." }, { status: 404 });
+    // 2. Evaluate completeness metrics and publishing readiness for target LessonVersion ONLY
+    const evaluation = await evaluateLessonCompleteness(base44, lesson_version_id);
+    const { lessonVersion, publishingReadiness, completionPercentage, checks, counts } = evaluation;
+    const lessonId = lessonVersion.lesson_id;
+
+    // 3. Validate publishing readiness (mandatory minimum requirements)
+    if (!publishingReadiness.isReadyToPublish) {
+      return Response.json(
+        {
+          success: false,
+          error: "Pakej pelajaran tidak lengkap.",
+          missing: publishingReadiness.missingRequirements,
+          counts: {
+            notes: counts.notes,
+            flashcards: counts.flashcards,
+            questions: counts.questions,
+            activities: counts.activities,
+            teacher_guide: counts.teacher_guide,
+          },
+        },
+        { status: 400 }
+      );
     }
 
-    // 3. Count all content types in parallel
-    const [lessonContent, flashcards, questions, activities, teacherGuides] = await Promise.all([
-      base44.asServiceRole.entities.LessonContent.filter({ lesson_version_id }),
-      base44.asServiceRole.entities.Flashcard.filter({ lesson_version_id }),
-      base44.asServiceRole.entities.QuestionBank.filter({ lesson_version_id }),
-      base44.asServiceRole.entities.LearningActivity.filter({ lesson_version_id }),
-      base44.asServiceRole.entities.TeacherGuide.filter({ lesson_version_id }),
-    ]);
-
-    // Check for published notes specifically
-    const hasNotes = lessonContent.some((c: any) => c.content_type === "notes");
-    const flashcardCount = flashcards.length;
-    const questionCount = questions.length;
-    const activityCount = activities.length;
-    const hasTeacherGuide = teacherGuides.length > 0;
-
-    // 4. Validate completeness
-    const missing: string[] = [];
-    if (!hasNotes) missing.push("Nota Pelajaran");
-    if (flashcardCount < MIN_FLASHCARDS) missing.push(`Flashcards (minimum ${MIN_FLASHCARDS}, kini ${flashcardCount})`);
-    if (questionCount < MIN_QUESTIONS) missing.push(`Soalan (minimum ${MIN_QUESTIONS}, kini ${questionCount})`);
-    if (activityCount < MIN_ACTIVITIES) missing.push(`Aktiviti (minimum ${MIN_ACTIVITIES}, kini ${activityCount})`);
-    if (!hasTeacherGuide) missing.push("Panduan Guru");
-
-    if (missing.length > 0) {
-      return Response.json({
-        success: false,
-        error: "Pakej pelajaran tidak lengkap.",
-        missing,
-        counts: { notes: hasNotes, flashcards: flashcardCount, questions: questionCount, activities: activityCount, teacher_guide: hasTeacherGuide },
-      }, { status: 400 });
-    }
-
-    // 5. Calculate completion percentage
-    // Notes 20% + Flashcards 20% + Questions 20% + Activity 20% + TeacherGuide 20%
-    const checks = {
-      notes: hasNotes,
-      flashcards: flashcardCount >= MIN_FLASHCARDS,
-      questions: questionCount >= MIN_QUESTIONS,
-      activities: activityCount >= MIN_ACTIVITIES,
-      teacher_guide: hasTeacherGuide,
+    // 4. LEGACY RECORD HANDLING:
+    //    Attach unassigned legacy content (where lesson_version_id is null/undefined, lesson_id matches, AND status is not published/archived)
+    //    NEVER touch or move existing published/archived records belonging to another version!
+    const legacyAttachedCounts: Record<string, number> = {
+      LessonContent: 0,
+      Flashcard: 0,
+      QuestionBank: 0,
+      LearningActivity: 0,
+      TeacherGuide: 0,
+      AIExplanation: 0,
+      CommonMistake: 0,
     };
-    const completedCount = Object.values(checks).filter(Boolean).length;
-    const completionPercentage = Math.round((completedCount / 5) * 100);
 
-    // 6. ARCHIVE any previously published version of this Lesson (Safety Rule)
+    const entityNames = [
+      "LessonContent",
+      "Flashcard",
+      "QuestionBank",
+      "LearningActivity",
+      "TeacherGuide",
+      "AIExplanation",
+      "CommonMistake",
+    ] as const;
+
+    for (const entityName of entityNames) {
+      try {
+        const unassignedRecords = await base44.asServiceRole.entities[entityName].filter({ lesson_id: lessonId });
+        const eligibleLegacy = unassignedRecords.filter(
+          (item: any) =>
+            !item.lesson_version_id &&
+            item.status !== "published" &&
+            item.status !== "archived"
+        );
+
+        if (eligibleLegacy.length > 0) {
+          await base44.asServiceRole.entities[entityName].bulkUpdate(
+            eligibleLegacy.map((item: any) => ({
+              id: item.id,
+              lesson_version_id,
+              status: "draft",
+            }))
+          );
+          legacyAttachedCounts[entityName] = eligibleLegacy.length;
+        }
+      } catch (err) {
+        console.error(`Legacy attach error for ${entityName}:`, err);
+      }
+    }
+
+    // 5. ARCHIVING PREVIOUS PUBLISHED VERSION (Safety Rule)
     //    AI content must never overwrite existing published content.
     //    The old published version is preserved as "archived"; the new version becomes published.
     const archivedAt = new Date().toISOString();
     const previousPublished = await base44.asServiceRole.entities.LessonVersion.filter({
-      lesson_id: lessonVersion.lesson_id,
+      lesson_id: lessonId,
       status: "published",
     });
     const toArchive = previousPublished.filter((v: any) => v.id !== lesson_version_id);
 
+    const archivedCounts: Record<string, number> = {
+      LessonVersion: toArchive.length,
+      LessonContent: 0,
+      Flashcard: 0,
+      QuestionBank: 0,
+      LearningActivity: 0,
+      TeacherGuide: 0,
+      AIExplanation: 0,
+      CommonMistake: 0,
+    };
+
     if (toArchive.length > 0) {
+      const archivedVersionIds = toArchive.map((v: any) => v.id);
+
+      // Archive previous LessonVersion records
       await base44.asServiceRole.entities.LessonVersion.bulkUpdate(
         toArchive.map((v: any) => ({
           id: v.id,
@@ -105,9 +136,29 @@ export default async function(req: Request): Promise<Response> {
           review_status: "archived",
         }))
       );
+
+      // Archive child content across ALL 7 learning entities for previously published versions
+      const archivedStatus = { status: "archived" as const };
+      for (const entityName of entityNames) {
+        try {
+          const recordsToArchive = await base44.asServiceRole.entities[entityName].filter({
+            lesson_version_id: { $in: archivedVersionIds },
+            status: "published",
+          });
+          if (recordsToArchive.length > 0) {
+            await base44.asServiceRole.entities[entityName].updateMany(
+              { lesson_version_id: { $in: archivedVersionIds }, status: "published" },
+              { $set: archivedStatus }
+            );
+            archivedCounts[entityName] = recordsToArchive.length;
+          }
+        } catch (err) {
+          console.error(`Archive child error for ${entityName}:`, err);
+        }
+      }
     }
 
-    // 7. Publish the new LessonVersion
+    // 6. PUBLISH THE NEW LESSONVERSION
     await base44.asServiceRole.entities.LessonVersion.update(lesson_version_id, {
       status: "published",
       review_status: "published",
@@ -117,68 +168,66 @@ export default async function(req: Request): Promise<Response> {
       last_reviewed_at: archivedAt,
     });
 
-    // 7b. Promote all content entities linked to this version from draft → published
-    //     This ensures students can ONLY access content that belongs to a published version.
-    const publishedStatus = { status: "published" as const };
-    await Promise.all([
-      base44.asServiceRole.entities.LessonContent.updateMany(
-        { lesson_version_id, status: "draft" },
-        { $set: publishedStatus }
-      ).catch((e: any) => console.error("LessonContent promote:", e)),
-      base44.asServiceRole.entities.Flashcard.updateMany(
-        { lesson_version_id, status: "draft" },
-        { $set: publishedStatus }
-      ).catch((e: any) => console.error("Flashcard promote:", e)),
-      base44.asServiceRole.entities.QuestionBank.updateMany(
-        { lesson_version_id, status: "draft" },
-        { $set: publishedStatus }
-      ).catch((e: any) => console.error("QuestionBank promote:", e)),
-      base44.asServiceRole.entities.LearningActivity.updateMany(
-        { lesson_version_id, status: "draft" },
-        { $set: publishedStatus }
-      ).catch((e: any) => console.error("LearningActivity promote:", e)),
-    ]);
+    // 7. PROMOTION: Draft → Published for ALL 7 Learning Entities
+    const promotedCounts: Record<string, number> = {
+      LessonContent: 0,
+      Flashcard: 0,
+      QuestionBank: 0,
+      LearningActivity: 0,
+      TeacherGuide: 0,
+      AIExplanation: 0,
+      CommonMistake: 0,
+    };
 
-    // 7c. Archive content from previously published versions (status: published → archived)
-    if (toArchive.length > 0) {
-      const archivedVersionIds = toArchive.map((v: any) => v.id);
-      const archivedStatus = { status: "archived" as const };
-      await Promise.all([
-        base44.asServiceRole.entities.LessonContent.updateMany(
-          { lesson_version_id: { $in: archivedVersionIds }, status: "published" },
-          { $set: archivedStatus }
-        ).catch((e: any) => console.error("LessonContent archive:", e)),
-        base44.asServiceRole.entities.Flashcard.updateMany(
-          { lesson_version_id: { $in: archivedVersionIds }, status: "published" },
-          { $set: archivedStatus }
-        ).catch((e: any) => console.error("Flashcard archive:", e)),
-        base44.asServiceRole.entities.QuestionBank.updateMany(
-          { lesson_version_id: { $in: archivedVersionIds }, status: "published" },
-          { $set: archivedStatus }
-        ).catch((e: any) => console.error("QuestionBank archive:", e)),
-        base44.asServiceRole.entities.LearningActivity.updateMany(
-          { lesson_version_id: { $in: archivedVersionIds }, status: "published" },
-          { $set: archivedStatus }
-        ).catch((e: any) => console.error("LearningActivity archive:", e)),
-      ]);
+    const publishedStatus = { status: "published" as const };
+    for (const entityName of entityNames) {
+      try {
+        const draftRecords = await base44.asServiceRole.entities[entityName].filter({
+          lesson_version_id,
+        });
+        const eligibleToPromote = draftRecords.filter((item: any) => item.status !== "published" && item.status !== "archived");
+
+        if (eligibleToPromote.length > 0) {
+          const promoteIds = eligibleToPromote.map((item: any) => item.id);
+          await base44.asServiceRole.entities[entityName].updateMany(
+            { id: { $in: promoteIds } },
+            { $set: publishedStatus }
+          );
+          promotedCounts[entityName] = eligibleToPromote.length;
+        }
+      } catch (err) {
+        console.error(`Promote error for ${entityName}:`, err);
+      }
     }
 
     // 8. Update parent Lesson pointer
-    await base44.asServiceRole.entities.Lesson.update(lessonVersion.lesson_id, {
+    await base44.asServiceRole.entities.Lesson.update(lessonId, {
       content_status: "published",
       published_version_id: lesson_version_id,
       published_version: lessonVersion.version_number,
       video_url: lessonVersion.video_url || "",
     });
 
+    // 9. Return structured response with defensive logging breakdown
     return Response.json({
       success: true,
       message: "LessonVersion berjaya diterbitkan!",
       lesson_version_id,
-      lesson_id: lessonVersion.lesson_id,
+      lesson_id: lessonId,
       completion_percentage: completionPercentage,
       published_at: archivedAt,
       archived_versions: toArchive.map((v: any) => v.id),
+      checks,
+      counts: {
+        notes: counts.notes,
+        flashcards: counts.flashcards,
+        questions: counts.questions,
+        activities: counts.activities,
+        teacher_guide: counts.teacher_guide,
+      },
+      promoted_counts: promotedCounts,
+      archived_counts: archivedCounts,
+      legacy_attached_counts: legacyAttachedCounts,
     });
   } catch (error: any) {
     console.error("publishLessonVersion error:", error);

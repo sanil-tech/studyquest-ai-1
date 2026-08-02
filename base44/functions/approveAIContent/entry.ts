@@ -165,6 +165,7 @@ export default async function(req: Request): Promise<Response> {
           back_text: fc.back || "",
           explanation: fc.explanation || "",
           sort_order: i,
+          status: "draft",
           ...commonFields,
         }))
       );
@@ -214,6 +215,7 @@ export default async function(req: Request): Promise<Response> {
         success_criteria: content.success_criteria || "",
         suggested_activity: content.suggested_activity || "",
         assessment_notes: content.assessment_notes || "",
+        status: "draft",
         ...commonFields,
       });
     } else if (content_type === "explanation") {
@@ -230,6 +232,7 @@ export default async function(req: Request): Promise<Response> {
           example: e.example || "",
           analogy: e.analogy || "",
           language: "ms",
+          status: "draft",
           ...commonFields,
         }))
       );
@@ -246,6 +249,7 @@ export default async function(req: Request): Promise<Response> {
           correction: m.correction || "",
           explanation: m.explanation || "",
           recommended_activity: m.recommended_activity || "",
+          status: "draft",
           ...commonFields,
         }))
       );
