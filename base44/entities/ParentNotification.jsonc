@@ -1,0 +1,87 @@
+{
+  "name": "ParentNotification",
+  "type": "object",
+  "description": "AI-generated notification messages for parent progress oversight",
+  "properties": {
+    "parent_id": {
+      "type": "string",
+      "description": "ID of the recipient parent user"
+    },
+    "student_id": {
+      "type": "string",
+      "description": "ID of the target child student"
+    },
+    "notification_type": {
+      "type": "string",
+      "enum": [
+        "mastery_growth",
+        "weakness_detected",
+        "mission_completed",
+        "streak_milestone",
+        "reward_request"
+      ],
+      "default": "mastery_growth",
+      "description": "Category of parent notification"
+    },
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "message": {
+      "type": "string",
+      "description": "Detailed notification message content"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium",
+      "description": "Urgency level of notification"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "unread",
+        "read"
+      ],
+      "default": "unread",
+      "description": "Read status"
+    },
+    "metadata_json": {
+      "type": "string",
+      "description": "Optional metadata payload JSON"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "parent_id",
+    "student_id",
+    "notification_type",
+    "title",
+    "message"
+  ],
+  "rls": {
+    "read": true,
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

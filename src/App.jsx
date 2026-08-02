@@ -58,13 +58,16 @@ const ParentRewards = React.lazy(() => import('@/pages/ParentRewards'));
 const ParentApprovals = React.lazy(() => import('@/pages/ParentApprovals'));
 const ParentProfilePage = React.lazy(() => import('@/pages/ParentProfilePage'));
 const ParentBilling = React.lazy(() => import('@/pages/ParentBilling'));
+const ParentTips = React.lazy(() => import('@/pages/ParentTips'));
 const ChildSelectionPage = React.lazy(() => import('@/pages/ChildSelectionPage'));
+
+// Lazy-loaded Teacher Pages
+const TeacherDashboard = React.lazy(() => import('@/pages/TeacherDashboard'));
 
 // Lazy-loaded Extra Pages
 const Leaderboard = React.lazy(() => import('@/pages/Leaderboard'));
 const Achievements = React.lazy(() => import('@/pages/Achievements'));
 const Friends = React.lazy(() => import('@/pages/Friends'));
-const ParentTips = React.lazy(() => import('@/pages/ParentTips'));
 const Missions = React.lazy(() => import('@/pages/Missions'));
 
 // Lazy-loaded Admin Pages
@@ -176,39 +179,46 @@ const AuthenticatedApp = () => {
                 <Route path="/parent/select-child" element={<ChildSelectionPage />} />
                 <Route path="/parent/children" element={<MyChildrenPage />} />
                 
-                {/* Child Profile Management Routes (Both Plural & Singular Aliases) */}
+                {/* Child Profile Management Routes */}
                 <Route path="/parent/children/:childId" element={<ChildProfilePage />} />
                 <Route path="/parent/child/:childId" element={<ChildProfilePage />} />
-                
+
                 <Route path="/parent/rewards" element={<ParentRewards />} />
                 <Route path="/parent/approvals" element={<ParentApprovals />} />
                 <Route path="/parent/profile" element={<ParentProfilePage />} />
                 <Route path="/parent/billing" element={<ParentBilling />} />
-                <Route path="/parent-tips" element={<ParentTips />} />
+                <Route path="/parent/tips" element={<ParentTips />} />
               </Route>
             </Route>
+
+            {/* Teacher Portal Routes */}
+            <Route element={<ProfileCompleteRoute />}>
+              <Route element={<RoleRoute allowedRoles={["teacher", "admin"]} />}>
+                <Route path="/teacher" element={<TeacherDashboard />} />
+                <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+              </Route>
+            </Route>
+
           </Route>
         </Route>
 
         <Route path="*" element={<PageNotFound />} />
-        </Routes>
+      </Routes>
     </Suspense>
     </ViewModeProvider>
   );
 };
 
-function App() {
+export default function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
+    <QueryClientProvider client={queryClientInstance}>
+      <AuthProvider>
         <Router>
           <ScrollToTop />
           <AuthenticatedApp />
+          <Toaster />
         </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
-
-export default App;

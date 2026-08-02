@@ -1,0 +1,87 @@
+{
+  "name": "CurriculumStandard",
+  "type": "object",
+  "description": "Malaysian official DSKP curriculum standards entity (KSSR Semakan & KSSM)",
+  "properties": {
+    "subject": {
+      "type": "string",
+      "description": "Subject name (e.g. Matematik, Sains, Bahasa Melayu, Sejarah)"
+    },
+    "curriculum_type": {
+      "type": "string",
+      "enum": [
+        "KSSR_SEMAKAN",
+        "KSSM"
+      ],
+      "default": "KSSR_SEMAKAN",
+      "description": "Curriculum framework type"
+    },
+    "education_level": {
+      "type": "string",
+      "enum": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "default": "PRIMARY",
+      "description": "Education level stage"
+    },
+    "year_level": {
+      "type": "string",
+      "description": "Year / Form level (e.g. Tahun 1 - Tahun 6, Tingkatan 1 - Tingkatan 5)"
+    },
+    "topic": {
+      "type": "string",
+      "description": "Topic name (e.g. Pecahan, Perpuluhan dan Peratus)"
+    },
+    "standard_content_code": {
+      "type": "string",
+      "description": "Standard Kandungan SK code (e.g. SK 1.1 Pecahan)"
+    },
+    "standard_learning_code": {
+      "type": "string",
+      "description": "Standard Pembelajaran SP code (e.g. SP 1.1.1 Penambahan Pecahan)"
+    },
+    "learning_objective": {
+      "type": "string",
+      "description": "Official DSKP learning objective text"
+    },
+    "dskp_description": {
+      "type": "string",
+      "description": "Detailed description of learning scope and limitations"
+    },
+    "tahapan_penguasaan": {
+      "type": "string",
+      "description": "JSON string mapping TP1 to TP6 rubrics for Classroom Assessment (PBD)"
+    },
+    "success_criteria": {
+      "type": "string",
+      "description": "JSON string array of explicit student success criteria"
+    }
+  },
+  "required": [
+    "subject",
+    "curriculum_type",
+    "year_level",
+    "topic",
+    "standard_content_code",
+    "standard_learning_code"
+  ],
+  "rls": {
+    "read": true,
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

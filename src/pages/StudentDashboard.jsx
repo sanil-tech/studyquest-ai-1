@@ -18,6 +18,7 @@ import moment from "moment";
 import MissionCard from "@/components/student/MissionCard";
 import AvatarEvolutionCard from "@/components/student/AvatarEvolutionCard";
 import RecommendationCard from "@/components/student/RecommendationCard";
+import AILearningCoach from "@/components/student/AILearningCoach";
 import KSSRMasteryMap from "@/components/student/KSSRMasteryMap";
 import AvatarShop from "@/components/student/AvatarShop";
 import { parseOwnedItems, parseEquippedItems } from "@/lib/avatarSystem";
@@ -49,6 +50,20 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showAvatarShop, setShowAvatarShop] = useState(false);
+  const [learningInsights, setLearningInsights] = useState(null);
+
+  const handleStartMission = useCallback((mission) => {
+    if (!mission?.assessment_id) {
+      toast({
+        title: "Alamak!",
+        description: "Misi adaptif belum sedia untuk dilancarkan.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const queueId = mission.id || "";
+    navigate(`/quiz/${mission.assessment_id}?adaptive=true&queue_id=${queueId}`);
+  }, [navigate, toast]);
 
   // Load Dashboard Data
   const loadDashboardData = useCallback(async () => {
@@ -75,7 +90,19 @@ export default function StudentDashboard() {
 
       const targetStudentId = activeChildId || currentUser.id;
 
-      // 1. Fetch Aggregated Package
+      // 1. Fetch AI Learning Insights Layer
+      try {
+        const insightsRes = await base44.functions.invoke("getStudentLearningInsights", {
+          student_id: targetStudentId,
+        });
+        if (insightsRes.data?.success) {
+          setLearningInsights(insightsRes.data);
+        }
+      } catch (err) {
+        console.warn("getStudentLearningInsights fallback:", err);
+      }
+
+      // 2. Fetch Aggregated Package
       let pkgSuccess = false;
       try {
         const pkgRes = await base44.functions.invoke("getStudentDashboardPackage", {
@@ -477,7 +504,15 @@ export default function StudentDashboard() {
           </button>
         </div>
 
-        {/* ═══ 7. AI RECOMMENDATION ═══ */}
+        {/* ═══ 7. AI LEARNING COACH LAYER ═══ */}
+        {learningInsights && (
+          <AILearningCoach
+            insights={learningInsights}
+            onStartMission={handleStartMission}
+          />
+        )}
+
+        {/* ═══ 7b. AI RECOMMENDATION ═══ */}
         <RecommendationCard
           initialRecommendation={activeRecommendation}
           user={user}

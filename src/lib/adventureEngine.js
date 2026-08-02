@@ -30,6 +30,8 @@ const STAGE_MAPPINGS = {
   IMAGE: { stage: "DISCOVER", icon: "🖼️", defaultTitle: "Peta Visual" },
   infographic: { stage: "DISCOVER", icon: "🎨", defaultTitle: "Peta Visual" },
   image: { stage: "DISCOVER", icon: "🖼️", defaultTitle: "Peta Visual" },
+  LESSON_MEDIA_ASSET: { stage: "DISCOVER", icon: "🖼️", defaultTitle: "Peta Visual" },
+  lesson_media_asset: { stage: "DISCOVER", icon: "🖼️", defaultTitle: "Peta Visual" },
 
   AI_EXPLANATION: { stage: "DISCOVER", icon: "🤖", defaultTitle: "Penerangan Pintar AI" },
   ai_explanation: { stage: "DISCOVER", icon: "🤖", defaultTitle: "Penerangan Pintar AI" },

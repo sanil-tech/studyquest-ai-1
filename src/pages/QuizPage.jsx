@@ -184,11 +184,14 @@ export default function QuizPage() {
     return () => { isMounted = false; };
   }, [targetAssessmentId, topicParam, versionParam, location.pathname, searchParams]);
 
+  const isAdaptive = searchParams.get("adaptive") === "true";
+  const queueId = searchParams.get("queue_id") || "";
+
   const questions = extractQuestions(packageData);
 
   const activeAssessment = packageData ? {
     id: packageData.assessments?.[0]?.id || targetAssessmentId,
-    title: packageData.assessments?.[0]?.title || packageData.lesson_title || "Penilaian Minda",
+    title: packageData.assessments?.[0]?.title || packageData.lesson_title || (isAdaptive ? "Misi AI Personal: Pembelajaran Adaptif" : "Penilaian Minda"),
     questions: questions
   } : null;
 
@@ -234,7 +237,7 @@ export default function QuizPage() {
             </button>
             <div>
               <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 px-2.5 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20">
-                {packageData?.curriculum_context?.subject_name || "Ujian Minda"}
+                {isAdaptive ? "Suku AI Tutor" : (packageData?.curriculum_context?.subject_name || "Ujian Minda")}
               </span>
               <h1 className="text-sm sm:text-base font-black text-white mt-1 flex items-center gap-1.5">
                 <Compass className="w-4 h-4 text-amber-400" /> {activeAssessment.title || "Penilaian Minda"}
@@ -243,10 +246,26 @@ export default function QuizPage() {
           </div>
         </div>
 
+        {/* ADAPTIVE AI PERSONAL BANNER */}
+        {isAdaptive && (
+          <div className="p-4 bg-gradient-to-r from-purple-950/80 via-indigo-950 to-stone-900 border-2 border-purple-500/40 rounded-3xl shadow-xl flex items-start gap-3">
+            <div className="text-3xl shrink-0">🧠</div>
+            <div className="space-y-0.5">
+              <span className="px-2.5 py-0.5 bg-purple-500/20 text-purple-300 text-[10px] font-black uppercase tracking-wider rounded-full border border-purple-500/30">
+                Misi AI Personal
+              </span>
+              <p className="text-xs sm:text-sm font-bold text-purple-100 leading-relaxed">
+                "Suku menyediakan latihan khas berdasarkan kesilapan kamu sebelum ini."
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* QUIZ RUNNER MODULE */}
         <QuizRunner
           assessment={activeAssessment}
           studentName={studentName}
+          adaptiveQueueId={queueId}
           onFinish={() => navigate(-1)}
         />
 

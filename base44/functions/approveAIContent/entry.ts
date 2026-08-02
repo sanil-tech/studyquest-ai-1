@@ -139,17 +139,36 @@ export default async function(req: Request): Promise<Response> {
     } else if (content_type === "infographic") {
       const infographicPayload = typeof content === "object" && content !== null ? content : { title: "Infografik", summary: String(content) };
       const infographicMarkdown = JSON.stringify(infographicPayload);
+      const imgUrl = infographicPayload.image_url || infographicPayload.media_url || "";
+
       createdRecords = await base44.asServiceRole.entities.LessonContent.create({
         lesson_version_id,
         content_type: "infographic",
         title: infographicPayload.title || "Infografik (AI)",
         content_markdown: infographicMarkdown,
-        media_url: infographicPayload.image_url || infographicPayload.media_url || "",
+        media_url: imgUrl,
         sort_order: 4,
         created_by: user.id,
         status: "draft",
         ...commonFields,
       });
+
+      // Also create dedicated LessonMediaAsset entity record
+      await base44.asServiceRole.entities.LessonMediaAsset.create({
+        lesson_id,
+        lesson_version_id,
+        asset_type: "infographic",
+        title: infographicPayload.title || "Infografik Visual",
+        image_url: imgUrl,
+        description: infographicPayload.short_description || infographicPayload.summary || "",
+        key_points_json: JSON.stringify(infographicPayload.key_points || []),
+        visual_labels_json: JSON.stringify(infographicPayload.visual_labels || []),
+        sort_order: 4,
+        status: "draft",
+        created_source: "ai_generated",
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+      }).catch((e: any) => console.warn("LessonMediaAsset non-fatal creation warning:", e));
     } else if (content_type === "flashcards") {
       const cards = content.flashcards || [];
       if (cards.length === 0) {

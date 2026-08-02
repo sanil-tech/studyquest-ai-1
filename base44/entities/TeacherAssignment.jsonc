@@ -1,0 +1,50 @@
+{
+  "name": "TeacherAssignment",
+  "type": "object",
+  "description": "Student assignment mapping to a TeacherClass",
+  "properties": {
+    "class_id": {
+      "type": "string",
+      "description": "ID of the target TeacherClass"
+    },
+    "student_id": {
+      "type": "string",
+      "description": "ID of the assigned student user"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "archived"
+      ],
+      "default": "active",
+      "description": "Assignment active status"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "class_id",
+    "student_id"
+  ],
+  "rls": {
+    "read": true,
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

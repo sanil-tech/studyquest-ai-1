@@ -19,15 +19,12 @@ Deno.serve(async (req) => {
     // ------------------------------------------------------------------
     // 1. INPUT PARSING & AUTHENTICATION RESOLUTION
     // ------------------------------------------------------------------
-    const body = await req.json().catch(() => ({}));
-    const lessonIdParam = body.lesson_id || body.lessonId;
-    const topicIdParam = body.topic_id || body.topicId;
-    const assessmentIdParam = body.assessment_id || body.assessmentId;
-    const studentIdParam = body.student_id || body.studentId;
+    const lessonVersionIdParam = body.lesson_version_id || body.lessonVersionId;
+    const isPreviewParam = body.preview === true || body.preview === "true";
 
-    if (!lessonIdParam && !topicIdParam && !assessmentIdParam) {
+    if (!lessonIdParam && !topicIdParam && !assessmentIdParam && !lessonVersionIdParam) {
       return Response.json(
-        { success: false, error: "lesson_id, topic_id, atau assessment_id diperlukan." },
+        { success: false, error: "lesson_id, topic_id, assessment_id, atau lesson_version_id diperlukan." },
         { status: 400, headers: resHeaders }
       );
     }
@@ -35,6 +32,15 @@ Deno.serve(async (req) => {
     // Authenticate optional user token
     const authUser = await base44.auth.me().catch(() => null);
     const activeStudentId = studentIdParam || authUser?.id || null;
+
+    // Direct LessonVersion preview lookup by ID
+    let targetVersionObj: any = null;
+    if (lessonVersionIdParam) {
+      targetVersionObj = await db.entities.LessonVersion.get(lessonVersionIdParam).catch(() => null);
+      if (targetVersionObj && targetVersionObj.lesson_id) {
+        lessonIdParam = targetVersionObj.lesson_id;
+      }
+    }
 
     // ------------------------------------------------------------------
     // 2. FETCH ROOT LESSON ANCHOR (SUPPORT ASSESSMENT_ID LOOKUP)
@@ -57,31 +63,31 @@ Deno.serve(async (req) => {
       lesson = lessons && lessons.length > 0 ? lessons[0] : null;
     }
 
-    if (!lesson) {
+    if (!lesson && !targetVersionObj) {
       return Response.json(
         { success: false, error: "Pelajaran atau penilaian tidak dijumpai." },
         { status: 404, headers: resHeaders }
       );
     }
 
-    const lessonId = lesson.id;
-    const topicId = lesson.topic_id;
+    const lessonId = lesson?.id || targetVersionObj?.lesson_id;
+    const topicId = lesson?.topic_id;
 
     // ------------------------------------------------------------------
     // 3. TIER 1 BATCH FETCH: Topic, Versions, Student Profile, Progress
     // ------------------------------------------------------------------
     const [topic, versions, studentUser, progressList, walletList, rewardRules] = await Promise.all([
       topicId ? db.entities.Topic.get(topicId).catch(() => null) : null,
-      db.entities.LessonVersion.filter({ lesson_id: lessonId }).catch(() => []),
+      lessonId ? db.entities.LessonVersion.filter({ lesson_id: lessonId }).catch(() => []) : [],
       activeStudentId ? db.entities.User.get(activeStudentId).catch(() => null) : null,
       activeStudentId ? db.entities.Progress.filter({ student_id: activeStudentId }).catch(() => []) : [],
       activeStudentId ? db.entities.Wallet.filter({ student_id: activeStudentId }).catch(() => []) : [],
       db.entities.RewardRule.filter({ is_active: true }).catch(() => []),
     ]);
 
-    // SAFE LESSONVERSION RESOLUTION: ONLY allow published LessonVersions
-    let publishedVersion: any = null;
-    if (lesson.published_version_id) {
+    // SAFE LESSONVERSION RESOLUTION: Allow targetVersionObj if preview, otherwise published LessonVersions
+    let publishedVersion: any = targetVersionObj || null;
+    if (!publishedVersion && lesson?.published_version_id) {
       const v = await db.entities.LessonVersion.get(lesson.published_version_id).catch(() => null);
       if (v && (v.status === "published" || v.review_status === "published")) {
         publishedVersion = v;
@@ -96,12 +102,14 @@ Deno.serve(async (req) => {
         publishedVersion = publishedOnly.sort(
           (a: any, b: any) => (b.version_number || 0) - (a.version_number || 0)
         )[0];
+      } else if (isPreviewParam && versions.length > 0) {
+        publishedVersion = versions[0];
       }
     }
 
     if (!publishedVersion) {
       return Response.json(
-        { success: false, error: "Tiada versi pelajaran yang diterbitkan." },
+        { success: false, error: "Tiada versi pelajaran yang ditemui." },
         { status: 404, headers: resHeaders }
       );
     }
@@ -117,6 +125,7 @@ Deno.serve(async (req) => {
       learningStandard,
       lessonContent,
       lessonBlocks,
+      mediaAssets,
       flashcards,
       activities,
       teacherGuides,
@@ -126,8 +135,9 @@ Deno.serve(async (req) => {
     ] = await Promise.all([
       subjectId ? db.entities.Subject.get(subjectId).catch(() => null) : null,
       topic?.learning_standard_id ? db.entities.LearningStandard.get(topic.learning_standard_id).catch(() => null) : null,
-      db.entities.LessonContent.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
-      db.entities.LessonBlock.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
+      db.entities.LessonContent.filter(isPreviewParam || targetVersionObj ? { lesson_version_id: versionId } : { lesson_version_id: versionId, status: "published" }).catch(() => []),
+      db.entities.LessonBlock.filter(isPreviewParam || targetVersionObj ? { lesson_version_id: versionId } : { lesson_version_id: versionId, status: "published" }).catch(() => []),
+      db.entities.LessonMediaAsset.filter(isPreviewParam || targetVersionObj ? { lesson_version_id: versionId } : { lesson_version_id: versionId, status: "published" }).catch(() => []),
       db.entities.Flashcard.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
       db.entities.LearningActivity.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
       db.entities.TeacherGuide.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
@@ -392,6 +402,35 @@ Deno.serve(async (req) => {
       })
       .sort((a: any, b: any) => (a.order_number || 0) - (b.order_number || 0));
 
+    // Append standalone LessonMediaAsset items as INFOGRAPHIC blocks if present
+    if (Array.isArray(mediaAssets) && mediaAssets.length > 0) {
+      mediaAssets.forEach((ma: any, idx: number) => {
+        const hasMediaBlock = formattedBlocks.some((b: any) => b.id === ma.id);
+        if (!hasMediaBlock) {
+          let keyPoints = [];
+          let visualLabels = [];
+          try { keyPoints = typeof ma.key_points_json === "string" ? JSON.parse(ma.key_points_json) : (ma.key_points_json || []); } catch {}
+          try { visualLabels = typeof ma.visual_labels_json === "string" ? JSON.parse(ma.visual_labels_json) : (ma.visual_labels_json || []); } catch {}
+
+          formattedBlocks.push({
+            id: ma.id || `media-asset-${idx + 1}`,
+            block_type: "INFOGRAPHIC",
+            title: ma.title || "Infografik Visual",
+            order_number: ma.sort_order ?? 1.2,
+            payload: {
+              image_url: ma.image_url || "",
+              media_url: ma.image_url || "",
+              title: ma.title || "Infografik Visual",
+              short_description: ma.description || "",
+              description: ma.description || "",
+              key_points: keyPoints,
+              visual_labels: visualLabels
+            }
+          });
+        }
+      });
+    }
+
     // Append standalone Flashcard deck to formattedBlocks if present and not already added
     if (Array.isArray(flashcards) && flashcards.length > 0) {
       const hasFlashcardBlock = formattedBlocks.some((b: any) => b.block_type === "FLASHCARD_DECK" || b.block_type === "FLASHCARD");
@@ -418,15 +457,23 @@ Deno.serve(async (req) => {
       activities.forEach((act: any, idx: number) => {
         const hasActBlock = formattedBlocks.some((b: any) => b.id === act.id);
         if (!hasActBlock) {
+          let parsedData: any = {};
+          if (typeof act.activity_data_json === "string") {
+            try { parsedData = JSON.parse(act.activity_data_json); } catch { parsedData = {}; }
+          } else {
+            parsedData = act.activity_data_json || {};
+          }
+
           formattedBlocks.push({
             id: act.id || `activity-${idx + 1}`,
             block_type: "INTERACTIVE_GAME",
             title: act.title || "Aktiviti Pembelajaran Interaktif",
             order_number: 2.5 + idx * 0.1,
             payload: {
-              activity_type: act.activity_type || "matching",
-              instructions: act.instructions || "",
-              activity_data: act.activity_data_json || "{}"
+              activity_type: act.activity_type || parsedData.type || "matching",
+              instructions: act.instructions || parsedData.instructions || "",
+              activity_data: parsedData,
+              items: parsedData.items || parsedData.pairs || parsedData.options || []
             }
           });
         }

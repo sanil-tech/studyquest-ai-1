@@ -1,6 +1,7 @@
 {
   "name": "LessonVersion",
   "type": "object",
+  "description": "Lesson version snapshot featuring DSKP curriculum alignment and AI Quality Scorecard",
   "properties": {
     "lesson_id": {
       "type": "string",
@@ -20,6 +21,49 @@
       ],
       "default": "draft",
       "description": "Version lifecycle status"
+    },
+    "curriculum_type": {
+      "type": "string",
+      "enum": [
+        "KSSR_SEMAKAN",
+        "KSSM"
+      ],
+      "default": "KSSR_SEMAKAN",
+      "description": "Malaysian curriculum standard framework"
+    },
+    "education_stage": {
+      "type": "string",
+      "enum": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "default": "PRIMARY",
+      "description": "Education level stage"
+    },
+    "year_level": {
+      "type": "string",
+      "description": "Form/Year level (e.g. Tahun 4, Tingkatan 1)"
+    },
+    "sk_code": {
+      "type": "string",
+      "description": "DSKP Standard Kandungan code (e.g. SK 1.1 Pecahan)"
+    },
+    "sp_code": {
+      "type": "string",
+      "description": "DSKP Standard Pembelajaran code (e.g. SP 1.1.1 Penambahan Pecahan)"
+    },
+    "dskp_tp_mapping": {
+      "type": "string",
+      "description": "JSON string mapping TP1-TP6 rubrics"
+    },
+    "quality_score": {
+      "type": "number",
+      "default": 0,
+      "description": "Automated AI Quality Audit score (0-100)"
+    },
+    "quality_feedback": {
+      "type": "string",
+      "description": "JSON string of AI Quality evaluation report"
     },
     "notes_content": {
       "type": "string",
@@ -54,6 +98,30 @@
       "type": "number",
       "default": 0,
       "description": "Auto-calculated lesson package completion (0-100)"
+    },
+    "preview_status": {
+      "type": "string",
+      "enum": [
+        "NOT_VIEWED",
+        "VIEWED",
+        "APPROVED"
+      ],
+      "default": "NOT_VIEWED",
+      "description": "Admin preview approval status prior to publishing"
+    },
+    "previewed_by": {
+      "type": "string",
+      "description": "User ID or name of the admin who previewed/approved this version"
+    },
+    "previewed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when admin previewed/approved this version"
+    },
+    "preview_checklist_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether admin completed all items in the lesson preview checklist"
     },
     "review_status": {
       "type": "string",

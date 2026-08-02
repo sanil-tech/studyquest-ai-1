@@ -1,5 +1,6 @@
 // src/components/lesson/BlockRenderer.jsx
-// Reusable Polymorphic Block Renderer for StudyQuest Learning Packages
+// Reusable Polymorphic Block Renderer for StudyQuest DSKP Learning Packages
+// Enhancements for Phase 1-4: Pedagogical badges, Suku Mascot Induction Card 🐢, Worked Examples, PBD Assessments, Reflection Journal, and "Teruskan Misi ➡️" buttons.
 
 import React, { useMemo, useState } from "react";
 import { personalize, replaceStudentVariables } from "@/lib/personalize";
@@ -14,13 +15,18 @@ import {
   HelpCircle,
   CheckCircle2,
   XCircle,
-  ExternalLink
+  ExternalLink,
+  Target,
+  PenTool,
+  Award,
+  ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import Flashcards from "@/components/lesson/Flashcards";
 import MindMap from "@/components/lesson/MindMap";
 import InfographicBlock from "@/components/lesson/InfographicBlock";
+import InteractiveActivity from "@/components/lesson/InteractiveActivity";
 
 // ==========================================
 // TEXT FORMATTING UTILITIES
@@ -57,6 +63,18 @@ export const parseMarkdownToHTML = (text) => {
   return htmlOutput.join("\n").replace(/\*\*(.*?)\*\*/g, '<strong class="font-black text-amber-300">$1</strong>');
 };
 
+// Pedagogical Badge Resolution Helper
+const getPedagogicalBadge = (phase, blockType) => {
+  const p = (phase || "").toUpperCase();
+  const t = (blockType || "").toUpperCase();
+  if (p === "INDUCTION" || t === "INDUCTION") return { label: "🎯 Set Induksi", bg: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" };
+  if (p === "CONCEPT" || t === "CONCEPT" || t === "TEXT_MARKDOWN" || t === "NOTE") return { label: "📚 Kenali Konsep", bg: "bg-amber-500/10 text-amber-300 border-amber-500/30" };
+  if (p === "WORKED_EXAMPLE" || t === "WORKED_EXAMPLE") return { label: "✏️ Contoh Terbimbing", bg: "bg-indigo-500/10 text-indigo-300 border-indigo-500/30" };
+  if (p === "PBD_ASSESSMENT" || t === "PBD_ASSESSMENT" || t === "QUIZ" || t === "ASSESSMENT") return { label: "📝 Pentaksiran PBD", bg: "bg-rose-500/10 text-rose-300 border-rose-500/30" };
+  if (p === "REFLECTION" || t === "REFLECTION") return { label: "🌱 Refleksi", bg: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" };
+  return { label: "🎒 Modul Pembelajaran", bg: "bg-stone-500/10 text-stone-300 border-stone-500/30" };
+};
+
 // ==========================================
 // YOUTUBE VIDEO EMBED SUB-COMPONENT
 // ==========================================
@@ -66,13 +84,7 @@ function YouTubeLesson({ videoUrl, onCompleted, isCompleted, scriptText, searchQ
   const videoId = useMemo(() => {
     if (!videoUrl) return null;
     const str = String(videoUrl).trim();
-
-    // 1. Check direct 11-character video ID
-    if (/^[a-zA-Z0-9_-]{11}$/.test(str)) {
-      return str;
-    }
-
-    // 2. Check standard YouTube URL formats: watch, youtu.be, shorts, embed
+    if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
     const match = str.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/i);
     return (match && match[1] && match[1].length === 11) ? match[1] : null;
   }, [videoUrl]);
@@ -108,10 +120,10 @@ function YouTubeLesson({ videoUrl, onCompleted, isCompleted, scriptText, searchQ
         )}
 
         <Button
-          className="w-full bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs rounded-xl h-11 border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+          className="w-full bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs rounded-xl h-11 border-b-4 border-emerald-700 active:translate-y-1 transition-all flex items-center justify-center gap-1.5"
           onClick={onCompleted}
         >
-          {isCompleted ? "Selesai Taklimat Video ✓" : "Selesai & Ambil +10 XP 🔥"}
+          {isCompleted ? "Selesai Taklimat Video ✓" : <>Teruskan Misi ➡️</>}
         </Button>
       </div>
     );
@@ -153,10 +165,10 @@ function YouTubeLesson({ videoUrl, onCompleted, isCompleted, scriptText, searchQ
       )}
 
       <Button
-        className="w-full bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs rounded-xl h-11 border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+        className="w-full bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs rounded-xl h-11 border-b-4 border-emerald-700 active:translate-y-1 transition-all flex items-center justify-center gap-1.5"
         onClick={onCompleted}
       >
-        {isCompleted ? "Selesai Video ✓" : "Selesai & Ambil +10 XP 🔥"}
+        {isCompleted ? "Selesai Video ✓" : <>Teruskan Misi ➡️</>}
       </Button>
     </div>
   );
@@ -166,78 +178,33 @@ function YouTubeLesson({ videoUrl, onCompleted, isCompleted, scriptText, searchQ
 // INTERACTIVE GAME / ACTIVITY SUB-COMPONENT
 // ==========================================
 function InteractiveGameBlock({ blockType, blockTitle, payload, studentName, onCompleted, isCompleted }) {
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [completedItems, setCompletedItems] = useState({});
+  let activityData = payload.activity_data || payload.activity_data_json || {};
+  if (typeof activityData === "string") {
+    try { activityData = JSON.parse(activityData); } catch { activityData = {}; }
+  }
 
-  const instructions = personalize(
-    payload.instructions || payload.prompt || payload.markdown || payload.description || payload.text || "Selesaikan cabaran interaktif ini untuk menguji kefahaman anda!",
-    studentName
-  );
+  const items = Array.isArray(activityData.items)
+    ? activityData.items
+    : (Array.isArray(activityData.pairs)
+      ? activityData.pairs.map((p) => ({ left: p.left || p.pair_a || p.item, right: p.right || p.pair_b || p.match }))
+      : (Array.isArray(payload.items)
+        ? payload.items
+        : (Array.isArray(payload.options) ? payload.options : [])));
 
-  const options = Array.isArray(payload.options)
-    ? payload.options
-    : (Array.isArray(payload.items) ? payload.items : (Array.isArray(payload.choices) ? payload.choices : []));
-
-  const toggleItem = (idx) => {
-    setCompletedItems((prev) => ({ ...prev, [idx]: !prev[idx] }));
-  };
+  const activityType = (payload.activity_type || activityData.type || activityData.activity_type || blockType || "matching").toLowerCase();
 
   return (
-    <div className="space-y-4 text-center">
-      <div className="flex items-center justify-between border-b border-stone-800 pb-3 text-left">
-        <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
-          <Gamepad2 className="w-5 h-5 text-cyan-400" /> {blockTitle || "Aktiviti Interaktif"}
-        </h3>
-        <span className="px-2.5 py-1 bg-cyan-950 text-cyan-300 text-[10px] font-black uppercase rounded-full border border-cyan-500/30">
-          {(blockType || "INTERACTIVE").replace(/_/g, " ")}
-        </span>
-      </div>
-
-      <div className="p-5 sm:p-6 bg-gradient-to-br from-cyan-950/40 via-stone-900 to-indigo-950/40 border border-cyan-500/30 rounded-2xl space-y-4 text-left">
-        <div className="w-14 h-14 bg-cyan-500/20 text-cyan-300 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner border border-cyan-400/30">
-          🎮
-        </div>
-
-        <div
-          className="text-xs sm:text-sm text-stone-200 font-bold leading-relaxed space-y-2 text-center"
-          dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(instructions) }}
-        />
-
-        {options.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
-            {options.map((opt, i) => {
-              const isDone = !!completedItems[i] || selectedOption === i;
-              const text = typeof opt === "object" ? (opt.text || opt.label || opt.title || JSON.stringify(opt)) : String(opt);
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => {
-                    setSelectedOption(i);
-                    toggleItem(i);
-                  }}
-                  className={`p-3 rounded-xl text-xs font-bold transition-all text-left flex items-center justify-between border ${
-                    isDone
-                      ? "bg-emerald-900/80 border-emerald-500 text-emerald-200 shadow-md"
-                      : "bg-stone-800/80 hover:bg-stone-700/80 border-stone-700 text-amber-200"
-                  }`}
-                >
-                  <span>{personalize(text, studentName)}</span>
-                  {isDone && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <Button
-        onClick={onCompleted}
-        className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
-      >
-        {isCompleted ? "Permainan Selesai ✓" : "Selesai Permainan & Ambil XP! 🎮"}
-      </Button>
-    </div>
+    <InteractiveActivity
+      activity={{
+        type: activityType,
+        title: blockTitle || "Aktiviti Pembelajaran Interaktif",
+        instructions: payload.instructions || activityData.instructions || payload.prompt,
+        items: items,
+      }}
+      studentName={studentName}
+      onComplete={onCompleted}
+      isCompleted={isCompleted}
+    />
   );
 }
 
@@ -295,9 +262,9 @@ function InlineQuizBlock({ questions = [], onCompleted, isCompleted, studentName
         </p>
         <Button
           onClick={onCompleted}
-          className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-sm rounded-xl border-b-4 border-emerald-700"
+          className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-sm rounded-xl border-b-4 border-emerald-700 flex items-center justify-center gap-1.5"
         >
-          {isCompleted ? "Kuiz Selesai ✓" : "Selesai Kuiz! 👑"}
+          {isCompleted ? "Kuiz Selesai ✓" : <>Teruskan Misi ➡️</>}
         </Button>
       </div>
     );
@@ -362,9 +329,9 @@ function InlineQuizBlock({ questions = [], onCompleted, isCompleted, studentName
           </p>
           <Button
             onClick={onCompleted}
-            className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-sm rounded-xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+            className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-sm rounded-xl border-b-4 border-emerald-700 active:translate-y-1 transition-all flex items-center justify-center gap-1.5"
           >
-            {isCompleted ? "Kuiz Selesai ✓" : "Selesai & Ambil Hadiah XP! 👑"}
+            {isCompleted ? "Kuiz Selesai ✓" : <>Teruskan Misi ➡️</>}
           </Button>
         </div>
       ) : (
@@ -393,14 +360,9 @@ export default function BlockRenderer({
 }) {
   if (!block) return null;
 
-  console.log("[CONTENT BLOCK AUDIT]", {
-    type: block.block_type,
-    title: block.title,
-    payload: block.payload
-  });
-
-  // Normalize block_type safely
   const blockType = (block.block_type || "").toUpperCase();
+  const pedagogicalPhase = (block.pedagogical_phase || "").toUpperCase();
+  const badgeInfo = getPedagogicalBadge(pedagogicalPhase, blockType);
 
   // Safely resolve payload
   const payload = typeof block.payload === "string"
@@ -412,94 +374,181 @@ export default function BlockRenderer({
   const blockTitle = (!rawTitle || rawTitle === "Skrip Video (AI)" || rawTitle === "Skrip Video") ? "Taklimat Video" : rawTitle;
 
   switch (blockType) {
+    // 1. INDUCTION / SUKU MYSTERY HOOK
+    case "INDUCTION":
+      return (
+        <div className="space-y-4 text-left">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <h3 className="text-base font-black text-cyan-300 flex items-center gap-2">
+              <span className="text-2xl">🐢</span> {blockTitle || "Set Induksi Bersama Suku"}
+            </h3>
+            <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+              {badgeInfo.label}
+            </span>
+          </div>
+
+          <div className="p-5 bg-gradient-to-br from-cyan-950/50 via-stone-900 to-stone-950 border-2 border-cyan-500/40 rounded-3xl space-y-3 shadow-xl">
+            <div className="flex items-center gap-3 border-b border-stone-800 pb-3">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-3xl shrink-0">
+                🐢
+              </div>
+              <div>
+                <span className="text-[10px] font-black uppercase text-cyan-400 tracking-wider">Misteri & Cabaran Suku</span>
+                <h4 className="text-sm font-black text-white">Suku Perlukan Bantuan Kamu!</h4>
+              </div>
+            </div>
+
+            <div
+              className="text-xs sm:text-sm text-stone-200 leading-relaxed font-bold space-y-2"
+              dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(payload.markdown || payload.text || "", studentName)) }}
+            />
+          </div>
+
+          <Button
+            onClick={onComplete}
+            className="w-full h-14 bg-cyan-500 hover:bg-cyan-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-cyan-700 active:translate-y-1 transition-all flex items-center justify-center gap-2"
+          >
+            {isCompleted ? "Set Induksi Selesai ✓" : <>Bantu Suku & Teruskan Misi ➡️</>}
+          </Button>
+        </div>
+      );
+
+    // 2. WORKED EXAMPLE (Step-by-Step Solutions)
+    case "WORKED_EXAMPLE":
+      {
+        const steps = Array.isArray(payload.step_by_step_solution) ? payload.step_by_step_solution : (Array.isArray(payload.steps) ? payload.steps : []);
+        return (
+          <div className="space-y-4 text-left">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <h3 className="text-base font-black text-indigo-300 flex items-center gap-2">
+                <PenTool className="w-5 h-5 text-indigo-400" /> {blockTitle || "Contoh Terbimbing"}
+              </h3>
+              <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+                {badgeInfo.label}
+              </span>
+            </div>
+
+            <div className="p-5 bg-stone-900/90 border border-indigo-500/30 rounded-3xl space-y-4 shadow-xl">
+              {payload.problem && (
+                <div className="p-3.5 bg-indigo-950/40 border border-indigo-500/20 rounded-2xl text-xs sm:text-sm font-black text-indigo-200">
+                  📌 Soalan: {personalize(payload.problem, studentName)}
+                </div>
+              )}
+
+              {steps.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black uppercase text-indigo-400 tracking-wider">Penyelesaian Langkah demi Langkah</span>
+                  {steps.map((step, idx) => (
+                    <div key={idx} className="p-3 bg-stone-950/80 rounded-xl border border-stone-800 text-xs font-bold text-stone-200 flex items-start gap-2">
+                      <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-[10px] font-black rounded-md shrink-0">
+                        Langkah {idx + 1}
+                      </span>
+                      <span>{personalize(step, studentName)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {payload.common_student_mistake && (
+                <div className="p-3 bg-rose-950/40 border border-rose-500/30 rounded-xl text-xs text-rose-200 font-bold space-y-1">
+                  <span className="text-rose-400 font-black">⚠️ Kesilapan Lazim Murid:</span>
+                  <p>{personalize(payload.common_student_mistake, studentName)}</p>
+                </div>
+              )}
+
+              {payload.correct_reasoning && (
+                <div className="p-3 bg-emerald-950/40 border border-emerald-500/30 rounded-xl text-xs text-emerald-200 font-bold space-y-1">
+                  <span className="text-emerald-400 font-black">✅ Penalaran Betul:</span>
+                  <p>{personalize(payload.correct_reasoning, studentName)}</p>
+                </div>
+              )}
+            </div>
+
+            <Button
+              onClick={onComplete}
+              className="w-full h-14 bg-indigo-500 hover:bg-indigo-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-indigo-700 active:translate-y-1 transition-all flex items-center justify-center gap-2"
+            >
+              {isCompleted ? "Contoh Selesai ✓" : <>Teruskan Misi ➡️</>}
+            </Button>
+          </div>
+        );
+      }
+
+    // 3. CONCEPT EXPLANATION & MARKDOWN NOTES
     case "TEXT_MARKDOWN":
     case "NOTE":
     case "TEXT":
       return (
-        <div className="space-y-4">
+        <div className="space-y-4 text-left">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
             <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-amber-400" /> {blockTitle || "Nota Pengembaraan"}
             </h3>
-            {(payload.markdown || payload.text) && (
-              <Button
-                onClick={() => onSpeak(payload.markdown || payload.text)}
-                className={`h-9 px-3 rounded-xl font-black text-xs ${
-                  isSpeaking ? "bg-rose-500 hover:bg-rose-600 text-white" : "bg-amber-400 hover:bg-amber-300 text-stone-950"
-                }`}
-              >
-                {isSpeaking ? <VolumeX className="w-4 h-4 mr-1" /> : <Volume2 className="w-4 h-4 mr-1" />}
-                {isSpeaking ? "Berhenti" : "Dengar"}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+                {badgeInfo.label}
+              </span>
+              {(payload.markdown || payload.text) && (
+                <Button
+                  onClick={() => onSpeak(payload.markdown || payload.text)}
+                  className={`h-8 px-2.5 rounded-xl font-black text-[11px] ${
+                    isSpeaking ? "bg-rose-500 hover:bg-rose-600 text-white" : "bg-amber-400 hover:bg-amber-300 text-stone-950"
+                  }`}
+                >
+                  {isSpeaking ? <VolumeX className="w-3.5 h-3.5 mr-1" /> : <Volume2 className="w-3.5 h-3.5 mr-1" />}
+                  {isSpeaking ? "Berhenti" : "Dengar"}
+                </Button>
+              )}
+            </div>
           </div>
+
           <div className="max-h-[50vh] overflow-y-auto p-4 bg-black/40 rounded-2xl border border-stone-800 text-xs sm:text-sm leading-relaxed font-bold space-y-3">
             {payload.image_url && (
               <img src={payload.image_url} alt="Illustration" className="w-full max-w-md mx-auto rounded-2xl mb-4 border border-stone-700" />
             )}
             <div dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(payload.markdown || payload.text || "", studentName)) }} />
           </div>
+
           <Button
             onClick={onComplete}
-            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all flex items-center justify-center gap-2"
           >
-            {isCompleted ? "Nota Selesai ✓" : "Selesai Hadam Nota! 🎒"}
+            {isCompleted ? "Nota Selesai ✓" : <>Teruskan Misi ➡️</>}
           </Button>
         </div>
       );
 
-    case "AI_EXPLANATION":
-      return (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-            <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-400" /> {blockTitle || "Penerangan Pintar AI"}
-            </h3>
-            {(payload.markdown || payload.explanation || payload.text) && (
-              <Button
-                onClick={() => onSpeak(payload.markdown || payload.explanation || payload.text)}
-                className={`h-9 px-3 rounded-xl font-black text-xs ${
-                  isSpeaking ? "bg-rose-500 hover:bg-rose-600 text-white" : "bg-amber-400 hover:bg-amber-300 text-stone-950"
-                }`}
-              >
-                {isSpeaking ? <VolumeX className="w-4 h-4 mr-1" /> : <Volume2 className="w-4 h-4 mr-1" />}
-                {isSpeaking ? "Berhenti" : "Dengar"}
-              </Button>
-            )}
-          </div>
-          <div className="p-5 bg-gradient-to-br from-purple-950/40 via-stone-900 to-indigo-950/40 rounded-2xl border border-purple-500/30 text-xs sm:text-sm leading-relaxed font-bold space-y-3">
-            <div dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(payload.markdown || payload.explanation || payload.text || "", studentName)) }} />
-          </div>
-          <Button
-            onClick={onComplete}
-            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
-          >
-            {isCompleted ? "Penerangan Selesai ✓" : "Selesai & Ambil +15 XP 🤖"}
-          </Button>
-        </div>
-      );
-
+    // 4. REFLECTION JOURNAL
     case "REFLECTION":
       return (
-        <div className="space-y-4">
+        <div className="space-y-4 text-left">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-            <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
-              <Brain className="w-5 h-5 text-sky-400" /> {blockTitle || "Refleksi Kendiri"}
+            <h3 className="text-base font-black text-emerald-300 flex items-center gap-2">
+              <Brain className="w-5 h-5 text-emerald-400" /> {blockTitle || "Refleksi Kendiri"}
             </h3>
+            <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+              {badgeInfo.label}
+            </span>
           </div>
-          <div className="p-5 bg-stone-900/90 rounded-2xl border border-sky-500/30 text-xs sm:text-sm font-bold space-y-3">
-            <p className="text-sky-300 font-black text-xs uppercase tracking-wider">💭 Soalan Refleksi</p>
+
+          <div className="p-5 bg-stone-900/90 rounded-3xl border border-emerald-500/30 text-xs sm:text-sm font-bold space-y-3 shadow-xl">
+            <div className="flex items-center gap-2 text-emerald-300 font-black text-xs uppercase tracking-wider">
+              <span>🌱 Jurnal Refleksi DSKP</span>
+            </div>
             <div dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(payload.prompt || payload.markdown || payload.text || "Apakah perkara utama yang anda pelajari dalam sesi ini?", studentName)) }} />
           </div>
+
           <Button
             onClick={onComplete}
-            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all flex items-center justify-center gap-2"
           >
-            {isCompleted ? "Refleksi Selesai ✓" : "Selesai Refleksi! 💭"}
+            {isCompleted ? "Refleksi Selesai ✓" : <>Selesai Refleksi! Teruskan Misi ➡️</>}
           </Button>
         </div>
       );
 
+    // 5. PBD ASSESSMENT & INLINE QUIZ
+    case "PBD_ASSESSMENT":
     case "QUIZ":
     case "ASSESSMENT":
       {
@@ -510,12 +559,16 @@ export default function BlockRenderer({
             : (Array.isArray(payload.quiz) ? payload.quiz : (Array.isArray(payload.items) ? payload.items : (payload.question ? [payload] : []))));
 
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-              <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
-                <HelpCircle className="w-5 h-5 text-rose-400" /> {blockTitle || "Ujian Modul"}
+              <h3 className="text-base font-black text-rose-300 flex items-center gap-2">
+                <Award className="w-5 h-5 text-rose-400" /> {blockTitle || "Pentaksiran Bilik Darjah (PBD)"}
               </h3>
+              <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+                {badgeInfo.label}
+              </span>
             </div>
+
             <InlineQuizBlock
               questions={quizItems}
               onCompleted={onComplete}
@@ -526,6 +579,7 @@ export default function BlockRenderer({
         );
       }
 
+    // 6. VIDEO EMBED
     case "VIDEO_EMBED":
     case "VIDEO":
     case "VIDEO_SCRIPT":
@@ -541,17 +595,19 @@ export default function BlockRenderer({
           payload.url ||
           (payload.youtube_id ? `https://www.youtube.com/watch?v=${payload.youtube_id}` : null) ||
           (payload.video_id ? `https://www.youtube.com/watch?v=${payload.video_id}` : null) ||
-          (typeof block.payload === "string" && block.payload.trim().startsWith("http") ? block.payload.trim() : null) ||
-          (typeof block.content_markdown === "string" && (block.content_markdown.includes("youtu") || block.content_markdown.startsWith("http")) ? block.content_markdown.trim() : null);
+          (typeof block.payload === "string" && block.payload.trim().startsWith("http") ? block.payload.trim() : null);
 
         const videoScript = payload.video_script || payload.script || payload.voice_script || payload.description || payload.summary || payload.markdown || payload.text || block.content_markdown;
 
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-stone-800 pb-3">
               <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
                 <Tv className="w-5 h-5 text-emerald-400" /> {blockTitle || "Taklimat Video"}
               </h3>
+              <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+                {badgeInfo.label}
+              </span>
             </div>
             <YouTubeLesson
               videoUrl={directVideoUrl}
@@ -565,6 +621,7 @@ export default function BlockRenderer({
         );
       }
 
+    // 7. MIND MAP
     case "MIND_MAP":
     case "MINDMAP":
       {
@@ -592,11 +649,14 @@ export default function BlockRenderer({
         }
 
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-stone-800 pb-3">
               <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-400" /> {blockTitle || "Peta Minda"}
+                <Brain className="w-5 h-5 text-purple-400" /> {blockTitle || "Peta Minda Visual"}
               </h3>
+              <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+                {badgeInfo.label}
+              </span>
             </div>
             {imgUrl && (
               <div className="p-3 bg-black/50 border border-stone-800 rounded-2xl overflow-hidden text-center">
@@ -608,14 +668,15 @@ export default function BlockRenderer({
             </div>
             <Button
               onClick={onComplete}
-              className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+              className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all flex items-center justify-center gap-1.5"
             >
-              {isCompleted ? "Peta Minda Selesai ✓" : "Selesai Peta Minda! 🧠"}
+              {isCompleted ? "Peta Minda Selesai ✓" : <>Teruskan Misi ➡️</>}
             </Button>
           </div>
         );
       }
 
+    // 8. FLASHCARDS
     case "FLASHCARD_DECK":
     case "FLASHCARD":
     case "FLASHCARDS":
@@ -627,69 +688,27 @@ export default function BlockRenderer({
           }));
 
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-stone-800 pb-3">
               <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-400" /> {blockTitle || "Kad Kilat"}
+                <Sparkles className="w-5 h-5 text-amber-400" /> {blockTitle || "Kad Kilat DBP"}
               </h3>
+              <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+                {badgeInfo.label}
+              </span>
             </div>
             <Flashcards flashcards={cardsList} />
             <Button
               onClick={onComplete}
-              className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+              className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all flex items-center justify-center gap-1.5"
             >
-              {isCompleted ? "Kad Kilat Selesai ✓" : "Selesai Kad Kilat! 🎴"}
+              {isCompleted ? "Kad Kilat Selesai ✓" : <>Teruskan Misi ➡️</>}
             </Button>
           </div>
         );
       }
 
-    case "TEACHER_GUIDE":
-      return (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-            <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-indigo-400" /> {blockTitle || "Panduan Pembelajaran Guru"}
-            </h3>
-          </div>
-          <div className="p-5 bg-stone-900/90 border border-stone-800 rounded-2xl space-y-3 text-xs sm:text-sm font-semibold text-stone-200">
-            {payload.learning_objective && <p><strong>🎯 Objektif:</strong> {personalize(payload.learning_objective, studentName)}</p>}
-            {payload.teaching_strategy && <p><strong>💡 Strategi:</strong> {personalize(payload.teaching_strategy, studentName)}</p>}
-            {payload.success_criteria && <p><strong>✨ Kriteria Kejayaan:</strong> {personalize(payload.success_criteria, studentName)}</p>}
-            {payload.suggested_activity && <p><strong>🧩 Cadangan Aktiviti:</strong> {personalize(payload.suggested_activity, studentName)}</p>}
-          </div>
-          <Button onClick={onComplete} className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all">
-            {isCompleted ? "Panduan Selesai ✓" : "Selesai & Teruskan! 📚"}
-          </Button>
-        </div>
-      );
-
-    case "COMMON_MISTAKES":
-      {
-        const mistakesList = Array.isArray(payload.mistakes) ? payload.mistakes : [];
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-              <h3 className="text-base font-black text-rose-400 flex items-center gap-2">
-                <XCircle className="w-5 h-5 text-rose-400" /> {blockTitle || "Kesilapan Lazim & Pembetulan"}
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {mistakesList.map((m, idx) => (
-                <div key={idx} className="p-4 bg-stone-900/90 border border-rose-500/30 rounded-2xl space-y-2 text-xs sm:text-sm">
-                  <p className="text-rose-300 font-black">⚠️ Kesilapan: {personalize(m.mistake, studentName)}</p>
-                  <p className="text-emerald-300 font-bold">✅ Pembetulan: {personalize(m.correction, studentName)}</p>
-                  {m.explanation && <p className="text-stone-300 font-semibold">{personalize(m.explanation, studentName)}</p>}
-                </div>
-              ))}
-            </div>
-            <Button onClick={onComplete} className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all">
-              {isCompleted ? "Kesilapan Lazim Selesai ✓" : "Faham Kesilapan & Teruskan! ⚠️"}
-            </Button>
-          </div>
-        );
-      }
-
+    // 9. INTERACTIVE GAMES & ACTIVITIES
     case "INTERACTIVE_GAME":
     case "GAME":
     case "ACTIVITY":
@@ -697,84 +716,16 @@ export default function BlockRenderer({
     case "INTERACTIVE":
     case "DRAG_DROP":
     case "MATCHING_GAME":
-    case "BOSS_CHALLENGE":
-    case "INTERACTIVE_PLACE_VALUE":
-    case "LESSON_ACTIVITY":
       return (
-        <InteractiveGameBlock
-          blockType={blockType}
-          blockTitle={blockTitle}
-          payload={payload}
-          studentName={studentName}
-          onCompleted={onComplete}
-          isCompleted={isCompleted}
-        />
-      );
-
-    case "INFOGRAPHIC":
-    case "IMAGE":
-      return (
-        <InfographicBlock
-          blockTitle={blockTitle}
-          payload={payload}
-          studentName={studentName}
-          onCompleted={onComplete}
-          isCompleted={isCompleted}
-        />
-      );
-
-    case "AUDIO_TTS":
-      return (
-        <div className="space-y-4 text-center">
-          <h3 className="text-base font-black text-amber-300 flex items-center justify-center gap-2">
-            <Volume2 className="w-5 h-5 text-cyan-400" /> {blockTitle || "Audio Pengajaran"}
-          </h3>
-          <p className="text-xs text-stone-300 font-bold">{personalize(payload.voice_script, studentName)}</p>
-          {payload.audio_url && <audio controls src={payload.audio_url} className="mx-auto" />}
-          <Button
-            onClick={onComplete}
-            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
-          >
-            {isCompleted ? "Audio Selesai ✓" : "Selesai Audio! 🎧"}
-          </Button>
-        </div>
-      );
-
-    case "WORKSHEET":
-      return (
-        <div className="space-y-4">
+        <div className="space-y-4 text-left">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
             <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-indigo-400" /> {blockTitle || "Lembaran Kerja"}
+              <Gamepad2 className="w-5 h-5 text-cyan-400" /> {blockTitle || "Aktiviti Pembelajaran PBD"}
             </h3>
+            <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+              {badgeInfo.label}
+            </span>
           </div>
-          <div className="max-h-[50vh] overflow-y-auto p-4 bg-black/40 rounded-2xl border border-stone-800 text-xs sm:text-sm leading-relaxed font-bold space-y-3">
-            {payload.media_url && (
-              <a href={payload.media_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-xl mb-3">
-                📄 Muat Turun Lembaran Kerja
-              </a>
-            )}
-            <div dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(payload.markdown || "", studentName)) }} />
-          </div>
-          <Button
-            onClick={onComplete}
-            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-base rounded-2xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
-          >
-            {isCompleted ? "Lembaran Kerja Selesai ✓" : "Selesai Lembaran Kerja! 📝"}
-          </Button>
-        </div>
-      );
-
-    default:
-      if (
-        blockType.includes("GAME") ||
-        blockType.includes("ACTIVIT") ||
-        blockType.includes("INTERACTIV") ||
-        blockType.includes("MATCH") ||
-        blockType.includes("DRAG") ||
-        blockType.includes("CHALLENGE")
-      ) {
-        return (
           <InteractiveGameBlock
             blockType={blockType}
             blockTitle={blockTitle}
@@ -783,14 +734,40 @@ export default function BlockRenderer({
             onCompleted={onComplete}
             isCompleted={isCompleted}
           />
-        );
-      }
+        </div>
+      );
+
+    // 10. INFOGRAPHIC
+    case "INFOGRAPHIC":
+    case "IMAGE":
       return (
-        <div className="p-6 bg-stone-900 border border-stone-800 rounded-2xl text-center space-y-3">
+        <div className="space-y-4 text-left">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-400" /> {blockTitle || "Infografik Visual"}
+            </h3>
+            <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+              {badgeInfo.label}
+            </span>
+          </div>
+          <InfographicBlock
+            blockTitle={blockTitle}
+            payload={payload}
+            studentName={studentName}
+            onCompleted={onComplete}
+            isCompleted={isCompleted}
+          />
+        </div>
+      );
+
+    // DEFAULT FALLBACK
+    default:
+      return (
+        <div className="p-6 bg-stone-900 border border-stone-800 rounded-2xl text-center space-y-3 text-left">
           <HelpCircle className="w-8 h-8 text-amber-400 mx-auto" />
-          <p className="text-xs font-bold text-stone-200">Blok Kandungan ({block.block_type || "Modul"})</p>
-          <Button onClick={onComplete} className="w-full h-11 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs rounded-xl border-b-4 border-emerald-700">
-            Selesai & Teruskan ✓
+          <p className="text-xs font-bold text-stone-200 text-center">Modul Pembelajaran ({block.block_type || "Modul"})</p>
+          <Button onClick={onComplete} className="w-full h-11 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs rounded-xl border-b-4 border-emerald-700 flex items-center justify-center gap-1.5">
+            {isCompleted ? "Selesai ✓" : <>Teruskan Misi ➡️</>}
           </Button>
         </div>
       );

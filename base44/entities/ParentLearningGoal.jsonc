@@ -1,0 +1,72 @@
+{
+  "name": "ParentLearningGoal",
+  "type": "object",
+  "description": "Parent-defined learning goals for linked children",
+  "properties": {
+    "parent_id": {
+      "type": "string",
+      "description": "ID of the parent user"
+    },
+    "student_id": {
+      "type": "string",
+      "description": "ID of the target child student"
+    },
+    "goal_type": {
+      "type": "string",
+      "enum": [
+        "quiz",
+        "study_time",
+        "adaptive_mission"
+      ],
+      "default": "quiz",
+      "description": "Type of learning goal"
+    },
+    "target_value": {
+      "type": "number",
+      "description": "Target numeric value (e.g. 3 missions, 60 minutes)"
+    },
+    "current_value": {
+      "type": "number",
+      "default": 0,
+      "description": "Current progress value achieved by child"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "expired"
+      ],
+      "default": "active",
+      "description": "Lifecycle status of the parent goal"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "parent_id",
+    "student_id",
+    "goal_type",
+    "target_value"
+  ],
+  "rls": {
+    "read": true,
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

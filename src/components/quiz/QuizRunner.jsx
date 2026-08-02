@@ -6,7 +6,7 @@ import QuizResult from "./QuizResult";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check, Loader2, AlertCircle } from "lucide-react";
 
-export default function QuizRunner({ assessment, studentName, onFinish }) {
+export default function QuizRunner({ assessment, studentName, adaptiveQueueId, onFinish }) {
   const questions = assessment?.questions || [];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -50,6 +50,7 @@ export default function QuizRunner({ assessment, studentName, onFinish }) {
         assessment_id: assessment?.id,
         answers: formattedAnswers,
         duration_seconds: durationSeconds,
+        adaptive_queue_id: adaptiveQueueId || undefined,
       });
 
       const resData = response?.data;
@@ -101,6 +102,7 @@ export default function QuizRunner({ assessment, studentName, onFinish }) {
     return (
       <QuizResult
         submissionResult={submissionResult}
+        isAdaptive={Boolean(adaptiveQueueId)}
         totalQuestions={questions.length}
         completionMessage={assessment?.completion_message}
         onRetry={handleRetry}

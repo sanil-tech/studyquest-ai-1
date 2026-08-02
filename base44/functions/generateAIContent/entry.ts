@@ -93,12 +93,28 @@ const CONTENT_SCHEMAS: Record<string, any> = {
   activity: {
     type: "object",
     properties: {
-      activity_type: { type: "string", enum: ["matching", "sorting", "word_builder", "sequence", "simulation", "puzzle"] },
+      activity_type: { type: "string", enum: ["matching", "sorting", "fill_blank", "true_false", "word_builder"] },
       title: { type: "string" },
       instructions: { type: "string" },
-      activity_data: { type: "string", description: "JSON string of activity-specific data" },
+      items: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            left: { type: "string", description: "Item / Soalan kiri untuk padanan" },
+            right: { type: "string", description: "Item / Jawapan kanan untuk padanan" },
+            category: { type: "string", description: "Nama kategori untuk aktiviti isihan" },
+            sentence: { type: "string", description: "Ayat soalan untuk fill_blank" },
+            answer: { type: "string", description: "Jawapan betul untuk fill_blank" },
+            statement: { type: "string", description: "Kenyataan untuk true_false" },
+            is_true: { type: "boolean", description: "Status betul (true) atau salah (false) untuk true_false" }
+          }
+        },
+        description: "Senarai item/pasangan padanan/latihan interaktif"
+      },
+      activity_data: { type: "string", description: "JSON string of activity-specific data (backward compat)" }
     },
-    required: ["activity_type", "title", "instructions"],
+    required: ["activity_type", "title", "instructions", "items"],
   },
   teacher_guide: {
     type: "object",
@@ -344,6 +360,65 @@ JANA dalam format JSON berikut:
 }`;
 };
 
+const getBloomDistributionGuidance = (levelName: string): string => {
+  const levelStr = String(levelName || "").toLowerCase();
+
+  // Primary Year 1-3 (Tahun 1, 2, 3)
+  if (/(tahun|y|year)\s*[1-3]/i.test(levelStr) || levelStr.includes("tahun 1") || levelStr.includes("tahun 2") || levelStr.includes("tahun 3")) {
+    return `- 30% (3 Soalan) Mengingat (Remember): Kenal pasti, sebut fakta asas, padanan mudah.
+- 40% (4 Soalan) Memahami (Understand): Terangkan maksud, gambarkan konsep harian.
+- 20% (2 Soalan) Mengaplikasi (Apply): Selesaikan masalah situasi ringkas.
+- 10% (1 Soalan) Menganalisis (Analyze): Bandingkan 2 objek atau situasi mudah.`;
+  }
+
+  // Primary Year 4-6 (Tahun 4, 5, 6)
+  if (/(tahun|y|year)\s*[4-6]/i.test(levelStr) || levelStr.includes("tahun 4") || levelStr.includes("tahun 5") || levelStr.includes("tahun 6")) {
+    return `- 20% (2 Soalan) Mengingat (Remember): Definisi dan fakta kurikulum.
+- 30% (3 Soalan) Memahami (Understand): Penjelasan konsep dan rajah.
+- 30% (3 Soalan) Mengaplikasi (Apply): Pengiraan atau penyelesaian masalah harian.
+- 20% (2 Soalan) Menganalisis (Analyze): Hubung kait fakta, urutan sebab-akibat.`;
+  }
+
+  // Secondary (Tingkatan 1-5 / Form 1-5)
+  return `- 20% (2 Soalan) Mengingat (Remember): Istilah akademik, formula, takrifan DSKP.
+- 30% (3 Soalan) Memahami (Understand): Mekanisme, prinsip, dan penerangan konsep.
+- 30% (3 Soalan) Mengaplikasi (Apply): Penggunaan formula, senario kehidupan sebenar.
+- 20% (2 Soalan) KBAT / HOTS (Menganalisis/Menilai/Mencipta): Penilaian data, keputusan terbaik, justifikasi jawapan.`;
+};
+
+const buildQuestionsPrompt = (topicName: string, subjectName: string, levelName: string, customContext?: string) => {
+  const bloomGuidance = getBloomDistributionGuidance(levelName);
+
+  return `Anda ialah pakar pentaksiran kurikulum KSSR/KSSM Malaysia.
+Jana 10 soalan kuiz pilihan berganda (MCQ) berkualiti tinggi untuk topik "${topicName}" (${subjectName}, ${levelName}) dalam Bahasa Melayu.
+
+================================================
+DISTRIBUSI TAKSONOMI BLOOM (MANDATORI 10 SOALAN UNTUK ${levelName}):
+${bloomGuidance}
+
+================================================
+PERATURAN PILIHAN JAWAPAN SIKAP/DISTRACTOR:
+1. SETIAP jawapan salah (distractor) MESTI mewakili kesilapan lazim (realistic Malaysian student misconception) yang kerap dibuat oleh pelajar Malaysia semasa belajar topik ini.
+2. JANGAN sertakan jawapan yang terlalu mudah diteka, unsur jenaka, atau pilihan mengarut.
+3. Elakkan corak berulang (seperti jawapan A sentiasa betul).
+4. Gunakan contoh situasi harian dan konteks yang familiar kepada pelajar di Malaysia.
+
+Jana JSON mengikut format persis berikut:
+{
+  "questions": [
+    {
+      "question": "Soalan yang jelas dan berpandukan DSKP...",
+      "options": ["Jawapan A", "Jawapan B", "Jawapan C", "Jawapan D"],
+      "correct_answer": "Jawapan A",
+      "explanation": "Penjelasan terperinci mengapa jawapan ini betul...",
+      "cognitive_level": "remember",
+      "difficulty": "medium",
+      "hint": "Petunjuk membantu pelajar"
+    }
+  ]
+}${customContext ? `\nKonteks Tambahan: ${customContext}` : ""}`;
+};
+
 export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
@@ -418,14 +493,36 @@ export default async function(req: Request): Promise<Response> {
           ? buildLessonNotesPrompt(topicName, subjectName, levelName, prompt_context)
           : content_type === "infographic"
           ? buildInfographicPrompt(topicName, subjectName, levelName, prompt_context)
+          : content_type === "questions"
+          ? buildQuestionsPrompt(topicName, subjectName, levelName, prompt_context)
           : buildPrompt(content_type, topicName, subjectName, levelName, prompt_context));
 
-      // 6. Call InvokeLLM — use gpt_5_mini (NOT Gemini)
+      // 6. Call InvokeLLM — use gpt_5_mini for educational reasoning
       const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: promptText,
         model: "gpt_5_mini",
         response_json_schema: CONTENT_SCHEMAS[content_type],
       });
+
+      // 6b. Dynamic Image Generation Pipeline for Infographics
+      if (content_type === "infographic" || content_type === "infographic_image") {
+        const visualPrompt =
+          aiResponse.image_prompt ||
+          aiResponse.short_description ||
+          `Educational infographic diagram for ${topicName}`;
+
+        try {
+          const imageRes = await base44.asServiceRole.integrations.Core.GenerateImage({
+            prompt: `High quality clean educational vector infographic diagram illustration for Malaysian KSSR/KSSM students about "${topicName}". Concept: ${visualPrompt}. Bright colors, clear visual structure, school textbook style, digital vector art.`,
+          }).catch(() => null);
+
+          if (imageRes && (imageRes.url || imageRes.image_url)) {
+            aiResponse.image_url = imageRes.url || imageRes.image_url;
+          }
+        } catch (imgErr) {
+          console.warn("GenerateImage non-fatal warning:", imgErr);
+        }
+      }
 
       // 7. Store generated content in AIContentRequest
       await base44.asServiceRole.entities.AIContentRequest.update(aiRequest.id, {

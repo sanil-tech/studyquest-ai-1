@@ -1,7 +1,7 @@
 {
   "name": "LessonBlock",
   "type": "object",
-  "description": "Flexible, ordered content block belonging to a LessonVersion",
+  "description": "Flexible, ordered content block belonging to a LessonVersion featuring DSKP pedagogical metadata",
   "properties": {
     "id": {
       "type": "string",
@@ -14,6 +14,35 @@
     "learning_standard_id": {
       "type": "string",
       "description": "Optional DSKP SP code reference (e.g., SP 1.1.1)"
+    },
+    "sp_code": {
+      "type": "string",
+      "description": "DSKP Standard Pembelajaran code"
+    },
+    "pedagogical_phase": {
+      "type": "string",
+      "enum": [
+        "INDUCTION",
+        "CONCEPT",
+        "WORKED_EXAMPLE",
+        "PBD_ASSESSMENT",
+        "REFLECTION"
+      ],
+      "default": "CONCEPT",
+      "description": "Malaysian formal 5-phase lesson structure index"
+    },
+    "cognitive_level": {
+      "type": "string",
+      "enum": [
+        "remember",
+        "understand",
+        "apply",
+        "analyze",
+        "evaluate",
+        "create"
+      ],
+      "default": "understand",
+      "description": "Bloom's taxonomy cognitive level"
     },
     "block_type": {
       "type": "string",
@@ -37,7 +66,7 @@
     },
     "payload": {
       "type": "object",
-      "description": "Type-specific structured JSON content (markdown text, video URL, mind map branches, or game items)"
+      "description": "Type-specific structured JSON content"
     },
     "status": {
       "type": "string",

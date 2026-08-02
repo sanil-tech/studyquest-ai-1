@@ -1,5 +1,6 @@
 // src/pages/LessonPage.jsx
-// Student Lesson Viewer — Controller for Adventure & Classic Modes
+// Student Lesson Viewer — Controller for Gamified Adventure & Classic Modes
+// Phase 1-4 Upgrades: Progress journey bar (🐢 Misi X/Y · Z%), DSKP phase badges, Suku Mascot encouragement bubbles 🐢, sequential block unlocking ("Teruskan Misi ➡️"), and Mission Completion Celebration.
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -15,7 +16,11 @@ import {
   Compass,
   ChevronLeft,
   Sparkles,
-  BookOpen
+  BookOpen,
+  CheckCircle2,
+  Award,
+  ArrowRight,
+  Coins
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import confetti from "canvas-confetti";
@@ -24,32 +29,12 @@ import ClassicLessonView from "@/components/lesson/ClassicLessonView";
 import { LessonAdventure } from "@/components/adventure/LessonAdventure";
 import { bersihkanTeksUntukSuara } from "@/components/lesson/BlockRenderer";
 
-// ==========================================
-// SUBJECT WORLD THEMES
-// ==========================================
+// WORLD THEMES
 const WORLD_THEMES = {
-  science: {
-    name: "Discovery Jungle",
-    mascotName: "Bimo Orangutan",
-    emoji: "🦧",
-    bgGradient: "bg-gradient-to-b from-emerald-950 via-green-950 to-stone-950",
-    cardBg: "bg-stone-900/90 border-emerald-500/40 text-emerald-100",
-    accentColor: "bg-emerald-500 hover:bg-emerald-400 text-stone-950",
-    badgeBg: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-  },
-  math: {
-    name: "Number Island",
-    mascotName: "Suku Penyu",
-    emoji: "🐢",
-    bgGradient: "bg-gradient-to-b from-blue-950 via-indigo-950 to-stone-950",
-    cardBg: "bg-stone-900/90 border-blue-500/40 text-blue-100",
-    accentColor: "bg-blue-500 hover:bg-blue-400 text-stone-950",
-    badgeBg: "bg-blue-500/20 text-blue-300 border-blue-500/30"
-  },
   default: {
     name: "Hutan Ilmu",
-    mascotName: "Otan",
-    emoji: "🦧",
+    mascotName: "Suku Penyu",
+    emoji: "🐢",
     bgGradient: "bg-gradient-to-b from-emerald-950 via-green-950 to-stone-950",
     cardBg: "bg-stone-900/90 border-emerald-500/40 text-emerald-100",
     accentColor: "bg-emerald-500 hover:bg-emerald-400 text-stone-950",
@@ -65,6 +50,7 @@ export default function LessonPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("map");
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // Learning Mode State: "adventure" | "classic"
   const [learningMode, setLearningMode] = useState(() => {
@@ -100,7 +86,7 @@ export default function LessonPage() {
     localStorage.setItem("studyquest_learning_mode", mode);
   };
 
-  // 1. Fetch unified Learning Package via single API endpoint
+  // Fetch unified Learning Package
   useEffect(() => {
     let isMounted = true;
     const loadPackage = async () => {
@@ -134,9 +120,8 @@ export default function LessonPage() {
   const assessments = packageData?.assessments || [];
   const primaryAssessment = assessments[0] || null;
 
-  // Resolve active student context directly from packageData / auth context (No redundant entity queries)
+  // Resolve student context
   const { user: currentUser } = useAuth();
-
   const studentData = useMemo(() => {
     let cachedChild = null;
     try {
@@ -146,109 +131,56 @@ export default function LessonPage() {
     return cachedChild || packageData?.student_context || currentUser;
   }, [packageData, currentUser]);
 
-  const studentNickname = useMemo(() => {
-    return studentData?.nickname || studentData?.display_name || null;
-  }, [studentData]);
-
-  const personalizedName = useMemo(() => {
+  const studentName = useMemo(() => {
     return resolveStudentName(studentData, currentUser);
   }, [studentData, currentUser]);
 
-  // Audit console log as requested
+  // Lesson Progress Metrics
+  const totalBlocks = sortedBlocks.length || 1;
+  const completedCount = completedBlockIds.length;
+  const progressPercent = Math.min(100, Math.round((completedCount / totalBlocks) * 100));
+
+  // Current Active Block & Pedagogical Phase
+  const activeBlock = sortedBlocks[Math.min(completedCount, totalBlocks - 1)] || null;
+  const activePhaseLabel = useMemo(() => {
+    if (!activeBlock) return "🎯 Set Induksi";
+    const p = (activeBlock.pedagogical_phase || "").toUpperCase();
+    const t = (activeBlock.block_type || "").toUpperCase();
+    if (p === "INDUCTION" || t === "INDUCTION") return "🎯 Set Induksi";
+    if (p === "CONCEPT" || t === "CONCEPT" || t === "TEXT_MARKDOWN") return "📚 Kenali Konsep";
+    if (p === "WORKED_EXAMPLE" || t === "WORKED_EXAMPLE") return "✏️ Contoh Terbimbing";
+    if (p === "PBD_ASSESSMENT" || t === "PBD_ASSESSMENT" || t === "QUIZ") return "📝 Pentaksiran PBD";
+    if (p === "REFLECTION" || t === "REFLECTION") return "🌱 Refleksi";
+    return "🎒 Modul Pembelajaran";
+  }, [activeBlock]);
+
+  // Trigger celebration when 100% completed
   useEffect(() => {
-    console.log({
-      studentData,
-      studentNickname,
-      currentUser,
-      personalizedName
-    });
-  }, [studentData, studentNickname, currentUser, personalizedName]);
+    if (completedCount >= totalBlocks && totalBlocks > 0 && !showCelebration) {
+      setShowCelebration(true);
+      confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 } });
+    }
+  }, [completedCount, totalBlocks, showCelebration]);
 
-  const studentName = personalizedName;
-
-  // Session duration calculator
   const getElapsedMinutes = useCallback(() => {
     return Math.max(1, Math.round((Date.now() - sessionStartRef.current) / 60000));
   }, []);
 
-  // Update StudySession duration every 60 seconds
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      const sId = sessionIdRef.current;
-      if (!sId) return;
-      try {
-        await base44.entities.StudySession.update(sId, { duration_minutes: getElapsedMinutes() });
-      } catch (err) {}
-    }, 60000);
-    return () => clearInterval(interval);
-  }, [getElapsedMinutes]);
-
-  const triggerConfetti = () => confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-
-  const handleStageComplete = async (stageKey, xpAmount) => {
-    if (progressState[`${stageKey}_completed`]) {
-      setActiveTab("map");
-      return;
-    }
-
-    const studentId = await getActiveStudentId();
-    setProgressState(prev => ({
-      ...prev,
-      [`${stageKey}_completed`]: true,
-      xp_earned: prev.xp_earned + xpAmount
-    }));
-
-    if (studentId) {
-      await processReward(studentId, {
-        activityType: "lesson_complete",
-        referenceId: `${topicId}_${stageKey}`,
-        referenceName: `${packageData?.lesson?.title || "Misi"} - ${stageKey}`,
-        subjectName: packageData?.curriculum_context?.subject_name,
-        reason: `Selesai ${stageKey.toUpperCase()}`
-      }).catch(() => {});
-    }
-
-    triggerConfetti();
-    setActiveTab("map");
-  };
+  const triggerConfetti = () => confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
 
   const handleAdventureBlockComplete = async (blockId, blockType) => {
     if (!blockId) return;
 
-    if (completedBlockIds.includes(blockId)) {
-      return; // Already completed, prevent duplicate XP and reward process calls
-    }
+    if (completedBlockIds.includes(blockId)) return;
 
-    setCompletedBlockIds((prev) => {
-      const next = Array.from(new Set([...prev, blockId]));
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-
-    const typeKeyMap = {
-      TEXT_MARKDOWN: "lesson",
-      NOTE: "lesson",
-      TEXT: "lesson",
-      VIDEO_EMBED: "video",
-      VIDEO: "video",
-      MIND_MAP: "mindmap",
-      MINDMAP: "mindmap",
-      FLASHCARD_DECK: "flashcard",
-      FLASHCARD: "flashcard",
-      FLASHCARDS: "flashcard",
-      INTERACTIVE_GAME: "games",
-      GAME: "games",
-      ACTIVITY: "games",
-      QUIZ: "quiz"
-    };
-
-    const stageKey = typeKeyMap[(blockType || "").toUpperCase()] || "lesson";
+    const nextCompleted = Array.from(new Set([...completedBlockIds, blockId]));
+    setCompletedBlockIds(nextCompleted);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(nextCompleted));
+    } catch {}
 
     setProgressState((prev) => ({
       ...prev,
-      [`${stageKey}_completed`]: true,
       xp_earned: prev.xp_earned + 25
     }));
 
@@ -287,7 +219,7 @@ export default function LessonPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-emerald-950 text-white">
         <Loader2 className="w-12 h-12 text-lime-400 animate-spin" />
-        <p className="mt-4 font-black text-lime-200 text-sm">Membuka Pakej Pembelajaran...</p>
+        <p className="mt-4 font-black text-lime-200 text-sm">Membuka Pakej Pembelajaran DSKP...</p>
       </div>
     );
   }
@@ -295,8 +227,8 @@ export default function LessonPage() {
   const worldTheme = WORLD_THEMES.default;
 
   return (
-    <div className={`min-h-screen ${worldTheme.bgGradient} font-sans text-stone-100 pb-24 px-4 py-6`}>
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className={`min-h-screen ${worldTheme.bgGradient} font-sans text-stone-100 pb-24 px-4 py-6 text-left`}>
+      <div className="max-w-4xl mx-auto space-y-5">
 
         {/* TOP HUD BAR */}
         <div className="bg-stone-900/90 border-2 border-stone-700/80 rounded-3xl p-4 shadow-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 backdrop-blur-md">
@@ -309,16 +241,15 @@ export default function LessonPage() {
             </button>
             <div>
               <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${worldTheme.badgeBg}`}>
-                {packageData?.curriculum_context?.subject_name || "Subjek"}
+                {packageData?.curriculum_context?.subject_name || "Subjek DSKP"}
               </span>
               <h1 className="text-sm sm:text-base font-black text-white mt-1 flex items-center gap-1.5 truncate">
-                <Compass className="w-4 h-4 text-amber-400 shrink-0" /> {packageData?.lesson?.title || "Misi Pembelajaran"}
+                <Compass className="w-4 h-4 text-amber-400 shrink-0" /> {packageData?.lesson?.title || "Misi Pembelajaran DSKP"}
               </h1>
             </div>
           </div>
 
           <div className="flex items-center justify-between sm:justify-end gap-3">
-            {/* MODE SWITCHER CONTROLLER */}
             <div className="bg-stone-950 p-1 rounded-2xl border border-stone-800 flex items-center gap-1">
               <button
                 onClick={() => handleModeChange("adventure")}
@@ -344,16 +275,44 @@ export default function LessonPage() {
               </button>
             </div>
 
-            {/* XP BADGE */}
             <div className="bg-gradient-to-r from-amber-400 to-lime-400 px-3 py-1.5 rounded-2xl text-stone-950 font-black text-xs shadow-md flex items-center gap-1.5 shrink-0">
-              <Leaf className="w-4 h-4 fill-stone-950" /> {progressState.xp_earned} XP
+              <Leaf className="w-4 h-4 fill-stone-950" /> {progressState.xp_earned + 50} XP
             </div>
+          </div>
+        </div>
+
+        {/* PHASE 1: LESSON PROGRESS JOURNEY BAR & SUKU MOTIVATION BUBBLE */}
+        <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-4 shadow-xl space-y-3">
+          <div className="flex items-center justify-between text-xs font-black">
+            <span className="text-amber-300 flex items-center gap-1.5">
+              <span>🐢</span> Misi {completedCount}/{totalBlocks} Selesai
+            </span>
+            <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-300 border border-amber-500/30 rounded-full text-[10px]">
+              Fasa: {activePhaseLabel}
+            </span>
+            <span className="text-emerald-400">{progressPercent}%</span>
+          </div>
+
+          <div className="w-full h-3 bg-stone-950 rounded-full overflow-hidden border border-stone-800 p-0.5">
+            <div
+              className="h-full bg-gradient-to-r from-amber-400 via-lime-400 to-emerald-400 rounded-full transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+
+          {/* SUKU MASCOT MOTIVATION SPEECH BUBBLE */}
+          <div className="p-3 bg-stone-950/80 rounded-2xl border border-stone-800 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-2xl shrink-0">
+              🐢
+            </div>
+            <p className="text-xs font-bold text-stone-200">
+              "Hebat {studentName}! {progressPercent >= 100 ? "Kamu berjaya menamatkan misi ini!" : "Mari teruskan kembara membantu Suku!"}"
+            </p>
           </div>
         </div>
 
         {/* MAIN MODE VIEW CONTENT */}
         {learningMode === "adventure" ? (
-          /* ADVENTURE MODE EXPERIENCE */
           <LessonAdventure
             packageData={packageData}
             contentBlocks={sortedBlocks}
@@ -365,18 +324,18 @@ export default function LessonPage() {
             quizComponent={
               <div className="bg-gradient-to-br from-amber-950 to-stone-900 rounded-3xl p-6 sm:p-8 border-2 border-amber-500/40 shadow-2xl text-center space-y-4">
                 <Trophy className="w-14 h-14 text-amber-400 mx-auto animate-bounce" />
-                <h3 className="text-xl font-black text-amber-200">⚔️ Ujian Kemahiran Boss</h3>
-                <p className="text-xs text-stone-300 font-bold">Jawab soalan penilaian untuk melengkapkan modul ini!</p>
+                <h3 className="text-xl font-black text-amber-200">⚔️ Ujian Pentaksiran Bilik Darjah (PBD)</h3>
+                <p className="text-xs text-stone-300 font-bold">Jawab soalan penilaian untuk melengkapkan modul DSKP ini!</p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto pt-2">
                   <Button
-                    onClick={() => navigate(`/quiz/${topicId || primaryAssessment?.id}?topic=${topicId || ''}&version=${versionId || ''}&limit=10&mode=practice`)}
+                    onClick={() => navigate(`/quiz/${topicId || primaryAssessment?.id}?topic=${topicId || ''}&version=${packageData?.published_version?.id || ''}&limit=10&mode=practice`)}
                     className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs py-4 rounded-xl border-b-4 border-amber-600"
                   >
-                    ⚡ Latihan (10 Soalan)
+                    ⚡ Latihan PBD (10 Soalan)
                   </Button>
                   <Button
-                    onClick={() => navigate(`/quiz/${topicId || primaryAssessment?.id}?topic=${topicId || ''}&version=${versionId || ''}&limit=20&mode=mastery`)}
+                    onClick={() => navigate(`/quiz/${topicId || primaryAssessment?.id}?topic=${topicId || ''}&version=${packageData?.published_version?.id || ''}&limit=20&mode=mastery`)}
                     className="bg-orange-500 hover:bg-orange-400 text-stone-950 font-black text-xs py-4 rounded-xl border-b-4 border-orange-700"
                   >
                     ⚔️ Ujian Mahir (20 Soalan)
@@ -386,7 +345,6 @@ export default function LessonPage() {
             }
           />
         ) : (
-          /* CLASSIC LMS TAB-BASED EXPERIENCE */
           <ClassicLessonView
             sortedBlocks={sortedBlocks}
             primaryAssessment={primaryAssessment}
@@ -397,11 +355,50 @@ export default function LessonPage() {
             progressState={progressState}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-            handleStageComplete={handleStageComplete}
             handleSpeech={handleSpeech}
             isSpeaking={isSpeaking}
             navigate={navigate}
           />
+        )}
+
+        {/* PHASE 3: LESSON COMPLETION CELEBRATION MODAL */}
+        {showCelebration && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-stone-900 border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center space-y-5 shadow-2xl animate-in zoom-in-95 duration-300">
+              <div className="w-16 h-16 bg-emerald-500/20 border border-emerald-400/40 rounded-full flex items-center justify-center text-4xl mx-auto">
+                🎉
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-emerald-300">🎉 Misi DSKP Tamat!</h2>
+                <p className="text-xs text-stone-300 font-bold mt-1">
+                  Tahniah {studentName}! Kamu berjaya melengkapkan keseluruhan modul pembelajaran ini.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">
+                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center gap-2 text-amber-300 font-black text-sm">
+                  <Leaf className="w-4 h-4 fill-amber-400" /> +50 XP
+                </div>
+                <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl flex items-center justify-center gap-2 text-cyan-300 font-black text-sm">
+                  <Coins className="w-4 h-4 text-cyan-400" /> +10 Syiling
+                </div>
+              </div>
+
+              <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 text-left flex items-start gap-3">
+                <span className="text-3xl">🐢</span>
+                <p className="text-xs font-bold text-stone-200">
+                  "Kamu sangat hebat! Terima kasih kerana membantu Suku memahami tajuk ini dengan baik!"
+                </p>
+              </div>
+
+              <Button
+                onClick={() => navigate(`/study/${subjectId}`)}
+                className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-sm rounded-xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+              >
+                Kembali Ke Peta Pembelajaran 🗺️
+              </Button>
+            </div>
+          </div>
         )}
 
       </div>

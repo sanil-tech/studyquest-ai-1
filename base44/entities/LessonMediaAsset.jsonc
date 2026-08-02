@@ -1,0 +1,100 @@
+{
+  "name": "LessonMediaAsset",
+  "type": "object",
+  "properties": {
+    "lesson_id": {
+      "type": "string",
+      "description": "ID of the parent Lesson"
+    },
+    "lesson_version_id": {
+      "type": "string",
+      "description": "ID of the parent LessonVersion"
+    },
+    "asset_type": {
+      "type": "string",
+      "enum": [
+        "infographic",
+        "image",
+        "diagram",
+        "illustration",
+        "chart"
+      ],
+      "default": "infographic",
+      "description": "Type of visual media asset"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of this media asset"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "URL of the infographic image / visual asset"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description or summary of the visual asset"
+    },
+    "key_points_json": {
+      "type": "string",
+      "description": "JSON string array of key takeaways"
+    },
+    "visual_labels_json": {
+      "type": "string",
+      "description": "JSON string of visual labels or hotspots"
+    },
+    "sort_order": {
+      "type": "number",
+      "default": 0,
+      "description": "Display ordering"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default": "draft",
+      "description": "Media asset lifecycle status"
+    },
+    "created_source": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "ai_generated"
+      ],
+      "default": "manual",
+      "description": "Whether this asset was created manually or by AI"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "User ID of admin who approved this asset for publishing"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this asset was approved"
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "read": true,
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

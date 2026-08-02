@@ -56,11 +56,39 @@ export default async function(req: Request): Promise<Response> {
       );
     }
 
+    // QUALITY SHIELD CHECK: Enforce Quality Score >= 80 (Good / Excellent tier) for DSKP publishing
+    const qualityScore = lessonVersion.quality_score || 0;
+    if (qualityScore > 0 && qualityScore < 80 && !body.force_publish) {
+      return Response.json(
+        {
+          success: false,
+          error: `Skor kualiti DSKP (${qualityScore}%) berada dalam status Perlu Semakan (<80%). Sila kemaskini atau audit semula sebelum menerbit.`,
+          quality_score: qualityScore,
+          publication_tier: qualityScore >= 70 ? "NEEDS_REVIEW" : "REJECTED",
+        },
+        { status: 400 }
+      );
+    }
+
+    // PREVIEW APPROVAL SHIELD CHECK: Enforce preview approval (preview_status === APPROVED) before publishing
+    const previewStatus = lessonVersion.preview_status || "NOT_VIEWED";
+    if (previewStatus !== "APPROVED" && !body.force_publish) {
+      return Response.json(
+        {
+          success: false,
+          error: "Pelajaran mestilah melengkapkan audit kualiti AI (>=80%) dan kelulusan pratonton admin (APPROVED) sebelum diterbitkan.",
+          preview_status: previewStatus,
+        },
+        { status: 400 }
+      );
+    }
+
     // 4. LEGACY RECORD HANDLING:
     //    Attach unassigned legacy content (where lesson_version_id is null/undefined, lesson_id matches, AND status is not published/archived)
     //    NEVER touch or move existing published/archived records belonging to another version!
     const legacyAttachedCounts: Record<string, number> = {
       LessonContent: 0,
+      LessonMediaAsset: 0,
       Flashcard: 0,
       QuestionBank: 0,
       LearningActivity: 0,
@@ -71,6 +99,7 @@ export default async function(req: Request): Promise<Response> {
 
     const entityNames = [
       "LessonContent",
+      "LessonMediaAsset",
       "Flashcard",
       "QuestionBank",
       "LearningActivity",

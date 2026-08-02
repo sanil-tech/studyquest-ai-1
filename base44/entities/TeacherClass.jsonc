@@ -1,0 +1,51 @@
+{
+  "name": "TeacherClass",
+  "type": "object",
+  "description": "Classroom entity managed by a teacher",
+  "properties": {
+    "teacher_id": {
+      "type": "string",
+      "description": "ID of the managing teacher user"
+    },
+    "class_name": {
+      "type": "string",
+      "description": "Name of the class (e.g. 4 Cemerlang, 5 Bijak)"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Primary subject taught (e.g. Matematik, Sains)"
+    },
+    "year_level": {
+      "type": "string",
+      "description": "Year / Form level (e.g. Tahun 4, Tingkatan 1)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "teacher_id",
+    "class_name",
+    "subject",
+    "year_level"
+  ],
+  "rls": {
+    "read": true,
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

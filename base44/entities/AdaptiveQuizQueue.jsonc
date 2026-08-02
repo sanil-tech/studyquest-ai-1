@@ -1,0 +1,90 @@
+{
+  "name": "AdaptiveQuizQueue",
+  "type": "object",
+  "description": "Connects AI LearningRecommendation with generated adaptive quiz missions",
+  "properties": {
+    "student_id": {
+      "type": "string",
+      "description": "ID of the target student"
+    },
+    "recommendation_id": {
+      "type": "string",
+      "description": "ID of the parent LearningRecommendation"
+    },
+    "assessment_id": {
+      "type": "string",
+      "description": "ID of the generated Assessment"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Subject name (e.g. Matematik, Sains, Bahasa Melayu)"
+    },
+    "learning_standard_id": {
+      "type": "string",
+      "description": "Skill code or DSKP Standard Pembelajaran ID"
+    },
+    "quiz_tier": {
+      "type": "string",
+      "enum": [
+        "remediation",
+        "reinforcement",
+        "challenge"
+      ],
+      "default": "remediation",
+      "description": "Adaptive tier based on EWMA mastery"
+    },
+    "target_skills_json": {
+      "type": "string",
+      "description": "JSON string array of target conceptual weaknesses"
+    },
+    "question_ids_json": {
+      "type": "string",
+      "description": "JSON string array of question IDs included in this adaptive quiz"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "expired"
+      ],
+      "default": "pending",
+      "description": "Lifecycle status of the adaptive mission"
+    },
+    "completed_attempt_id": {
+      "type": "string",
+      "description": "ID of the QuizAttempt that fulfilled this queue item"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "student_id",
+    "subject",
+    "quiz_tier"
+  ],
+  "rls": {
+    "read": true,
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "name": "RewardApproval",
+  "type": "object",
+  "description": "Parent approval record for child coin redemption requests",
+  "properties": {
+    "student_id": {
+      "type": "string",
+      "description": "ID of the requesting child student"
+    },
+    "parent_id": {
+      "type": "string",
+      "description": "ID of the authorizing parent user"
+    },
+    "reward_type": {
+      "type": "string",
+      "description": "Description or type of reward (e.g. Avatar Item, Extra Screen Time)"
+    },
+    "coins_requested": {
+      "type": "number",
+      "description": "Coin cost requested for redemption"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Parent approval status"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "student_id",
+    "parent_id",
+    "reward_type",
+    "coins_requested"
+  ],
+  "rls": {
+    "read": true,
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

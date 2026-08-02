@@ -20,6 +20,16 @@ import ChildSummaryCard from "@/components/parent/ChildSummaryCard";
 import ChildDetailPanel from "@/components/parent/ChildDetailPanel";
 import DiagnosticRecommendationCard, { shouldShowDiagnosticRecommendation } from "@/components/parent/DiagnosticRecommendationCard";
 import ParentDiagnosticIntroModal from "@/components/parent/ParentDiagnosticIntroModal";
+import ParentLearningOverview from "@/components/parent/ParentLearningOverview";
+import MasteryProgressCard from "@/components/parent/MasteryProgressCard";
+import StrengthWeaknessCard from "@/components/parent/StrengthWeaknessCard";
+import AIParentCoach from "@/components/parent/AIParentCoach";
+import LearningGrowthChart from "@/components/parent/LearningGrowthChart";
+import ParentGoalCard from "@/components/parent/ParentGoalCard";
+import ParentMissionLauncher from "@/components/parent/ParentMissionLauncher";
+import RewardApprovalCard from "@/components/parent/RewardApprovalCard";
+import LearningStreakCard from "@/components/parent/LearningStreakCard";
+import NotificationCenter from "@/components/parent/NotificationCenter";
 import { loadChildrenWithStats, getSelectedChildId, setSelectedChildId } from "@/lib/childUtils";
 import { useViewMode } from "@/lib/ViewModeContext";
 
@@ -96,6 +106,44 @@ export default function ParentDashboard() {
   const [diagnosticTargetChild, setDiagnosticTargetChild] = useState(null);
 
   const [weather] = useState({ code: 0, temp: 28, city: "Kota Kinabalu" });
+  const [parentInsights, setParentInsights] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [parentNotifications, setParentNotifications] = useState([]);
+
+  const fetchNotifications = useCallback(async (childId) => {
+    if (!childId) return;
+    try {
+      const res = await base44.functions.invoke("generateParentNotifications", {
+        student_id: childId,
+      });
+      if (res.data?.success && Array.isArray(res.data?.notifications)) {
+        setParentNotifications(res.data.notifications);
+      }
+    } catch (err) {
+      console.warn("generateParentNotifications fallback:", err);
+    }
+  }, []);
+
+  const loadParentInsights = useCallback(async (childId) => {
+    if (!childId) {
+      setParentInsights(null);
+      return;
+    }
+    try {
+      setInsightsLoading(true);
+      const res = await base44.functions.invoke("getParentLearningInsights", {
+        child_student_id: childId,
+      });
+      if (res.data?.success) {
+        setParentInsights(res.data);
+      }
+      fetchNotifications(childId);
+    } catch (err) {
+      console.warn("getParentLearningInsights fallback:", err);
+    } finally {
+      setInsightsLoading(false);
+    }
+  }, [fetchNotifications]);
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -120,6 +168,7 @@ export default function ParentDashboard() {
         const savedId = getSelectedChildId();
         const initial = kids.find((k) => k.id === savedId) || kids[0];
         setSelectedChild(initial);
+        loadParentInsights(initial.id);
       }
     } catch (err) {
       console.error("Ralat memuatkan dashboard:", err);
@@ -131,11 +180,17 @@ export default function ParentDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, loadParentInsights]);
 
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
+
+  useEffect(() => {
+    if (selectedChild?.id) {
+      loadParentInsights(selectedChild.id);
+    }
+  }, [selectedChild?.id, loadParentInsights]);
 
   if (loading) {
     return (
@@ -287,6 +342,51 @@ export default function ParentDashboard() {
                 <ChildDetailPanel
                   child={selectedChild}
                   onClose={() => setSelectedChild(null)}
+                />
+              </div>
+            )}
+
+            {/* ═══ PHASE 7.2: PARENT AI LEARNING INTELLIGENCE DASHBOARD ═══ */}
+            {selectedChild && parentInsights && (
+              <div className="mt-6 space-y-6 border-t-2 border-slate-200/60 pt-6">
+                <AIParentCoach aiParentMessage={parentInsights.ai_parent_message} />
+                <ParentLearningOverview
+                  childProfile={parentInsights.child_profile}
+                  learningProgress={parentInsights.learning_progress}
+                />
+                <MasteryProgressCard masteryOverview={parentInsights.mastery_overview} />
+                <LearningGrowthChart learningProgress={parentInsights.learning_progress} />
+                <StrengthWeaknessCard
+                  strengths={parentInsights.strengths}
+                  weaknesses={parentInsights.weaknesses}
+                />
+              </div>
+            )}
+
+            {/* ═══ PHASE 7.3: PARENT ACTION CENTER ═══ */}
+            {selectedChild && (
+              <div className="mt-6 space-y-6 border-t-2 border-slate-200/60 pt-6">
+                <ParentMissionLauncher
+                  studentId={selectedChild.id}
+                  weaknesses={parentInsights?.weaknesses || []}
+                  onMissionCreated={() => loadParentInsights(selectedChild.id)}
+                />
+                <ParentGoalCard
+                  studentId={selectedChild.id}
+                  goals={[]}
+                  onRefresh={() => loadParentInsights(selectedChild.id)}
+                />
+                <RewardApprovalCard
+                  requests={[]}
+                  onRefresh={loadDashboardData}
+                />
+                <LearningStreakCard
+                  currentStreak={selectedChild.realProgress?.streak_days || 3}
+                  longestStreak={14}
+                />
+                <NotificationCenter
+                  notifications={parentNotifications}
+                  onRefresh={() => fetchNotifications(selectedChild.id)}
                 />
               </div>
             )}
