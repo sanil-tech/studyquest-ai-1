@@ -88,6 +88,7 @@ export default async function(req: Request): Promise<Response> {
     //    NEVER touch or move existing published/archived records belonging to another version!
     const legacyAttachedCounts: Record<string, number> = {
       LessonContent: 0,
+      LessonBlock: 0,
       LessonMediaAsset: 0,
       Flashcard: 0,
       QuestionBank: 0,
@@ -99,6 +100,7 @@ export default async function(req: Request): Promise<Response> {
 
     const entityNames = [
       "LessonContent",
+      "LessonBlock",
       "LessonMediaAsset",
       "Flashcard",
       "QuestionBank",
@@ -146,6 +148,8 @@ export default async function(req: Request): Promise<Response> {
     const archivedCounts: Record<string, number> = {
       LessonVersion: toArchive.length,
       LessonContent: 0,
+      LessonBlock: 0,
+      LessonMediaAsset: 0,
       Flashcard: 0,
       QuestionBank: 0,
       LearningActivity: 0,
@@ -166,8 +170,7 @@ export default async function(req: Request): Promise<Response> {
         }))
       );
 
-      // Archive child content across ALL 7 learning entities for previously published versions
-      const archivedStatus = { status: "archived" as const };
+      // Archive child content across ALL 8 learning entities for previously published versions
       for (const entityName of entityNames) {
         try {
           const recordsToArchive = await base44.asServiceRole.entities[entityName].filter({
@@ -175,9 +178,11 @@ export default async function(req: Request): Promise<Response> {
             status: "published",
           });
           if (recordsToArchive.length > 0) {
-            await base44.asServiceRole.entities[entityName].updateMany(
-              { lesson_version_id: { $in: archivedVersionIds }, status: "published" },
-              { $set: archivedStatus }
+            await base44.asServiceRole.entities[entityName].bulkUpdate(
+              recordsToArchive.map((item: any) => ({
+                id: item.id,
+                status: "archived",
+              }))
             );
             archivedCounts[entityName] = recordsToArchive.length;
           }
@@ -197,9 +202,11 @@ export default async function(req: Request): Promise<Response> {
       last_reviewed_at: archivedAt,
     });
 
-    // 7. PROMOTION: Draft → Published for ALL 7 Learning Entities
+    // 7. PROMOTION: Draft → Published for ALL 8 Learning Entities
     const promotedCounts: Record<string, number> = {
       LessonContent: 0,
+      LessonBlock: 0,
+      LessonMediaAsset: 0,
       Flashcard: 0,
       QuestionBank: 0,
       LearningActivity: 0,
@@ -208,7 +215,6 @@ export default async function(req: Request): Promise<Response> {
       CommonMistake: 0,
     };
 
-    const publishedStatus = { status: "published" as const };
     for (const entityName of entityNames) {
       try {
         const draftRecords = await base44.asServiceRole.entities[entityName].filter({
@@ -217,10 +223,11 @@ export default async function(req: Request): Promise<Response> {
         const eligibleToPromote = draftRecords.filter((item: any) => item.status !== "published" && item.status !== "archived");
 
         if (eligibleToPromote.length > 0) {
-          const promoteIds = eligibleToPromote.map((item: any) => item.id);
-          await base44.asServiceRole.entities[entityName].updateMany(
-            { id: { $in: promoteIds } },
-            { $set: publishedStatus }
+          await base44.asServiceRole.entities[entityName].bulkUpdate(
+            eligibleToPromote.map((item: any) => ({
+              id: item.id,
+              status: "published",
+            }))
           );
           promotedCounts[entityName] = eligibleToPromote.length;
         }
