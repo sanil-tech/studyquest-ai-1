@@ -1,0 +1,74 @@
+{
+  "assessments": [
+    {
+      "id": "diag_mat_t1",
+      "title": "Ujian Diagnostik Matematik Tahun 1",
+      "curriculum": "KSSR_SEMAKAN",
+      "subject": "Matematik",
+      "year_level": "Tahun 1",
+      "topic": "Nombor dan Operasi",
+      "sk_code": "1.4",
+      "sp_code": "1.4.1",
+      "difficulty": "BEGINNER",
+      "bloom_level": "UNDERSTAND",
+      "estimated_duration": 30,
+      "passing_score": 80,
+      "mastery_weight": 1.0,
+      "questions": [
+        {
+          "id": "q_mat_141_01",
+          "type": "MULTIPLE_CHOICE",
+          "widget_type": "standard_quiz",
+          "question": "Apakah nilai digit bagi 4 dalam nombor 45?",
+          "choices": ["4", "40", "45", "5"],
+          "correct_answer": "40",
+          "explanation": "Dalam nombor 45, 4 berada pada nilai tempat puluh, jadi nilainya ialah 40.",
+          "sp_code": "1.4.1",
+          "difficulty": "BEGINNER",
+          "estimated_time": 60
+        },
+        {
+          "id": "q_mat_141_02",
+          "type": "INTERACTIVE_WIDGET",
+          "widget_type": "base_ten_blocks",
+          "question": "Bina nombor 32 menggunakan blok asas sepuluh.",
+          "choices": [],
+          "correct_answer": "{\"puluh\": 3, \"sa\": 2}",
+          "explanation": "32 terdiri daripada 3 puluh dan 2 sa.",
+          "sp_code": "1.4.1",
+          "difficulty": "INTERMEDIATE",
+          "estimated_time": 90
+        }
+      ]
+    },
+    {
+      "id": "diag_bm_t1",
+      "title": "Ujian Diagnostik Bahasa Melayu Tahun 1",
+      "curriculum": "KSSR_SEMAKAN",
+      "subject": "Bahasa Melayu",
+      "year_level": "Tahun 1",
+      "topic": "Tatabahasa",
+      "sk_code": "2.1",
+      "sp_code": "2.1.1",
+      "difficulty": "INTERMEDIATE",
+      "bloom_level": "CREATE",
+      "estimated_duration": 20,
+      "passing_score": 75,
+      "mastery_weight": 1.0,
+      "questions": [
+        {
+          "id": "q_bm_211_01",
+          "type": "INTERACTIVE_WIDGET",
+          "widget_type": "sentence_builder",
+          "question": "Susun perkataan menjadi ayat tunggal yang betul.",
+          "choices": ["buku", "Ali", "membaca"],
+          "correct_answer": "Ali membaca buku",
+          "explanation": "'Ali' ialah subjek, 'membaca buku' ialah predikat.",
+          "sp_code": "2.1.1",
+          "difficulty": "INTERMEDIATE",
+          "estimated_time": 120
+        }
+      ]
+    }
+  ]
+}

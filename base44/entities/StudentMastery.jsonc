@@ -1,0 +1,41 @@
+{
+  "name": "StudentMastery",
+  "description": "Student mastery level for specific curriculum standards",
+  "attributes": [
+    {
+      "name": "student_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "sp_code",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "mastery_percentage",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "confidence_level",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "status",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "attempts",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "last_attempt",
+      "type": "string",
+      "required": false
+    }
+  ]
+}

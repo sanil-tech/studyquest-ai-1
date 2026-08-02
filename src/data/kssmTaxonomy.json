@@ -1,0 +1,57 @@
+{
+  "framework": "KSSM",
+  "description": "Kurikulum Standard Sekolah Menengah",
+  "subjects": {
+    "Matematik": {
+      "Tingkatan 1": [
+        {
+          "sp_code": "1.1.1",
+          "title": "Mengenal nombor nisbah",
+          "bloom_level": "UNDERSTAND",
+          "prerequisites": [],
+          "default_widget_type": "number_scale"
+        }
+      ],
+      "Tingkatan 2": [],
+      "Tingkatan 3": [],
+      "Tingkatan 4": [
+        {
+          "sp_code": "1.1.1",
+          "title": "Mengenal fungsi kuadratik",
+          "bloom_level": "ANALYZE",
+          "prerequisites": ["1.1.1"],
+          "default_widget_type": "function_grapher"
+        }
+      ],
+      "Tingkatan 5": []
+    },
+    "Bahasa Melayu": {
+      "Tingkatan 1": [],
+      "Tingkatan 2": [],
+      "Tingkatan 3": [],
+      "Tingkatan 4": [],
+      "Tingkatan 5": []
+    },
+    "Sains": {
+      "Tingkatan 1": [],
+      "Tingkatan 2": [],
+      "Tingkatan 3": [],
+      "Tingkatan 4": [],
+      "Tingkatan 5": []
+    },
+    "English": {
+      "Tingkatan 1": [],
+      "Tingkatan 2": [],
+      "Tingkatan 3": [],
+      "Tingkatan 4": [],
+      "Tingkatan 5": []
+    },
+    "Sejarah": {
+      "Tingkatan 1": [],
+      "Tingkatan 2": [],
+      "Tingkatan 3": [],
+      "Tingkatan 4": [],
+      "Tingkatan 5": []
+    }
+  }
+}

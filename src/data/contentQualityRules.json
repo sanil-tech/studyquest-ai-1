@@ -1,0 +1,33 @@
+{
+  "bloom_levels": [
+    "Remember",
+    "Understand",
+    "Apply",
+    "Analyse",
+    "Evaluate",
+    "Create"
+  ],
+  "learning_objective_criteria": [
+    "Must not just use 'Understand'",
+    "Must be measurable (e.g. 'Student can identify', 'Student can calculate')",
+    "Must align directly to the SP code"
+  ],
+  "assessment_coverage_requirements": [
+    "Concept teaching",
+    "Practice",
+    "Assessment"
+  ],
+  "activity_matching": {
+    "Pecahan": ["fraction_slicer", "number_scale"],
+    "Nilai Tempat": ["base_ten_blocks"],
+    "Membina Ayat": ["sentence_builder"],
+    "Sains": ["interactive_diagram"]
+  },
+  "scoring_weights": {
+    "alignment": 0.4,
+    "pedagogy": 0.3,
+    "assessment": 0.2,
+    "engagement": 0.1
+  },
+  "passing_threshold": 80
+}

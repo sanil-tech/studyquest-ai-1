@@ -1,0 +1,21 @@
+{
+  "thresholds": {
+    "max_cost_per_student_myr": 1.50,
+    "max_load_time_ms": 3000,
+    "min_device_fps": 30,
+    "token_cost_per_1k": 0.0015
+  },
+  "qa_checklist": [
+    "Lesson Flow & Navigation",
+    "Widget Interaction",
+    "Assessment Question Clarity",
+    "AI Tutor Responsiveness",
+    "Bahasa Melayu Grammar/Nuance"
+  ],
+  "lesson_statuses": [
+    "DRAFT",
+    "TESTING",
+    "APPROVED",
+    "ARCHIVED"
+  ]
+}

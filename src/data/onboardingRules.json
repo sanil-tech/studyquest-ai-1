@@ -1,0 +1,55 @@
+{
+  "curriculums": [
+    {
+      "id": "kssr_semakan",
+      "name": "KSSR Semakan",
+      "active": true
+    }
+  ],
+  "subjects": [
+    {
+      "id": "matematik",
+      "name": "Matematik",
+      "active": true
+    },
+    {
+      "id": "sains",
+      "name": "Sains",
+      "active": false
+    }
+  ],
+  "levels": [
+    {
+      "id": "tahun_1",
+      "name": "Tahun 1",
+      "active": true
+    },
+    {
+      "id": "tahun_2",
+      "name": "Tahun 2",
+      "active": false
+    }
+  ],
+  "steps": [
+    {
+      "id": "welcome",
+      "title": "Selamat Datang!",
+      "description": "Mari mulakan pengembaraan pembelajaran anda."
+    },
+    {
+      "id": "diagnostic",
+      "title": "Ujian Diagnostik",
+      "description": "Tunjukkan kehebatan anda supaya kami boleh bantu."
+    },
+    {
+      "id": "path_generation",
+      "title": "Membina Laluan",
+      "description": "AI sedang menyediakan misi khas untuk anda..."
+    },
+    {
+      "id": "first_quest",
+      "title": "Cabaran Pertama",
+      "description": "Misi pertama telah sedia!"
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "resources": [
+    {
+      "sp_code": "1.4.1",
+      "subject": "Matematik",
+      "grade": "Tahun 1",
+      "title": "Menyatakan nilai tempat dan nilai digit",
+      "description": "Murid dapat membezakan antara nilai tempat (sa, puluh) dan nilai digit (0-9, 10-90) bagi sebarang nombor hingga 100.",
+      "learning_objectives": [
+        "Mengenal pasti nilai tempat 'sa' dan 'puluh'.",
+        "Menentukan nilai digit bagi setiap digit dalam nombor dua digit."
+      ],
+      "success_criteria": [
+        "Saya boleh menyatakan nilai tempat bagi nombor 45 ialah 4 puluh dan 5 sa.",
+        "Saya boleh menyatakan nilai digit 4 dalam 45 ialah 40."
+      ],
+      "difficulty": "BEGINNER",
+      "bloom_level": "APPLY",
+      "estimated_duration": 15,
+      "mastery_threshold": 80,
+      "prerequisites": ["1.1.1"],
+      "lesson_ids": ["lsn_mat_141_01"],
+      "lesson_version_ids": ["lsv_mat_141_01_v1"],
+      "lesson_block_ids": ["blk_141_induction", "blk_141_concept", "blk_141_practice"],
+      "assessment_ids": ["asm_mat_141_pbd"],
+      "quiz_ids": ["qz_mat_141_mastery"],
+      "widget_ids": ["wdg_base_ten_blocks"],
+      "revision_ids": ["rev_mat_141_flashcards"],
+      "mission_ids": ["msn_mat_141_turtle"],
+      "video_ids": ["vid_mat_141_intro"],
+      "audio_ids": ["aud_mat_141_dictation"],
+      "vocabulary_ids": ["voc_nilai_tempat", "voc_nilai_digit", "voc_sa", "voc_puluh"],
+      "hint_ids": ["hnt_141_blocks_visual", "hnt_141_place_value_chart"],
+      "common_mistakes": [
+        "Keliru antara definisi nilai tempat (perkataan) dan nilai digit (angka).",
+        "Menulis nilai digit sa sebagai puluh."
+      ],
+      "recommended_next": ["1.4.2", "1.5.1"],
+      "recommended_revision": ["1.1.1"]
+    },
+    {
+      "sp_code": "1.4.2",
+      "subject": "Matematik",
+      "grade": "Tahun 1",
+      "title": "Mencerakinkan sebarang nombor",
+      "description": "Mencerakinkan sebarang nombor mengikut nilai tempat dan nilai digit.",
+      "learning_objectives": [
+        "Mencerakinkan nombor kepada nilai tempat.",
+        "Mencerakinkan nombor kepada nilai digit."
+      ],
+      "success_criteria": [
+        "Saya boleh menulis 34 = 3 puluh + 4 sa.",
+        "Saya boleh menulis 34 = 30 + 4."
+      ],
+      "difficulty": "INTERMEDIATE",
+      "bloom_level": "ANALYZE",
+      "estimated_duration": 20,
+      "mastery_threshold": 85,
+      "prerequisites": ["1.4.1"],
+      "lesson_ids": ["lsn_mat_142_01"],
+      "lesson_version_ids": ["lsv_mat_142_01_v1"],
+      "lesson_block_ids": ["blk_142_concept", "blk_142_activity"],
+      "assessment_ids": ["asm_mat_142_pbd"],
+      "quiz_ids": ["qz_mat_142_drill"],
+      "widget_ids": ["wdg_number_partition"],
+      "revision_ids": ["rev_mat_142_notes"],
+      "mission_ids": ["msn_mat_142_puzzle"],
+      "video_ids": ["vid_mat_142_explainer"],
+      "audio_ids": [],
+      "vocabulary_ids": ["voc_cerakin"],
+      "hint_ids": ["hnt_142_split_number"],
+      "common_mistakes": [
+        "Lupa meletakkan simbol tambah (+) semasa mencerakin.",
+        "Mencerakin 40 sebagai 4 + 0."
+      ],
+      "recommended_next": ["1.5.1"],
+      "recommended_revision": ["1.4.1"]
+    },
+    {
+      "sp_code": "2.1.1",
+      "subject": "Bahasa Melayu",
+      "grade": "Tahun 1",
+      "title": "Membina ayat tunggal",
+      "description": "Murid berupaya membina dan menulis ayat tunggal berdasarkan bahan.",
+      "learning_objectives": [
+        "Mengenal pasti subjek dan predikat dalam ayat.",
+        "Membina ayat tunggal yang lengkap."
+      ],
+      "success_criteria": [
+        "Saya boleh membina ayat 'Ali membaca buku.' dengan betul."
+      ],
+      "difficulty": "INTERMEDIATE",
+      "bloom_level": "CREATE",
+      "estimated_duration": 25,
+      "mastery_threshold": 75,
+      "prerequisites": ["1.1.1"],
+      "lesson_ids": ["lsn_bm_211_01"],
+      "lesson_version_ids": ["lsv_bm_211_01_v1"],
+      "lesson_block_ids": ["blk_211_induction", "blk_211_builder"],
+      "assessment_ids": ["asm_bm_211_pbd"],
+      "quiz_ids": ["qz_bm_211_arrange"],
+      "widget_ids": ["wdg_sentence_builder"],
+      "revision_ids": ["rev_bm_211_examples"],
+      "mission_ids": ["msn_bm_211_story"],
+      "video_ids": ["vid_bm_211_subject_predicate"],
+      "audio_ids": ["aud_bm_211_pronunciation"],
+      "vocabulary_ids": ["voc_subjek", "voc_predikat", "voc_ayat_tunggal"],
+      "hint_ids": ["hnt_211_who_did_what"],
+      "common_mistakes": [
+        "Tidak memulakan ayat dengan huruf besar.",
+        "Lupa meletakkan titik di akhir ayat."
+      ],
+      "recommended_next": ["2.1.2"],
+      "recommended_revision": ["1.1.1"]
+    }
+  ]
+}

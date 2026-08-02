@@ -1,0 +1,20 @@
+{
+  "engagement": {
+    "active_threshold_minutes": 15,
+    "high_streak_days": 3
+  },
+  "learning": {
+    "mastery_gain_excellent": 30,
+    "mastery_gain_good": 15,
+    "velocity_high": 3,
+    "velocity_low": 1
+  },
+  "tutor": {
+    "success_rate_excellent": 80,
+    "success_rate_good": 50,
+    "max_hints_before_intervention": 5
+  },
+  "parent": {
+    "active_visits_per_week": 2
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "completeness_requirements": [
+    "learning_objective",
+    "induction_story",
+    "concept_explanation",
+    "interactive_widget",
+    "guided_practice",
+    "assessment_questions",
+    "mastery_link",
+    "revision_path"
+  ],
+  "scoring_weights": {
+    "alignment": 0.4,
+    "pedagogy": 0.3,
+    "assessment": 0.2,
+    "engagement": 0.1
+  },
+  "health_statuses": [
+    "Healthy",
+    "Needs Review",
+    "Repair Required",
+    "Archived"
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "framework": "KSSR_SEMAKAN",
+  "description": "Kurikulum Standard Sekolah Rendah (Semakan 2017)",
+  "subjects": {
+    "Matematik": {
+      "Tahun 1": [
+        {
+          "sp_code": "1.1.1",
+          "title": "Menyatakan kuantiti secara intuitif",
+          "bloom_level": "UNDERSTAND",
+          "prerequisites": [],
+          "default_widget_type": "number_scale"
+        },
+        {
+          "sp_code": "1.4.1",
+          "title": "Menyatakan nilai tempat dan nilai digit",
+          "bloom_level": "APPLY",
+          "prerequisites": ["1.1.1"],
+          "default_widget_type": "base_ten_blocks"
+        },
+        {
+          "sp_code": "1.5.1",
+          "title": "Membandingkan nilai dua nombor",
+          "bloom_level": "ANALYZE",
+          "prerequisites": ["1.4.1"],
+          "default_widget_type": "number_scale"
+        }
+      ],
+      "Tahun 2": [
+        {
+          "sp_code": "1.1.1",
+          "title": "Mengenal pasti dan menyebut pecahan wajar",
+          "bloom_level": "UNDERSTAND",
+          "prerequisites": [],
+          "default_widget_type": "fraction_slicer"
+        }
+      ],
+      "Tahun 3": [],
+      "Tahun 4": [],
+      "Tahun 5": [],
+      "Tahun 6": []
+    },
+    "Bahasa Melayu": {
+      "Tahun 1": [
+        {
+          "sp_code": "2.1.1",
+          "title": "Membina ayat tunggal",
+          "bloom_level": "CREATE",
+          "prerequisites": [],
+          "default_widget_type": "sentence_builder"
+        }
+      ],
+      "Tahun 2": [],
+      "Tahun 3": [],
+      "Tahun 4": [],
+      "Tahun 5": [],
+      "Tahun 6": []
+    },
+    "Sains": {
+      "Tahun 1": [],
+      "Tahun 2": [],
+      "Tahun 3": [],
+      "Tahun 4": [],
+      "Tahun 5": [],
+      "Tahun 6": []
+    },
+    "English": {
+      "Tahun 1": [],
+      "Tahun 2": [],
+      "Tahun 3": [],
+      "Tahun 4": [],
+      "Tahun 5": [],
+      "Tahun 6": []
+    }
+  }
+}

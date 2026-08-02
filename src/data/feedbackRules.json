@@ -1,0 +1,29 @@
+{
+  "student_emoji_options": [
+    { "id": "happy", "emoji": "😀", "label": "Seronok", "value": 3 },
+    { "id": "neutral", "emoji": "🙂", "label": "Ok", "value": 2 },
+    { "id": "sad", "emoji": "😟", "label": "Susah", "value": 1 }
+  ],
+  "parent_survey": {
+    "questions": [
+      {
+        "id": "q1",
+        "text": "Adakah anak lebih yakin dalam pembelajaran mereka?",
+        "type": "scale_1_to_5"
+      },
+      {
+        "id": "q2",
+        "text": "Adakah StudyQuest membantu prestasi anak anda?",
+        "type": "scale_1_to_5"
+      },
+      {
+        "id": "q3",
+        "text": "Apa yang perlu kami perbaiki?",
+        "type": "text"
+      }
+    ]
+  },
+  "certificate_thresholds": {
+    "mastery_percentage": 80
+  }
+}

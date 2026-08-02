@@ -1,0 +1,56 @@
+[
+  {
+    "id": "demo_strong",
+    "name": "Adam (Strong Demo)",
+    "level": "Tahun 1",
+    "subject": "Matematik",
+    "status": "ADVANCED",
+    "mastery_state": {
+      "overall": 95,
+      "weak_sp_codes": ["SP 2.1.2"]
+    },
+    "learning_history": {
+      "lessons_completed": 20,
+      "ai_hints_used": 1
+    },
+    "parent_insight": {
+      "visits": 5
+    }
+  },
+  {
+    "id": "demo_average",
+    "name": "Bella (Average Demo)",
+    "level": "Tahun 1",
+    "subject": "Matematik",
+    "status": "ON_TRACK",
+    "mastery_state": {
+      "overall": 75,
+      "weak_sp_codes": ["SP 2.1.1", "SP 2.2.1"]
+    },
+    "learning_history": {
+      "lessons_completed": 10,
+      "ai_hints_used": 12
+    },
+    "parent_insight": {
+      "visits": 2
+    }
+  },
+  {
+    "id": "demo_struggling",
+    "name": "Carl (Struggling Demo)",
+    "level": "Tahun 1",
+    "subject": "Matematik",
+    "status": "STRUGGLING",
+    "mastery_state": {
+      "overall": 40,
+      "weak_sp_codes": ["SP 1.1.1", "SP 1.4.1", "SP 1.5.1"]
+    },
+    "learning_history": {
+      "lessons_completed": 4,
+      "ai_hints_used": 25
+    },
+    "parent_insight": {
+      "visits": 0
+    }
+  }
+]

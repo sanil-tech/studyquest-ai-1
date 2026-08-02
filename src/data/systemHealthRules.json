@@ -1,0 +1,21 @@
+{
+  "system_checks": {
+    "db_connection": { "threshold_ms": 200 },
+    "auth_service": { "max_failure_rate": 5 },
+    "ai_engine": { "max_latency_ms": 1500 }
+  },
+  "data_integrity": {
+    "student_required_fields": ["id", "name", "level", "mastery_state"],
+    "mastery_required_fields": ["overall", "topics"],
+    "lesson_required_fields": ["id", "sp_code", "content"]
+  },
+  "readiness_checklist": [
+    { "id": "auth", "label": "Authentication System Tested" },
+    { "id": "diagnostic", "label": "Diagnostic Flow Completed" },
+    { "id": "lesson", "label": "First Lesson Generation Tested" },
+    { "id": "ai_tutor", "label": "AI Tutor Invocation Verified" },
+    { "id": "report", "label": "Parent Report Generated" },
+    { "id": "mobile", "label": "Mobile Layout Verified" },
+    { "id": "feedback", "label": "Feedback Submission Verified" }
+  ]
+}

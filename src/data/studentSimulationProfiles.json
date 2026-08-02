@@ -1,0 +1,31 @@
+{
+  "profiles": [
+    {
+      "id": "sim_fast",
+      "name": "Fast Learner",
+      "description": "High accuracy, fast completion. Simulates rapid progression.",
+      "accuracy": 0.95,
+      "hint_frequency": 0.05,
+      "speed_multiplier": 1.5,
+      "common_mistakes": []
+    },
+    {
+      "id": "sim_normal",
+      "name": "Normal Learner",
+      "description": "Average accuracy, occasional hints. Simulates standard progression.",
+      "accuracy": 0.75,
+      "hint_frequency": 0.30,
+      "speed_multiplier": 1.0,
+      "common_mistakes": ["calculation_error", "misread_question"]
+    },
+    {
+      "id": "sim_struggling",
+      "name": "Struggling Learner",
+      "description": "Low accuracy, frequent hints. Tests AI Tutor escalation and revision routing.",
+      "accuracy": 0.40,
+      "hint_frequency": 0.85,
+      "speed_multiplier": 0.7,
+      "common_mistakes": ["concept_misunderstanding", "calculation_error", "skipped_steps"]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "world_id": 1,
+    "name": "Kampung Nombor",
+    "description": "Pelajari asas nombor di kampung yang damai ini.",
+    "topics": ["Nombor Bulat", "Nilai Tempat"],
+    "sp_codes": ["SP 1.1.1", "SP 1.2.1", "SP 1.3.1", "SP 1.4.1", "SP 1.5.1"],
+    "unlock_requirement": { "type": "default" }
+  },
+  {
+    "world_id": 2,
+    "name": "Bandar Matematik",
+    "description": "Gunakan kemahiran anda untuk mengira di bandar yang sibuk.",
+    "topics": ["Tambah", "Tolak", "Wang"],
+    "sp_codes": ["SP 2.1.1", "SP 2.1.2", "SP 2.2.1", "SP 2.2.2", "SP 4.1.1", "SP 4.1.2"],
+    "unlock_requirement": { "type": "mastery", "topic": "Nilai Tempat", "threshold": 80 }
+  },
+  {
+    "world_id": 3,
+    "name": "Pulau Sains",
+    "description": "Terokai pulau misteri dengan masa, bentuk dan pecahan.",
+    "topics": ["Masa", "Bentuk", "Pecahan"],
+    "sp_codes": ["SP 5.1.1", "SP 5.1.2", "SP 7.1.1", "SP 7.1.2", "SP 3.1.1", "SP 3.1.2"],
+    "unlock_requirement": { "type": "mastery", "topic": "Wang", "threshold": 80 }
+  }
+]

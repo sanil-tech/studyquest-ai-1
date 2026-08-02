@@ -1,0 +1,31 @@
+{
+  "name": "Student",
+  "description": "Student profile and curriculum mapping",
+  "attributes": [
+    {
+      "name": "name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "age",
+      "type": "number",
+      "required": false
+    },
+    {
+      "name": "year_level",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "curriculum",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "subjects",
+      "type": "json",
+      "required": false
+    }
+  ]
+}

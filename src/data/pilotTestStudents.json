@@ -1,0 +1,44 @@
+[
+  {
+    "id": "student_A_strong",
+    "name": "Ahmad (Strong Learner)",
+    "year": "Tahun 1",
+    "subject": "Matematik",
+    "profile": {
+      "mastery_average": 92,
+      "lessons_completed": 15,
+      "tutor_hints_used": 2,
+      "mistakes": ["SP 2.1.2"],
+      "strengths": ["Nombor Bulat", "Nilai Tempat"],
+      "status": "ADVANCED"
+    }
+  },
+  {
+    "id": "student_B_average",
+    "name": "Balkis (Average Learner)",
+    "year": "Tahun 1",
+    "subject": "Matematik",
+    "profile": {
+      "mastery_average": 78,
+      "lessons_completed": 12,
+      "tutor_hints_used": 15,
+      "mistakes": ["SP 2.1.1", "SP 2.2.1"],
+      "strengths": ["Nombor Bulat"],
+      "status": "ON_TRACK"
+    }
+  },
+  {
+    "id": "student_C_support",
+    "name": "Chong (Needs Support)",
+    "year": "Tahun 1",
+    "subject": "Matematik",
+    "profile": {
+      "mastery_average": 45,
+      "lessons_completed": 5,
+      "tutor_hints_used": 35,
+      "mistakes": ["SP 1.4.1", "SP 1.5.1", "SP 1.1.1"],
+      "strengths": [],
+      "status": "STRUGGLING"
+    }
+  }
+]

@@ -1,0 +1,41 @@
+{
+  "name": "LessonReview",
+  "description": "AI quality review for generated lessons",
+  "attributes": [
+    {
+      "name": "lesson_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "quality_score",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "alignment_score",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "pedagogy_score",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "approved",
+      "type": "boolean",
+      "required": true
+    },
+    {
+      "name": "review_notes",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "created_at",
+      "type": "string",
+      "required": true
+    }
+  ]
+}

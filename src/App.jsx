@@ -49,6 +49,8 @@ const GameHub = React.lazy(() => import('@/pages/GameHub'));
 const DiagnosticIntro = React.lazy(() => import('@/pages/DiagnosticIntro'));
 const DiagnosticAssessment = React.lazy(() => import('@/pages/DiagnosticAssessment'));
 const DiagnosticResult = React.lazy(() => import('@/pages/DiagnosticResult'));
+const StudentOnboarding = React.lazy(() => import('@/pages/StudentOnboarding'));
+const StudentHome = React.lazy(() => import('@/pages/StudentHome'));
 
 // Lazy-loaded Parent Pages
 const ParentDashboard = React.lazy(() => import('@/pages/ParentDashboard'));
@@ -169,6 +171,10 @@ const AuthenticatedApp = () => {
                 <Route path="/diagnostic" element={<DiagnosticIntro />} />
                 <Route path="/diagnostic/assessment" element={<DiagnosticAssessment />} />
                 <Route path="/diagnostic/result/:sessionId" element={<DiagnosticResult />} />
+                
+                {/* V2 Integrated Intelligence Routes */}
+                <Route path="/onboarding" element={<StudentOnboarding />} />
+                <Route path="/home" element={<StudentHome />} />
               </Route>
             </Route>
 

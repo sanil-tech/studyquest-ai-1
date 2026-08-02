@@ -1,0 +1,93 @@
+{
+  "name": "StudentMastery",
+  "type": "object",
+  "description": "Schema representing a student's mastery record for a specific Standard Pembelajaran (SP).",
+  "properties": {
+    "student_id": {
+      "type": "string",
+      "description": "Unique identifier for the student."
+    },
+    "sp_code": {
+      "type": "string",
+      "description": "DSKP Standard Pembelajaran code (e.g., '1.4.1')."
+    },
+    "mastery_percentage": {
+      "type": "number",
+      "default": 0,
+      "description": "Calculated mastery percentage (0-100) based on assessments, widgets, and mission performance."
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0,
+      "description": "Total number of recorded attempts across lessons, quizzes, and widgets."
+    },
+    "correct_answers": {
+      "type": "number",
+      "default": 0,
+      "description": "Cumulative correct answers."
+    },
+    "incorrect_answers": {
+      "type": "number",
+      "default": 0,
+      "description": "Cumulative incorrect answers."
+    },
+    "average_score": {
+      "type": "number",
+      "default": 0,
+      "description": "Average score of all attempts."
+    },
+    "confidence_level": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH"],
+      "default": "LOW",
+      "description": "Calculated confidence level based on consistency and accuracy."
+    },
+    "last_attempt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the most recent interaction with this SP."
+    },
+    "first_completed": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when the SP first transitioned to MASTERED status."
+    },
+    "time_spent": {
+      "type": "number",
+      "default": 0,
+      "description": "Total active learning time spent on this SP in seconds."
+    },
+    "streak": {
+      "type": "number",
+      "default": 0,
+      "description": "Current consecutive correct answers or successful mission completions."
+    },
+    "recommended_revision": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "SP codes dynamically recommended for revision if mastery drops or is insufficient."
+    },
+    "recommended_next": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "SP codes recommended next once mastery is achieved."
+    },
+    "current_status": {
+      "type": "string",
+      "enum": [
+        "NOT_STARTED",
+        "LEARNING",
+        "REVIEW_REQUIRED",
+        "MASTERED",
+        "EXCELLENT"
+      ],
+      "default": "NOT_STARTED",
+      "description": "Current categorical mastery status."
+    }
+  },
+  "required": ["student_id", "sp_code"]
+}

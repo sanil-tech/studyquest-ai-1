@@ -2,6 +2,33 @@
 // Phase 4: Modernized 6-Step Malaysian Curriculum (KSSR Semakan / KSSM & DSKP) Lesson Authoring Studio
 // Step 1: Select Curriculum ➔ Step 2: Choose Topic & Standard ➔ Step 3: Generate AI Package ➔ Step 4: Review Blocks ➔ Step 5: AI Quality Check ➔ Step 6: Publish
 
+const DSKP_MAPPING = {
+  "Matematik": {
+    "Tahun 1": {
+      "Nombor hingga 100": {
+        "SK 1.4 Nilai Tempat": [
+          "SP 1.4.1 Menyatakan nilai tempat dan nilai digit bagi sebarang nombor hingga 100."
+        ],
+        "SK 1.5 Membandingkan Nombor": [
+          "SP 1.5.1 Membandingkan nilai dua nombor menggunakan lebih besar atau lebih kecil."
+        ]
+      },
+      "Pecahan": {
+        "SK 1.1 Pecahan": [
+          "SP 1.1.1 Mengenal pasti pecahan satu perdua, satu perempat, dua perempat dan tiga perempat."
+        ]
+      }
+    },
+    "Tahun 4": {
+      "Pecahan, Perpuluhan dan Peratus": {
+        "SK 1.1 Pecahan": [
+          "SP 1.1.1 Menyelesaikan ayat matematik tambah hingga tiga nombor melibatkan pecahan wajar."
+        ]
+      }
+    }
+  }
+};
+
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +37,8 @@ import CompletenessDashboard from "@/components/admin/CompletenessDashboard";
 import AIGenerationPanel from "@/components/admin/AIGenerationPanel";
 import LessonVideoField from "@/components/admin/LessonVideoField";
 import ManualContentPanel from "@/components/admin/ManualContentPanel";
+import ContentQualityPanel from "@/components/admin/ContentQualityPanel";
+import { validateLessonQuality, saveLessonReview } from "@/services/contentQualityService";
 import {
   BookOpen,
   Loader2,
@@ -53,8 +82,10 @@ export default function AdminContentStudio() {
   const [educationLevel, setEducationLevel] = useState("PRIMARY");
   const [yearLevel, setYearLevel] = useState("Tahun 4");
   const [topic, setTopic] = useState("Pecahan, Perpuluhan dan Peratus");
-  const [skCode, setSkCode] = useState("SK 1.1 Pecahan");
-  const [spCode, setSpCode] = useState("SP 1.1.1 Penambahan Pecahan");
+  const [skCode, setSkCode] = useState("");
+  const [spCode, setSpCode] = useState("");
+  const [availableSKs, setAvailableSKs] = useState([]);
+  const [availableSPs, setAvailableSPs] = useState([]);
 
   // Block Review & Single Block Regeneration State (Phase 4 & 5)
   const [blocks, setBlocks] = useState([]);
@@ -72,7 +103,48 @@ export default function AdminContentStudio() {
     setSelectedVersion(selection.version);
     setPublishResult(null);
     setQualityReport(null);
+    
+    if (selection.subjectName) setSubject(selection.subjectName);
+    if (selection.levelName) setYearLevel(selection.levelName);
+    if (selection.topicName) setTopic(selection.topicName);
   }, []);
+
+  useEffect(() => {
+    const topicData = DSKP_MAPPING[subject]?.[yearLevel]?.[topic];
+    if (topicData) {
+      const sks = Object.keys(topicData);
+      setAvailableSKs(sks);
+      
+      let currentSk = skCode;
+      if (!sks.includes(skCode)) {
+        currentSk = sks[0];
+        setSkCode(currentSk);
+      }
+      
+      const sps = topicData[currentSk] || [];
+      setAvailableSPs(sps);
+      
+      if (!sps.includes(spCode)) {
+        setSpCode(sps[0] || "");
+      }
+    } else {
+      setAvailableSKs(["SK Default"]);
+      setAvailableSPs(["SP Default"]);
+      setSkCode("SK Default");
+      setSpCode("SP Default");
+    }
+  }, [subject, yearLevel, topic]);
+
+  useEffect(() => {
+    const topicData = DSKP_MAPPING[subject]?.[yearLevel]?.[topic];
+    if (topicData) {
+      const sps = topicData[skCode] || [];
+      setAvailableSPs(sps);
+      if (!sps.includes(spCode)) {
+        setSpCode(sps[0] || "");
+      }
+    }
+  }, [skCode, subject, yearLevel, topic, spCode]);
 
   const fetchCompletenessAndBlocks = useCallback(async () => {
     if (!selectedVersion) {
@@ -157,15 +229,18 @@ export default function AdminContentStudio() {
 
   // Step 5: Evaluate Quality (5-Part Rubric & Tiers)
   const handleEvaluateQuality = async () => {
-    if (!selectedVersion) return;
+    if (!selectedVersion || !completeness) return;
     setEvaluatingQuality(true);
     try {
-      const res = await base44.functions.invoke("evaluateLessonQuality", {
-        lesson_version_id: selectedVersion,
-      });
-      if (res.data?.success) {
-        setQualityReport(res.data);
-      }
+      const lessonObj = {
+        title: completeness.title,
+        learning_objective: completeness.learning_objective,
+        content_blocks: blocks
+      };
+      
+      const report = await validateLessonQuality(lessonObj, true);
+      setQualityReport(report);
+      await saveLessonReview(selectedVersion, report);
     } catch (err) {
       console.error("Evaluate quality error:", err);
     } finally {
@@ -380,22 +455,28 @@ export default function AdminContentStudio() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-stone-300">Standard Kandungan (SK Code)</label>
-                      <input
-                        type="text"
+                      <select
                         value={skCode}
                         onChange={(e) => setSkCode(e.target.value)}
                         className="w-full bg-stone-950 border border-stone-800 text-white text-xs rounded-xl p-3 font-bold"
-                      />
+                      >
+                        {availableSKs.map(sk => (
+                          <option key={sk} value={sk}>{sk}</option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-stone-300">Standard Pembelajaran (SP Code)</label>
-                      <input
-                        type="text"
+                      <select
                         value={spCode}
                         onChange={(e) => setSpCode(e.target.value)}
                         className="w-full bg-stone-950 border border-stone-800 text-white text-xs rounded-xl p-3 font-bold"
-                      />
+                      >
+                        {availableSPs.map(sp => (
+                          <option key={sp} value={sp}>{sp}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -600,43 +681,11 @@ export default function AdminContentStudio() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {qualityReport ? (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-bold text-stone-400 uppercase block">Status Kelayakan Penerbitan</span>
-                        <h3 className="text-lg font-black text-white">Tier: {qualityReport.report?.publication_tier || "GOOD_PUBLISH_ALLOWED"}</h3>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-2xl font-black text-amber-300">{qualityReport.quality_score}%</span>
-                        <span className="text-[10px] font-bold block text-emerald-400">
-                          {qualityReport.is_publish_allowed ? "LULUS UNTUK DITERBITKAN ✅" : "PERLU PENAMBAHBAIKAN ❌"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs font-bold">
-                      <div className="p-3 bg-stone-950 rounded-xl border border-stone-800">
-                        <span className="text-[9px] text-stone-400 block uppercase">Curriculum (30%)</span>
-                        <span className="text-emerald-400 text-base">{qualityReport.report?.curriculum_alignment_score || 90}%</span>
-                      </div>
-                      <div className="p-3 bg-stone-950 rounded-xl border border-stone-800">
-                        <span className="text-[9px] text-stone-400 block uppercase">Pedagogy (25%)</span>
-                        <span className="text-cyan-400 text-base">{qualityReport.report?.pedagogical_structure_score || 85}%</span>
-                      </div>
-                      <div className="p-3 bg-stone-950 rounded-xl border border-stone-800">
-                        <span className="text-[9px] text-stone-400 block uppercase">Language (15%)</span>
-                        <span className="text-amber-400 text-base">{qualityReport.report?.language_quality_score || 88}%</span>
-                      </div>
-                      <div className="p-3 bg-stone-950 rounded-xl border border-stone-800">
-                        <span className="text-[9px] text-stone-400 block uppercase">Engagement (15%)</span>
-                        <span className="text-indigo-400 text-base">{qualityReport.report?.student_engagement_score || 82}%</span>
-                      </div>
-                      <div className="p-3 bg-stone-950 rounded-xl border border-stone-800">
-                        <span className="text-[9px] text-stone-400 block uppercase">Assessment (15%)</span>
-                        <span className="text-purple-400 text-base">{qualityReport.report?.assessment_quality_score || 84}%</span>
-                      </div>
-                    </div>
-                  </div>
+                  <ContentQualityPanel 
+                    report={qualityReport} 
+                    onApprove={() => setActiveStep(6)} 
+                    onReject={() => setActiveStep(4)} 
+                  />
                 ) : (
                   <div className="py-8 text-center">
                     <button
@@ -646,23 +695,16 @@ export default function AdminContentStudio() {
                     >
                       {evaluatingQuality ? <Loader2 className="w-4 h-4 animate-spin" /> : <Award className="w-4 h-4" />} Jalankan Audit Kualiti AI Sekarang
                     </button>
+                    <div className="flex justify-between pt-6">
+                      <button
+                        onClick={() => setActiveStep(4)}
+                        className="h-10 px-4 bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs rounded-xl"
+                      >
+                        Kembali
+                      </button>
+                    </div>
                   </div>
                 )}
-
-                <div className="flex justify-between pt-2">
-                  <button
-                    onClick={() => setActiveStep(4)}
-                    className="h-10 px-4 bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs rounded-xl"
-                  >
-                    Kembali
-                  </button>
-                  <button
-                    onClick={() => setActiveStep(6)}
-                    className="h-10 px-6 bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs rounded-xl border-b-2 border-amber-600 flex items-center gap-1.5"
-                  >
-                    <span>Seterusnya: Terbitkan Modul</span> <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
               </CardContent>
             </Card>
           )}

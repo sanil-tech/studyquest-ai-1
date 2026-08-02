@@ -1,0 +1,50 @@
+{
+  "name": "PilotAnalytics",
+  "fields": [
+    {
+      "name": "student_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "period",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "missions_completed",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "time_spent",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "mastery_gain",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "ai_help_success",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "engagement_score",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "learning_velocity",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp",
+      "required": true
+    }
+  ]
+}

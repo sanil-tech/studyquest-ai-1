@@ -1,0 +1,41 @@
+{
+  "name": "TutorInteraction",
+  "description": "Log of student interactions with the AI Tutor",
+  "attributes": [
+    {
+      "name": "student_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "sp_code",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "question_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "hint_level",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "student_response",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "tutor_response",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "timestamp",
+      "type": "string",
+      "required": true
+    }
+  ]
+}

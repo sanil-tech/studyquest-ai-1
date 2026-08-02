@@ -1,0 +1,45 @@
+{
+  "daily_goal": {
+    "target_quests": 1,
+    "title": "Selesaikan 1 Cabaran hari ini"
+  },
+  "streaks": {
+    "3": {
+      "name": "Konsisten",
+      "reward_xp": 100,
+      "message": "3 hari berturut-turut! Bagus!"
+    },
+    "7": {
+      "name": "Pejuang",
+      "reward_xp": 300,
+      "message": "Seminggu penuh! Hebat!"
+    },
+    "14": {
+      "name": "Lagenda",
+      "reward_xp": 700,
+      "message": "Luar biasa! 14 hari tanpa henti!"
+    },
+    "30": {
+      "name": "Juara",
+      "reward_xp": 2000,
+      "message": "Juara Sebenar! Tahniah atas pencapaian 30 hari!"
+    }
+  },
+  "motivation_messages": {
+    "success": [
+      "Hebat! Kamu semakin dekat untuk membuka tahap baru!",
+      "Luar biasa! Teruskan usaha ini!",
+      "Satu lagi kejayaan! Kamu memang bijak!"
+    ],
+    "comeback": [
+      "Selamat datang kembali! Misi baru sedang menunggu.",
+      "Kami rindu kamu! Jom sambung pengembaraan.",
+      "Masa untuk mengumpul lebih banyak bintang!"
+    ],
+    "struggling": [
+      "Jangan putus asa! Cuba lagi sekali.",
+      "Semua orang buat kesilapan. Yang penting kita belajar daripadanya!",
+      "Gunakan klu AI jika perlukan bantuan!"
+    ]
+  }
+}

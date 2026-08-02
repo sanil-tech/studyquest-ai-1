@@ -1,0 +1,41 @@
+{
+  "fraction_addition": {
+    "type": "MATH",
+    "spCode": "1.1.2",
+    "difficulty": ["BEGINNER", "STANDARD"],
+    "template": "{num1}/{den} + {num2}/{den} = ?",
+    "variables": {
+      "den": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "num1": "1 to {den}-1",
+      "num2": "1 to {den}-1"
+    },
+    "correct_formula": "({num1} + {num2}) / {den}",
+    "distractors": [
+      {
+        "formula": "({num1} + {num2}) / ({den} + {den})",
+        "mistakeType": "DENOMINATOR_ADDITION"
+      },
+      {
+        "formula": "({num1} * {num2}) / {den}",
+        "mistakeType": "CONFUSED_OPERATOR"
+      }
+    ]
+  },
+  "number_comparison": {
+    "type": "MATH",
+    "spCode": "1.5.1",
+    "difficulty": ["BEGINNER"],
+    "template": "Antara {val1} dan {val2}, yang manakah lebih besar?",
+    "variables": {
+      "val1": "10 to 99",
+      "val2": "10 to 99"
+    },
+    "correct_formula": "MAX({val1}, {val2})",
+    "distractors": [
+      {
+        "formula": "MIN({val1}, {val2})",
+        "mistakeType": "MISREAD_QUESTION_SMALLER"
+      }
+    ]
+  }
+}

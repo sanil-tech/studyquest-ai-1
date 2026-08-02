@@ -27,6 +27,10 @@ import Flashcards from "@/components/lesson/Flashcards";
 import MindMap from "@/components/lesson/MindMap";
 import InfographicBlock from "@/components/lesson/InfographicBlock";
 import InteractiveActivity from "@/components/lesson/InteractiveActivity";
+import BaseTenBlocksWidget from "@/components/widgets/BaseTenBlocksWidget";
+import SentenceBuilderWidget from "@/components/widgets/SentenceBuilderWidget";
+import FractionSlicerWidget from "@/components/widgets/FractionSlicerWidget";
+import NumberScaleWidget from "@/components/widgets/NumberScaleWidget";
 
 // ==========================================
 // TEXT FORMATTING UTILITIES
@@ -356,7 +360,8 @@ export default function BlockRenderer({
   isSpeaking = false,
   isCompleted = false,
   onSpeak = () => {},
-  onComplete = () => {}
+  onComplete = () => {},
+  onMistake = () => {}
 }) {
   if (!block) return null;
 
@@ -716,6 +721,94 @@ export default function BlockRenderer({
     case "INTERACTIVE":
     case "DRAG_DROP":
     case "MATCHING_GAME":
+      if (payload.widget_type === "base_ten_blocks") {
+        return (
+          <div className="space-y-4 text-left">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
+                <Gamepad2 className="w-5 h-5 text-cyan-400" /> {blockTitle || "Aktiviti Interaktif"}
+              </h3>
+              <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+                {badgeInfo.label}
+              </span>
+            </div>
+            <BaseTenBlocksWidget
+              targetNumber={payload.targetNumber || payload.target_number || 34}
+              onComplete={onComplete}
+              isCompleted={isCompleted}
+              onMistake={onMistake}
+            />
+          </div>
+        );
+      }
+
+      if (payload.widget_type === "sentence_builder") {
+        return (
+          <div className="space-y-4 text-left">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
+                <Gamepad2 className="w-5 h-5 text-cyan-400" /> {blockTitle || "Bina Ayat"}
+              </h3>
+              <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+                {badgeInfo.label}
+              </span>
+            </div>
+            <SentenceBuilderWidget
+              targetSentence={payload.targetSentence || payload.target_sentence || "Ahmad membaca buku di perpustakaan"}
+              wordBank={payload.wordBank || payload.word_bank || null}
+              onComplete={onComplete}
+              isCompleted={isCompleted}
+              onMistake={onMistake}
+            />
+          </div>
+        );
+      }
+
+      if (payload.widget_type === "fraction_slicer") {
+        return (
+          <div className="space-y-4 text-left">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
+                <Gamepad2 className="w-5 h-5 text-cyan-400" /> {blockTitle || "Pecahan Interaktif"}
+              </h3>
+              <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+                {badgeInfo.label}
+              </span>
+            </div>
+            <FractionSlicerWidget
+              targetFraction={payload.targetFraction || payload.target_fraction || "1/2"}
+              shapeType={payload.shapeType || payload.shape_type || "circle"}
+              onComplete={onComplete}
+              isCompleted={isCompleted}
+              onMistake={onMistake}
+            />
+          </div>
+        );
+      }
+
+      if (payload.widget_type === "number_scale") {
+        return (
+          <div className="space-y-4 text-left">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
+                <Gamepad2 className="w-5 h-5 text-cyan-400" /> {blockTitle || "Timbangan Nombor"}
+              </h3>
+              <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+                {badgeInfo.label}
+              </span>
+            </div>
+            <NumberScaleWidget
+              leftVal={payload.leftVal ?? payload.left_val ?? 42}
+              rightVal={payload.rightVal ?? payload.right_val ?? 68}
+              correctRelation={payload.correctRelation || payload.correct_relation || "LESS_THAN"}
+              onComplete={onComplete}
+              isCompleted={isCompleted}
+              onMistake={onMistake}
+            />
+          </div>
+        );
+      }
+
       return (
         <div className="space-y-4 text-left">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">

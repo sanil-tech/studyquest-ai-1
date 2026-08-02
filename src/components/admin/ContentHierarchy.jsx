@@ -116,7 +116,17 @@ export default function ContentHierarchy({ onSelect }) {
   }, [selected.lesson]);
 
   useEffect(() => {
-    if (selected.version && onSelect) onSelect(selected);
+    if (selected.version && onSelect) {
+      const subjectObj = subjects.find(s => s.id === selected.subject);
+      const topicObj = topics.find(t => t.id === selected.topic);
+      const levelObj = levels.find(l => l.id === selected.level);
+      onSelect({
+        ...selected,
+        subjectName: subjectObj?.name || "",
+        topicName: topicObj?.name || "",
+        levelName: levelObj?.name || ""
+      });
+    }
   }, [selected.version]);
 
   const selectClass = "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm";

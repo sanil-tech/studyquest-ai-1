@@ -1,0 +1,46 @@
+{
+  "name": "AssessmentAttempt",
+  "description": "Log of student answers to assessment questions",
+  "attributes": [
+    {
+      "name": "student_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "question_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "sp_code",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "answer",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "correct",
+      "type": "boolean",
+      "required": true
+    },
+    {
+      "name": "mistake_type",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "difficulty",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "timestamp",
+      "type": "string",
+      "required": true
+    }
+  ]
+}

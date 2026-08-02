@@ -1,0 +1,41 @@
+{
+  "name": "LessonProgress",
+  "description": "Progress tracking for lesson missions",
+  "attributes": [
+    {
+      "name": "student_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "lesson_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "sp_code",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "completion_status",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "score",
+      "type": "number",
+      "required": false
+    },
+    {
+      "name": "time_spent",
+      "type": "number",
+      "required": false
+    },
+    {
+      "name": "completed_at",
+      "type": "string",
+      "required": false
+    }
+  ]
+}

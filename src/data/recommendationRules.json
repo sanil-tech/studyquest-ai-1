@@ -1,0 +1,27 @@
+{
+  "priority_weights": {
+    "MISSING_PREREQUISITE": 100,
+    "REVIEW_REQUIRED": 80,
+    "LEARNING": 60,
+    "NOT_STARTED": 40,
+    "MASTERED": 20,
+    "EXCELLENT": 10
+  },
+  "study_time_allocations": {
+    "MISSING_PREREQUISITE": 20,
+    "REVIEW_REQUIRED": 15,
+    "LEARNING": 25,
+    "NOT_STARTED": 30,
+    "MASTERED": 10,
+    "EXCELLENT": 5
+  },
+  "velocity_factors": {
+    "HIGH": 1.2,
+    "MEDIUM": 1.0,
+    "LOW": 0.8
+  },
+  "spaced_repetition_intervals": {
+    "MASTERED": 7,
+    "EXCELLENT": 14
+  }
+}

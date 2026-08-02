@@ -1,0 +1,18 @@
+{
+  "metrics": [
+    { "id": "dskp_alignment", "label": "DSKP Alignment", "weight": 1.5 },
+    { "id": "objective_clarity", "label": "Learning Objective Clarity", "weight": 1.0 },
+    { "id": "pedagogy", "label": "Pedagogy & Flow", "weight": 1.5 },
+    { "id": "widget_suitability", "label": "Interactive Widget Suitability", "weight": 1.0 },
+    { "id": "practice_progression", "label": "Practice Progression", "weight": 1.0 },
+    { "id": "assessment_quality", "label": "Assessment Quality", "weight": 1.5 },
+    { "id": "tutor_hints", "label": "AI Tutor Hint Quality", "weight": 1.0 },
+    { "id": "bahasa_melayu", "label": "Bahasa Melayu Quality", "weight": 1.0 },
+    { "id": "parent_explanation", "label": "Parent Explanation Quality", "weight": 0.5 }
+  ],
+  "quality_gates": {
+    "GOLD_STANDARD": 90,
+    "APPROVED": 80,
+    "REPAIR_REQUIRED": 0
+  }
+}
