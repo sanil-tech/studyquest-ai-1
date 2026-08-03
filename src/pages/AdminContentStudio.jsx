@@ -59,6 +59,8 @@ const DSKP_MAPPING = {
       }
     }
   }
+};
+
 import kssrTaxonomy from "@/data/kssrTaxonomy.json";
 import { getKSSRModeByGrade } from "@/services/generateKSSRContent";
 import { validateCurriculumCoverage } from "@/services/curriculumValidator";
