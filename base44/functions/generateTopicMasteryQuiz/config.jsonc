@@ -1,0 +1,5 @@
+{
+  "name": "generateTopicMasteryQuiz",
+  "description": "Generates a structured N x 5 mastery quiz per subtopic using AI, ensuring strict TP distribution.",
+  "is_public": false
+}

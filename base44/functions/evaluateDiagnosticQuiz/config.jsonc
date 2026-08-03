@@ -1,0 +1,5 @@
+{
+  "name": "evaluateDiagnosticQuiz",
+  "description": "Evaluates diagnostic quizzes and handles gateway lock logic with Zod strict validation and ACID safety.",
+  "is_public": false
+}

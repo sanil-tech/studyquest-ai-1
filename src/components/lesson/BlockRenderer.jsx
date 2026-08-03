@@ -377,6 +377,183 @@ function InlineQuizBlock({ questions = [], onCompleted, isCompleted, studentName
 }
 
 // ==========================================
+// NEW: AUDIO HOOK (Fasa 1)
+// ==========================================
+function AudioHookBlock({ payload, studentName, onCompleted, isCompleted }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const text = payload.audio_script || payload.markdown || "Audio sedia dimainkan...";
+
+  const handlePlay = () => {
+    setIsPlaying(true);
+    setTimeout(() => setIsPlaying(false), 3000);
+  };
+
+  return (
+    <div className="p-5 bg-gradient-to-br from-indigo-950/80 to-purple-950/80 border-2 border-indigo-500/40 rounded-3xl space-y-4 shadow-xl">
+      <div className="flex items-start gap-4">
+        <div className="w-14 h-14 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0 border border-indigo-400/50 shadow-inner">
+          <Volume2 className="w-7 h-7 text-indigo-300" />
+        </div>
+        <div className="flex-1 space-y-2">
+          <h4 className="text-xs font-black uppercase text-indigo-300 tracking-wider">Mesej Suara Misteri</h4>
+          <div className="p-4 bg-stone-950/50 rounded-2xl border border-stone-800 relative">
+            <div className="absolute -left-2 top-4 border-[6px] border-transparent border-r-stone-950/50"></div>
+            <p className="text-sm font-semibold text-stone-200 leading-relaxed italic">
+              "{personalize(text, studentName)}"
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-2 pt-2">
+        <Button onClick={handlePlay} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-11 rounded-xl">
+          {isPlaying ? <span className="animate-pulse flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Sedang Memainkan...</span> : "▶️ Mainkan Audio"}
+        </Button>
+        <Button onClick={onCompleted} className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black h-11 rounded-xl">
+          {isCompleted ? "Selesai ✓" : "Teruskan ➡️"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// NEW: CONCEPT CARD (Fasa 2)
+// ==========================================
+function ConceptCardBlock({ payload, studentName, onCompleted, isCompleted }) {
+  return (
+    <div className="p-6 bg-gradient-to-br from-amber-950/60 to-orange-950/40 border-2 border-amber-500/30 rounded-3xl space-y-4 shadow-xl text-left">
+      <div className="flex items-center gap-3 border-b border-amber-500/20 pb-3">
+        <Sparkles className="w-6 h-6 text-amber-400" />
+        <h4 className="text-sm font-black text-amber-300 uppercase tracking-wider">Kad Fakta Pintar</h4>
+      </div>
+      <div
+        className="text-sm text-stone-200 leading-relaxed font-semibold space-y-3 prose prose-invert max-w-none"
+        dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(payload.markdown || payload.text || "", studentName)) }}
+      />
+      <Button onClick={onCompleted} className="w-full mt-4 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black h-12 rounded-xl border-b-4 border-amber-700 active:translate-y-1 transition-all">
+        {isCompleted ? "Faham ✓" : "Saya Faham Konsep Ini ➡️"}
+      </Button>
+    </div>
+  );
+}
+
+// ==========================================
+// NEW: MATCHING GAME (Fasa 3)
+// ==========================================
+function MatchingGameBlock({ payload, studentName, onCompleted, isCompleted }) {
+  const pairs = payload.pairs || [];
+  const [selectedLeft, setSelectedLeft] = useState(null);
+  const [matchedIds, setMatchedIds] = useState([]);
+  
+  const handleLeftClick = (idx) => {
+    if (!matchedIds.includes(idx)) setSelectedLeft(idx);
+  };
+  
+  const handleRightClick = (idx) => {
+    if (selectedLeft === idx) {
+      const newMatched = [...matchedIds, idx];
+      setMatchedIds(newMatched);
+      setSelectedLeft(null);
+      if (newMatched.length === pairs.length) {
+        setTimeout(onCompleted, 1000);
+      }
+    } else {
+      setSelectedLeft(null); // Reset on wrong
+    }
+  };
+
+  if (pairs.length === 0) return <p className="text-stone-400 text-xs">Tiada data padanan.</p>;
+
+  return (
+    <div className="p-5 bg-stone-900/90 border border-stone-700 rounded-3xl space-y-4 text-center">
+      <p className="text-xs font-bold text-stone-300 mb-4">Padankan item di sebelah kiri dengan rakan pasangannya di sebelah kanan.</p>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          {pairs.map((p, idx) => (
+            <button
+              key={`L-${idx}`}
+              onClick={() => handleLeftClick(idx)}
+              disabled={matchedIds.includes(idx)}
+              className={`w-full p-3 text-xs sm:text-sm font-bold rounded-xl border-2 transition-all ${matchedIds.includes(idx) ? "bg-emerald-950/50 border-emerald-500/50 text-emerald-400 opacity-50" : selectedLeft === idx ? "bg-indigo-600 border-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]" : "bg-stone-800 border-stone-600 text-stone-200 hover:bg-stone-700"}`}
+            >
+              {personalize(p.left || p.question, studentName)}
+            </button>
+          ))}
+        </div>
+        <div className="space-y-2">
+          {pairs.map((p, idx) => (
+            <button
+              key={`R-${idx}`}
+              onClick={() => handleRightClick(idx)}
+              disabled={matchedIds.includes(idx)}
+              className={`w-full p-3 text-xs sm:text-sm font-bold rounded-xl border-2 transition-all ${matchedIds.includes(idx) ? "bg-emerald-950/50 border-emerald-500/50 text-emerald-400 opacity-50" : "bg-stone-800 border-stone-600 text-stone-200 hover:bg-stone-700"}`}
+            >
+              {personalize(p.right || p.answer, studentName)}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      {matchedIds.length === pairs.length && (
+        <div className="mt-4 p-3 bg-emerald-950/60 text-emerald-300 font-black rounded-xl border border-emerald-500/40 animate-pulse">
+          🎉 Tahniah {studentName}! Semua padanan tepat.
+        </div>
+      )}
+      
+      <Button onClick={onCompleted} className="w-full mt-4 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black h-12 rounded-xl">
+        {isCompleted ? "Selesai ✓" : "Langkau / Teruskan ➡️"}
+      </Button>
+    </div>
+  );
+}
+
+// ==========================================
+// NEW: GUIDED PRACTICE (Fasa 4)
+// ==========================================
+function GuidedPracticeBlock({ payload, studentName, onCompleted, isCompleted }) {
+  const [showHint, setShowHint] = useState(false);
+  const hints = payload.hints || (payload.hint ? [payload.hint] : []);
+
+  return (
+    <div className="p-5 bg-stone-900/90 border border-cyan-500/30 rounded-3xl space-y-4 text-left shadow-lg">
+      <div className="flex items-center gap-2 mb-2">
+        <Target className="w-5 h-5 text-cyan-400" />
+        <h4 className="text-sm font-black text-cyan-300 uppercase tracking-wider">Latihan Terbimbing</h4>
+      </div>
+      
+      {payload.markdown && (
+        <div
+          className="text-sm text-stone-200 font-semibold space-y-2"
+          dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(personalize(payload.markdown, studentName)) }}
+        />
+      )}
+
+      {hints.length > 0 && (
+        <div className="mt-4">
+          <Button onClick={() => setShowHint(!showHint)} variant="outline" className="text-[10px] font-bold h-8 border-cyan-500/50 text-cyan-400 hover:bg-cyan-950">
+            {showHint ? "Sembunyikan Pembayang" : "💡 Tunjuk Pembayang (Hint)"}
+          </Button>
+          
+          {showHint && (
+            <div className="mt-2 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl space-y-2">
+              {hints.map((hint, idx) => (
+                <p key={idx} className="text-xs font-medium text-cyan-200 flex items-start gap-2">
+                  <span className="font-black text-cyan-500">{idx + 1}.</span> {personalize(hint, studentName)}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <Button onClick={onCompleted} className="w-full mt-4 bg-cyan-500 hover:bg-cyan-400 text-stone-950 font-black h-11 rounded-xl">
+        {isCompleted ? "Latihan Selesai ✓" : "Saya Dah Selesai Cuba ➡️"}
+      </Button>
+    </div>
+  );
+}
+
+// ==========================================
 // MAIN BLOCK RENDERER COMPONENT
 // ==========================================
 export default function BlockRenderer({
@@ -981,6 +1158,67 @@ export default function BlockRenderer({
             onCompleted={onComplete}
             isCompleted={isCompleted}
           />
+        </div>
+      );
+
+    // NEW BLOCK TYPES (Fasa 1-4)
+    case "AUDIO_HOOK":
+      return (
+        <div className="space-y-4 text-left">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <h3 className="text-base font-black text-indigo-300 flex items-center gap-2">
+              <Volume2 className="w-5 h-5 text-indigo-400" /> {blockTitle || "Audio Hook"}
+            </h3>
+            <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+              {badgeInfo.label}
+            </span>
+          </div>
+          <AudioHookBlock payload={payload} studentName={studentName} onCompleted={onComplete} isCompleted={isCompleted} />
+        </div>
+      );
+
+    case "CONCEPT_CARD":
+      return (
+        <div className="space-y-4 text-left">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <h3 className="text-base font-black text-amber-300 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-400" /> {blockTitle || "Kad Konsep"}
+            </h3>
+            <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+              {badgeInfo.label}
+            </span>
+          </div>
+          <ConceptCardBlock payload={payload} studentName={studentName} onCompleted={onComplete} isCompleted={isCompleted} />
+        </div>
+      );
+
+    case "MATCHING_GAME":
+      return (
+        <div className="space-y-4 text-left">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <h3 className="text-base font-black text-emerald-300 flex items-center gap-2">
+              <Gamepad2 className="w-5 h-5 text-emerald-400" /> {blockTitle || "Permainan Padanan"}
+            </h3>
+            <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+              {badgeInfo.label}
+            </span>
+          </div>
+          <MatchingGameBlock payload={payload} studentName={studentName} onCompleted={onComplete} isCompleted={isCompleted} />
+        </div>
+      );
+
+    case "GUIDED_PRACTICE":
+      return (
+        <div className="space-y-4 text-left">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <h3 className="text-base font-black text-cyan-300 flex items-center gap-2">
+              <Target className="w-5 h-5 text-cyan-400" /> {blockTitle || "Latihan Terbimbing"}
+            </h3>
+            <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+              {badgeInfo.label}
+            </span>
+          </div>
+          <GuidedPracticeBlock payload={payload} studentName={studentName} onCompleted={onComplete} isCompleted={isCompleted} />
         </div>
       );
 

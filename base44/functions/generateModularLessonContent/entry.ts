@@ -220,6 +220,7 @@ STRICT GENERATION RULES:
 2. The lesson MUST be grouped into 5 DSKP Phases (exactly 3 micro-blocks per phase).
 3. The content MUST be written in professional, student-friendly Bahasa Melayu.
 4. DO NOT use placeholder text (e.g., "Node 1", "Lorem Ipsum", "c1/c2"). All content must be rich and complete.
+5. CRITICAL DIVERSITY RULE: DO NOT repeat content. Every single block MUST teach or test a DIFFERENT sub-topic, perspective, concept layer, or difficulty level. For example, if Block 7 tests addition, Block 8 must test subtraction or word problems. If Block 4 maps a concept, Block 5 must show a completely different visual aspect or deeper explanation.
 
 ================================================================================
 PHASE & BLOCK ARCHITECTURE SPECIFICATION

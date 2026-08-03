@@ -1,490 +1,165 @@
-// src/pages/ParentDashboard.jsx
-// 📊 PARENT EXPERIENCE — "Command Center" Theme
-// Design language: cool colors, thin borders, subtle shadows, clean typography,
-// data-viz elements, professional Malay, subtle animations.
-
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
-import moment from "moment";
-import {
-  Gift, BarChart2, CloudRain, Sun, Cloud, CloudLightning,
-  UserPlus, Flame, Loader2, ChevronRight, Users, Crown
-} from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-
-import AddChildModal from "@/components/parent/AddChildModal";
-import ChildSummaryCard from "@/components/parent/ChildSummaryCard";
-import ChildDetailPanel from "@/components/parent/ChildDetailPanel";
-import DiagnosticRecommendationCard, { shouldShowDiagnosticRecommendation } from "@/components/parent/DiagnosticRecommendationCard";
-import ParentDiagnosticIntroModal from "@/components/parent/ParentDiagnosticIntroModal";
-import ParentLearningOverview from "@/components/parent/ParentLearningOverview";
-import MasteryProgressCard from "@/components/parent/MasteryProgressCard";
-import StrengthWeaknessCard from "@/components/parent/StrengthWeaknessCard";
-import AIParentCoach from "@/components/parent/AIParentCoach";
-import LearningGrowthChart from "@/components/parent/LearningGrowthChart";
-import ParentGoalCard from "@/components/parent/ParentGoalCard";
-import ParentMissionLauncher from "@/components/parent/ParentMissionLauncher";
-import RewardApprovalCard from "@/components/parent/RewardApprovalCard";
-import LearningStreakCard from "@/components/parent/LearningStreakCard";
-import NotificationCenter from "@/components/parent/NotificationCenter";
-import { loadChildrenWithStats, getSelectedChildId, setSelectedChildId } from "@/lib/childUtils";
+import { Users, Award, BookOpen, AlertCircle, ChevronRight, Activity } from "lucide-react";
+import ParentActionCard from "@/components/parent/ParentActionCard";
+import ChildSwitcher from "@/components/parent/ChildSwitcher";
 import { useViewMode } from "@/lib/ViewModeContext";
-
-// Maps WMO Weather Interpretation Codes (WW) to icons and language text
-const getWeatherDetails = (code) => {
-  if ([0, 1].includes(code)) return { label: "Cerah", icon: Sun, color: "text-amber-500" };
-  if ([2, 3].includes(code)) return { label: "Berawan", icon: Cloud, color: "text-slate-400" };
-  if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return { label: "Hujan", icon: CloudRain, color: "text-blue-500" };
-  if ([95, 96, 99].includes(code)) return { label: "Ribut Petir", icon: CloudLightning, color: "text-purple-500" };
-  return { label: "Cerah", icon: Sun, color: "text-amber-500" };
-};
-
-// Professional shortcut tile
-function ShortcutCard({ icon: Icon, title, desc, gradient, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`bg-gradient-to-br ${gradient} p-4 rounded-xl shadow-sm flex items-center gap-3 text-white text-left w-full hover:shadow-md transition-all active:scale-95`}
-    >
-      <div className="bg-white/20 p-2.5 rounded-lg shrink-0">
-        <Icon className="w-5 h-5" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold truncate">{title}</p>
-        <p className="text-[11px] text-white/80 truncate">{desc}</p>
-      </div>
-    </button>
-  );
-}
-
-// Pending Reward Approvals Banner
-function PendingApprovalsBanner({ pendingCount, onClick }) {
-  if (!pendingCount || pendingCount === 0) return null;
-
-  return (
-    <div
-      onClick={onClick}
-      className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:bg-amber-100/50 transition-all active:scale-[0.99]"
-    >
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
-          <Gift className="w-5 h-5 text-amber-600" />
-        </div>
-        <div>
-          <h4 className="text-sm font-bold tracking-tight">
-            {pendingCount} Permohonan Ganjaran Menunggu
-          </h4>
-          <p className="text-xs text-amber-700 font-medium mt-0.5">
-            Anak anda telah menebus ganjaran. Sila semak dan sahkan.
-          </p>
-        </div>
-      </div>
-      <Button
-        size="sm"
-        className="bg-amber-600 text-white hover:bg-amber-700 font-semibold text-xs h-8 px-4 rounded-lg shrink-0"
-      >
-        Semak <ChevronRight className="w-3 h-3 ml-0.5" />
-      </Button>
-    </div>
-  );
-}
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { enterChildMode } = useViewMode();
-
-  const [childrenList, setChildrenList] = useState([]);
+  
+  const [children, setChildren] = useState([]);
   const [selectedChild, setSelectedChild] = useState(null);
-  const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0);
+  const [masteryData, setMasteryData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [addChildModalOpen, setAddChildModalOpen] = useState(false);
-  const [diagnosticIntroOpen, setDiagnosticIntroOpen] = useState(false);
-  const [diagnosticTargetChild, setDiagnosticTargetChild] = useState(null);
 
-  const [weather] = useState({ code: 0, temp: 28, city: "Kota Kinabalu" });
-  const [parentInsights, setParentInsights] = useState(null);
-  const [insightsLoading, setInsightsLoading] = useState(false);
-  const [parentNotifications, setParentNotifications] = useState([]);
-
-  const fetchNotifications = useCallback(async (childId) => {
-    if (!childId) return;
-    try {
-      const res = await base44.functions.invoke("generateParentNotifications", {
-        student_id: childId,
-      });
-      if (res.data?.success && Array.isArray(res.data?.notifications)) {
-        setParentNotifications(res.data.notifications);
+  // Fetch children and their overall mastery data in one go
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const me = await base44.auth.me();
+        
+        // Mock or actual fetch for children linked to parent
+        const linkedChildren = await base44.entities.User.filter({ parent_id: me.id }).catch(() => [
+          { id: "stu_123", name: "Ahmad" } // Mock fallback for display
+        ]);
+        
+        setChildren(linkedChildren);
+        if (linkedChildren.length > 0) {
+          setSelectedChild(linkedChildren[0]);
+        }
+      } catch (err) {
+        console.error("Failed to load parent dashboard", err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.warn("generateParentNotifications fallback:", err);
-    }
+    };
+    fetchDashboardData();
   }, []);
 
-  const loadParentInsights = useCallback(async (childId) => {
-    if (!childId) {
-      setParentInsights(null);
-      return;
-    }
-    try {
-      setInsightsLoading(true);
-      const res = await base44.functions.invoke("getParentLearningInsights", {
-        child_student_id: childId,
-      });
-      if (res.data?.success) {
-        setParentInsights(res.data);
-      }
-      fetchNotifications(childId);
-    } catch (err) {
-      console.warn("getParentLearningInsights fallback:", err);
-    } finally {
-      setInsightsLoading(false);
-    }
-  }, [fetchNotifications]);
-
-  const loadDashboardData = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      // 1. Fetch children profiles with stats
-      const kids = await loadChildrenWithStats();
-      setChildrenList(kids);
-
-      // 2. Fetch pending reward requests across linked children
-      const me = await base44.auth.me();
-      if (me?.id) {
-        const pendingRequests = await base44.entities.RewardRequest.filter({
-          status: "pending"
-        }).catch(() => []);
-
-        setPendingApprovalsCount(pendingRequests.length);
-      }
-
-      // 3. Select active child persistence
-      if (kids.length > 0) {
-        const savedId = getSelectedChildId();
-        const initial = kids.find((k) => k.id === savedId) || kids[0];
-        setSelectedChild(initial);
-        loadParentInsights(initial.id);
-      }
-    } catch (err) {
-      console.error("Ralat memuatkan dashboard:", err);
-      toast({
-        title: "Ralat Memuatkan Data",
-        description: "Gagal memuatkan maklumat anak-anak.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast, loadParentInsights]);
-
   useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
-
-  useEffect(() => {
-    if (selectedChild?.id) {
-      loadParentInsights(selectedChild.id);
-    }
-  }, [selectedChild?.id, loadParentInsights]);
+    const fetchChildMastery = async () => {
+      if (!selectedChild) return;
+      try {
+        const mastery = await base44.entities.StudentMastery.filter({ student_id: selectedChild.id }).catch(() => []);
+        setMasteryData(mastery);
+      } catch (err) {
+        console.error("Failed to load mastery data", err);
+      }
+    };
+    fetchChildMastery();
+  }, [selectedChild]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-32 min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
-      </div>
-    );
+    return <div className="p-8 text-center text-slate-500 animate-pulse font-medium">Memuatkan Papan Pemuka...</div>;
   }
 
-  const weatherInfo = getWeatherDetails(weather.code);
-  const WeatherIcon = weatherInfo.icon;
-
-  // Derived summary stats from existing data
-  const totalStreaks = childrenList.reduce((sum, c) => sum + (c.realProgress?.streak_days || 0), 0);
-
+  // Derive weak subjects/topics from mastery data
+  const weakMastery = masteryData.filter(m => m.mastery_status === "REMEDIATION_REQUIRED" || (m.max_tp_achieved && m.max_tp_achieved <= 2));
+  
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 space-y-6">
-
-      {/* ═══ HEADER ═══ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="w-full max-w-lg mx-auto bg-slate-50 min-h-screen pb-20 font-sans">
+      
+      {/* Mobile-First Header */}
+      <div className="bg-white px-4 pt-8 pb-4 shadow-sm border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-            Dashboard Ibu Bapa
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {moment().format("dddd, D MMM YYYY")} · Pantau perkembangan anak-anak anda
-          </p>
+          <h1 className="text-xl font-black text-slate-900 tracking-tight">Papan Pemuka</h1>
+          <p className="text-sm font-medium text-slate-500">Pantau perkembangan anak anda</p>
         </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => setAddChildModalOpen(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-9 px-4 rounded-lg shadow-sm"
-          >
-            <UserPlus className="w-4 h-4 mr-1.5" /> Tambah Anak
-          </Button>
+        <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+          <Users className="w-5 h-5 text-indigo-600" />
         </div>
       </div>
 
-      {/* ═══ QUICK STATS SUMMARY ═══ */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-              <Users className="w-4 h-4 text-indigo-500" />
+      <div className="p-4 space-y-6">
+        
+        {/* Child Switcher Component (Consolidated) */}
+        {children.length > 0 && (
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Pelajar Semasa</h3>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {children.map(child => (
+                <button 
+                  key={child.id}
+                  onClick={() => setSelectedChild(child)}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors ${
+                    selectedChild?.id === child.id 
+                      ? "bg-indigo-600 text-white shadow-md" 
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {child.name}
+                </button>
+              ))}
             </div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Anak</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800">{childrenList.length}</p>
-        </Card>
-        <Card className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-              <Gift className="w-4 h-4 text-amber-500" />
-            </div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Menunggu</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800">{pendingApprovalsCount}</p>
-        </Card>
-        <Card className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
-              <Flame className="w-4 h-4 text-orange-500" />
-            </div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Streak Aktif</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800">{totalStreaks}</p>
-        </Card>
-      </div>
-
-      {/* ═══ PENDING APPROVALS ═══ */}
-      <PendingApprovalsBanner
-        pendingCount={pendingApprovalsCount}
-        onClick={() => navigate("/parent/approvals")}
-      />
-
-      {/* ═══ SHORTCUTS ═══ */}
-      <div>
-        <h3 className="text-sm font-bold text-slate-700 mb-3">Tindakan Pantas</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <ShortcutCard
-            icon={Users}
-            title="Pengurusan Anak"
-            desc="Semak semua profil"
-            gradient="from-indigo-600 to-blue-600"
-            onClick={() => navigate("/parent/children")}
-          />
-          <ShortcutCard
-            icon={Gift}
-            title="Kedai Ganjaran"
-            desc="Tetapkan hadiah"
-            gradient="from-amber-500 to-orange-500"
-            onClick={() => navigate("/parent/rewards")}
-          />
-          <ShortcutCard
-            icon={BarChart2}
-            title="Kelulusan"
-            desc="Sahkan ganjaran"
-            gradient="from-emerald-600 to-teal-600"
-            onClick={() => navigate("/parent/approvals")}
-          />
-          <ShortcutCard
-            icon={Crown}
-            title="Pembayaran"
-            desc="Status langganan & akses"
-            gradient="from-amber-500 to-orange-600"
-            onClick={() => navigate("/parent/billing")}
-          />
-
-        </div>
-      </div>
-
-      {/* ═══ CHILDREN OVERVIEW ═══ */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-slate-700">Anak-Anak Anda</h3>
-          {childrenList.length > 0 && (
-            <button
-              onClick={() => navigate("/parent/children")}
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-0.5"
+            
+            <button 
+              onClick={() => enterChildMode(selectedChild?.id)}
+              className="mt-4 w-full py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800"
             >
-              Urus Semua <ChevronRight className="w-3 h-3" />
+              Lihat Skrin {selectedChild?.name} <ChevronRight className="w-4 h-4" />
             </button>
+          </div>
+        )}
+
+        {/* Parent Action Card / Bimbingan Ibubapa */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-slate-800 px-1">Tindakan Disyorkan</h3>
+          {weakMastery.length > 0 ? (
+            weakMastery.map((weak, idx) => (
+              <ParentActionCard 
+                key={idx}
+                childName={selectedChild?.name}
+                weakSubtopic={weak.subtopic_id || "Konsep Asas"}
+                tpLevel={weak.max_tp_achieved || 1}
+                remediationHint="Bantu anak anda melengkapkan kuiz ulangkaji yang disediakan di Peta Pengembaraan."
+              />
+            ))
+          ) : (
+            <ParentActionCard 
+              childName={selectedChild?.name}
+            />
           )}
         </div>
 
-        {childrenList.length > 0 ? (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {childrenList.map((child) => (
-                <ChildSummaryCard
-                  key={child.id}
-                  child={child}
-                  isSelected={selectedChild?.id === child.id}
-                  onClick={() => {
-                    if (selectedChild?.id === child.id) {
-                      setSelectedChild(null);
-                    } else {
-                      setSelectedChild(child);
-                      setSelectedChildId(child.id);
-                    }
-                  }}
-                />
-              ))}
-            </div>
-
-            {selectedChild && (
-              <div className="mt-4">
-                <ChildDetailPanel
-                  child={selectedChild}
-                  onClose={() => setSelectedChild(null)}
-                />
-              </div>
-            )}
-
-            {/* ═══ PHASE 7.2: PARENT AI LEARNING INTELLIGENCE DASHBOARD ═══ */}
-            {selectedChild && parentInsights && (
-              <div className="mt-6 space-y-6 border-t-2 border-slate-200/60 pt-6">
-                <AIParentCoach aiParentMessage={parentInsights.ai_parent_message} />
-                <ParentLearningOverview
-                  childProfile={parentInsights.child_profile}
-                  learningProgress={parentInsights.learning_progress}
-                />
-                <MasteryProgressCard masteryOverview={parentInsights.mastery_overview} />
-                <LearningGrowthChart learningProgress={parentInsights.learning_progress} />
-                <StrengthWeaknessCard
-                  strengths={parentInsights.strengths}
-                  weaknesses={parentInsights.weaknesses}
-                />
-              </div>
-            )}
-
-            {/* ═══ PHASE 7.3: PARENT ACTION CENTER ═══ */}
-            {selectedChild && (
-              <div className="mt-6 space-y-6 border-t-2 border-slate-200/60 pt-6">
-                <ParentMissionLauncher
-                  studentId={selectedChild.id}
-                  weaknesses={parentInsights?.weaknesses || []}
-                  onMissionCreated={() => loadParentInsights(selectedChild.id)}
-                />
-                <ParentGoalCard
-                  studentId={selectedChild.id}
-                  goals={[]}
-                  onRefresh={() => loadParentInsights(selectedChild.id)}
-                />
-                <RewardApprovalCard
-                  requests={[]}
-                  onRefresh={loadDashboardData}
-                />
-                <LearningStreakCard
-                  currentStreak={selectedChild.realProgress?.streak_days || 3}
-                  longestStreak={14}
-                />
-                <NotificationCenter
-                  notifications={parentNotifications}
-                  onRefresh={() => fetchNotifications(selectedChild.id)}
-                />
-              </div>
-            )}
-          </>
-        ) : (
-          <Card className="p-8 text-center border-dashed border-2 border-slate-200 rounded-xl bg-white">
-            <p className="text-sm text-slate-500 font-medium mb-3">
-              Tiada profil anak dijumpai. Tambah profil anak pertama anda untuk bermula.
-            </p>
-            <Button
-              onClick={() => setAddChildModalOpen(true)}
-              className="bg-indigo-600 text-white rounded-lg font-semibold text-xs px-5 h-9"
-            >
-              <UserPlus className="w-4 h-4 mr-1.5" /> Tambah Profil Anak
-            </Button>
-          </Card>
-        )}
-      </div>
-
-      {/* ═══ 3M DIAGNOSTIC RECOMMENDATION ═══ */}
-      {childrenList.length > 0 && (
-        <div className="space-y-3">
-          {childrenList.map((child) => {
-            const showCard = shouldShowDiagnosticRecommendation(child);
-            if (!showCard) return null;
-            const wasSkipped = child.diagnostic_status === "not_started" && child.diagnostic_recommended_date;
-            const isInProgress = child.diagnostic_status === "in_progress";
-            const isReminder = wasSkipped || isInProgress;
-
-            return (
-              <DiagnosticRecommendationCard
-                key={child.id}
-                child={child}
-                isReminder={isReminder}
-                onStart={() => {
-                  setDiagnosticTargetChild(child);
-                  setSelectedChildId(child.id);
-                  setDiagnosticIntroOpen(true);
-                }}
-                onSkip={async () => {
-                  try {
-                    // Mark the child's diagnostic as recommended (not_started + date) so reminder shows
-                    await base44.entities.User.update(child.id, {
-                      diagnostic_status: "not_started",
-                      diagnostic_recommended_date: new Date().toISOString(),
-                    }).catch(() => {});
-                    toast({
-                      title: "Tiada tekanan!",
-                      description: "Anda boleh mulakan Misi Penemuan 3M bila-bila masa dari profil anak.",
-                    });
-                    loadDashboardData();
-                  } catch (err) {
-                    console.error("Skip diagnostic error:", err);
-                  }
-                }}
-              />
-            );
-          })}
+        {/* High-Level Overview Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-emerald-500 rounded-2xl p-4 text-white shadow-sm relative overflow-hidden">
+            <Award className="w-8 h-8 opacity-20 absolute -right-2 -bottom-2" />
+            <div className="text-2xl font-black">{masteryData.filter(m => m.max_tp_achieved >= 5).length}</div>
+            <div className="text-xs font-bold mt-1 opacity-90">Topik Dikuasai (TP5-6)</div>
+          </div>
+          
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+            <Activity className="w-8 h-8 text-slate-100 absolute -right-2 -bottom-2" />
+            <div className="text-2xl font-black text-slate-800">{masteryData.length}</div>
+            <div className="text-xs font-bold mt-1 text-slate-500">Aktiviti Disiapkan</div>
+          </div>
         </div>
-      )}
 
-      {/* ═══ DIAGNOSTIC INTRO MODAL ═══ */}
-      <ParentDiagnosticIntroModal
-        open={diagnosticIntroOpen}
-        onClose={() => setDiagnosticIntroOpen(false)}
-        childName={diagnosticTargetChild?.nickname || diagnosticTargetChild?.full_name}
-        onStart={async () => {
-          try {
-            // Mark diagnostic as in_progress on the child
-            if (diagnosticTargetChild) {
-              await base44.entities.User.update(diagnosticTargetChild.id, {
-                diagnostic_status: "in_progress",
-                diagnostic_recommended_date: diagnosticTargetChild.diagnostic_recommended_date || new Date().toISOString(),
-              }).catch(() => {});
-            }
-            setDiagnosticIntroOpen(false);
-            // Enter child mode so diagnostic uses the child's ID, then navigate to diagnostic
-            if (diagnosticTargetChild) {
-              enterChildMode(diagnosticTargetChild);
-              // Override the /dashboard navigation from enterChildMode
-              setTimeout(() => navigate("/diagnostic"), 100);
-            } else {
-              navigate("/diagnostic");
-            }
-          } catch (err) {
-            console.error("Start diagnostic error:", err);
-            setDiagnosticIntroOpen(false);
-            navigate("/diagnostic");
-          }
-        }}
-      />
+        {/* Deep Dive Navigation */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 divide-y divide-slate-50">
+          <button onClick={() => navigate('/parent/report')} className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center"><BookOpen className="w-4 h-4" /></div>
+              <div className="text-left"><p className="text-sm font-bold text-slate-800">Laporan Akademik Terperinci</p></div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </button>
 
-      {/* ═══ ADD CHILD MODAL ═══ */}
-      <AddChildModal
-        open={addChildModalOpen}
-        onOpenChange={setAddChildModalOpen}
-        onChildAdded={loadDashboardData}
-      />
+          <button onClick={() => navigate('/parent/billing')} className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center"><Award className="w-4 h-4" /></div>
+              <div className="text-left"><p className="text-sm font-bold text-slate-800">Urus Ganjaran (Rewards)</p></div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </button>
+        </div>
+
+      </div>
     </div>
   );
 }

@@ -213,6 +213,7 @@ export default function AdminContentStudio() {
   // Generation & Quality Audit State (Phase 2 & 3)
   const [generatingPackage, setGeneratingPackage] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
+  const [currentStageText, setCurrentStageText] = useState("");
   const [evaluatingQuality, setEvaluatingQuality] = useState(false);
   const [qualityReport, setQualityReport] = useState(null);
 
@@ -292,13 +293,30 @@ export default function AdminContentStudio() {
     fetchCompletenessAndBlocks();
   }, [fetchCompletenessAndBlocks]);
 
-  // Step 3: Generate Full 7-Part DSKP Lesson Package
+  // Step 3: Generate Full 15-Part DSKP Lesson Package
   const handleGeneratePackage = async () => {
     if (!selectedVersion) return;
     setGeneratingPackage(true);
-    setGenerationProgress(20);
+    setGenerationProgress(0);
+    setCurrentStageText("🚀 [Fasa 1: Engagement] Menjana Naratif Hook & Audio Intro...");
+    
+    // Simulate progression while waiting
+    const progressInterval = setInterval(() => {
+      setGenerationProgress(prev => {
+        const next = prev + Math.floor(Math.random() * 3) + 1;
+        if (next > 95) return 95; // Wait at 95% for actual completion
+        
+        // Update text based on progress
+        if (next >= 81) setCurrentStageText("🎯 [Fasa 5: Assessment] Menyedia Kuiz PBD (TP1-TP6 Gamifikasi)...");
+        else if (next >= 61) setCurrentStageText("🎬 [Fasa 4: Application] Membina Panduan Video & Langkah Kerja...");
+        else if (next >= 41) setCurrentStageText("✏️ [Fasa 3: Practice] Menyedia Kad Imbas Active Recall & Padanan...");
+        else if (next >= 21) setCurrentStageText("💡 [Fasa 2: Concept] Menjana Peta i-THINK, Infografik & Kad Istilah...");
+        
+        return next;
+      });
+    }, 400);
+
     try {
-      setGenerationProgress(50);
       const res = await base44.functions.invoke("generateModularLessonContent", {
         lesson_version_id: selectedVersion,
         sk_code: skCode,
@@ -311,17 +329,23 @@ export default function AdminContentStudio() {
         taxonomy: "Bloom",
       });
 
-      setGenerationProgress(85);
+      clearInterval(progressInterval);
+      setGenerationProgress(100);
+      setCurrentStageText("✅ Penjanaan 15 Blok Selesai! Mengalihkan ke Langkah 4...");
+
       if (res.data?.success) {
-        setGenerationProgress(100);
         await fetchCompletenessAndBlocks();
         await handleEvaluateQuality();
+        
+        // Wait 1 second before transitioning
+        await new Promise(r => setTimeout(r, 1000));
         setActiveStep(4); // Move to Step 4: Block Review
         toast({ title: "Berjaya!", description: "Pakej Pelajaran AI berjaya dijana." });
       } else {
         toast({ title: "Ralat Penjanaan", description: res.data?.error || "Gagal menjana pakej pelajaran.", variant: "destructive" });
       }
     } catch (err) {
+      clearInterval(progressInterval);
       console.error("Generate package error:", err);
       toast({ title: "Ralat Sistem", description: err.message || "Gagal menjana modul.", variant: "destructive" });
     } finally {
@@ -633,25 +657,63 @@ export default function AdminContentStudio() {
             <Card className="bg-gradient-to-br from-indigo-950/40 via-stone-900 to-amber-950/40 border-2 border-indigo-500/30 shadow-xl">
               <CardHeader>
                 <CardTitle className="text-sm font-black text-indigo-300 uppercase tracking-wider flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-indigo-400" /> Langkah 3: Penjanaan Pakej Pelajaran AI 7-Bahagian
+                  ✨ LANGKAH 3: PENJANAAN PAKEJ PELAJARAN AI (15 MIKRO-BLOK)
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <p className="text-xs text-stone-300 font-medium leading-relaxed">
-                  Sistem akan menjana modul DSKP lengkap merangkumi Set Induksi Misteri Suku 🐢, Nota 5-Fasa, Contoh Terbimbing, 3 Aktiviti Interaktif, Pentaksiran PBD, dan Ganjaran Syiling/XP.
+                  Sistem sedang menjana 15 blok modul DSKP berstruktur merangkumi 5 Fasa Utama (Engagement, Concept, Practice, Application, dan Pentaksiran PBD).
                 </p>
 
                 {generatingPackage && (
-                  <div className="space-y-2 py-4">
-                    <div className="flex items-center justify-between text-xs font-black text-indigo-300">
-                      <span>Penjanaan Berlangsung...</span>
-                      <span>{generationProgress}%</span>
+                  <div className="space-y-4 py-4">
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex items-center justify-between text-xs font-black">
+                        <span className="text-indigo-300 animate-pulse">{currentStageText || "Memulakan Penjanaan..."}</span>
+                        <span className="font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                          {generationProgress}%
+                        </span>
+                      </div>
+                      <div className="w-full h-4 bg-stone-950 rounded-full overflow-hidden border border-stone-800 p-0.5 shadow-inner">
+                        <div
+                          className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-emerald-400 rounded-full transition-all duration-500 ease-out shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                          style={{ width: `${generationProgress}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full h-3 bg-stone-950 rounded-full overflow-hidden border border-stone-800 p-0.5">
-                      <div
-                        className="h-full bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 rounded-full transition-all duration-500"
-                        style={{ width: `${generationProgress}%` }}
-                      />
+
+                    {/* 5-Phase Stepper Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 pt-2">
+                      {[
+                        { id: 1, label: "Fasa 1: Engagement", range: [0, 20] },
+                        { id: 2, label: "Fasa 2: Concept", range: [21, 40] },
+                        { id: 3, label: "Fasa 3: Practice", range: [41, 60] },
+                        { id: 4, label: "Fasa 4: Application", range: [61, 80] },
+                        { id: 5, label: "Fasa 5: Assessment", range: [81, 100] }
+                      ].map(phase => {
+                        const isCompleted = generationProgress > phase.range[1] || generationProgress === 100;
+                        const isActive = generationProgress >= phase.range[0] && generationProgress <= phase.range[1] && generationProgress < 100;
+                        
+                        let cardClass = "bg-stone-950/50 border-stone-800 text-stone-500 opacity-50"; // Pending
+                        let icon = <span className="w-4 h-4 rounded-full bg-stone-800 text-[9px] flex items-center justify-center font-bold text-stone-500">{phase.id}</span>;
+
+                        if (isCompleted) {
+                          cardClass = "bg-emerald-950/30 border-emerald-500/50 text-emerald-300";
+                          icon = <CheckCircle2 className="w-4 h-4 text-emerald-400" />;
+                        } else if (isActive) {
+                          cardClass = "bg-indigo-950/30 border-indigo-400 text-indigo-200 shadow-[0_0_10px_rgba(99,102,241,0.3)] animate-pulse";
+                          icon = <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />;
+                        }
+
+                        return (
+                          <div key={phase.id} className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all ${cardClass}`}>
+                            <div className="flex items-center gap-1.5 mb-1">
+                              {icon}
+                            </div>
+                            <span className="text-[9px] font-bold text-center leading-tight uppercase tracking-wider">{phase.label}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -674,7 +736,7 @@ export default function AdminContentStudio() {
                     ) : (
                       <>
                         <Zap className="w-4 h-4" />
-                        <span>Jana Modul Pelajaran DSKP 7-Bahagian Lengkap</span>
+                        <span>Jana Modul Pelajaran DSKP 15-Bahagian Lengkap</span>
                       </>
                     )}
                   </button>

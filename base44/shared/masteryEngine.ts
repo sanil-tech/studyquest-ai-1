@@ -1,4 +1,6 @@
 // base44/shared/masteryEngine.ts
+import { z } from "npm:zod";
+
 // StudyQuest Mastery Engine - Evaluates student performance using 4-tier weighted mastery calculation
 // (Quiz Accuracy 50%, Bloom Taxonomy 20%, Recent Performance 20%, Practice Consistency 10%)
 
@@ -148,5 +150,107 @@ export function analysePerformance(
     misconceptions: misconceptions.length > 0 ? misconceptions : ["Miskonsepsi Asas Topik"],
     recommended_level: recommendedLevel,
     recommendation_type: recommendationType,
+  };
+}
+
+// ==========================================
+// NEW: ZOD SCHEMA & GATEWAY ENGINE (Fasa 1)
+// ==========================================
+
+/**
+ * Strict schema validation for evaluating diagnostic quizzes and gateway attempts.
+ */
+export const EvaluateQuizRequestSchema = z.object({
+  student_id: z.string().min(1, "Student ID cannot be empty"),
+  assessment_id: z.string().min(1, "Assessment/Topic ID cannot be empty"),
+  duration_seconds: z.number().nonnegative().optional().default(0),
+  answers: z.array(
+    z.object({
+      question_id: z.string(),
+      selected_option_id: z.string().optional(),
+      selected_option: z.string().optional(),
+      text_answer: z.string().optional(),
+      is_correct: z.boolean().optional(), // In case pre-evaluated
+      subtopic_id: z.string().optional(), // For gateway subtopic breakdown
+      tp_level: z.number().min(1).max(6).optional()
+    })
+  ).min(1, "At least one answer must be provided")
+});
+
+export interface SubtopicBreakdown {
+  subtopic_id: string;
+  total_questions: number;
+  correct_count: number;
+  score_percentage: number;
+  max_tp_achieved: number;
+  is_passed: boolean;
+}
+
+export interface GatewayResult {
+  isTopicUnlocked: boolean;
+  failedSubtopicIds: string[];
+  subtopics: SubtopicBreakdown[];
+}
+
+/**
+ * Calculates per-subtopic accuracy and determines if the student passes the 60% gateway threshold.
+ */
+export function calculateSubtopicBreakdown(
+  questionResults: (QuestionResultInput & { subtopic_id?: string; tp_level?: number })[]
+): GatewayResult {
+  if (!questionResults || questionResults.length === 0) {
+    return { isTopicUnlocked: false, failedSubtopicIds: [], subtopics: [] };
+  }
+
+  const subtopicMap = new Map<string, { total: number; correct: number; maxTp: number }>();
+
+  // Aggregate stats per subtopic
+  for (const q of questionResults) {
+    const subId = q.subtopic_id || "unknown";
+    const tp = q.tp_level || 1;
+
+    if (!subtopicMap.has(subId)) {
+      subtopicMap.set(subId, { total: 0, correct: 0, maxTp: 0 });
+    }
+
+    const stats = subtopicMap.get(subId)!;
+    stats.total += 1;
+    if (q.is_correct) {
+      stats.correct += 1;
+      if (tp > stats.maxTp) {
+        stats.maxTp = tp;
+      }
+    }
+  }
+
+  const subtopics: SubtopicBreakdown[] = [];
+  const failedSubtopicIds: string[] = [];
+  let allPassed = true;
+
+  // Evaluate 60% threshold rule for each subtopic
+  for (const [subId, stats] of subtopicMap.entries()) {
+    // Avoid divide-by-zero
+    const percentage = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+    const isPassed = percentage >= 60;
+
+    if (!isPassed) {
+      allPassed = false;
+      failedSubtopicIds.push(subId);
+    }
+
+    subtopics.push({
+      subtopic_id: subId,
+      total_questions: stats.total,
+      correct_count: stats.correct,
+      score_percentage: percentage,
+      max_tp_achieved: stats.maxTp,
+      is_passed: isPassed
+    });
+  }
+
+  return {
+    isTopicUnlocked: allPassed,
+    failedSubtopicIds,
+    subtopics
   };
 }
