@@ -53,7 +53,9 @@ const FIVE_PHASE_LESSON_SCHEMA = {
                   properties: {
                     front: { type: "string" },
                     back: { type: "string" },
-                    hint: { type: "string" }
+                    hint: { type: "string" },
+                    visual_front: { type: "string" },
+                    visual_back: { type: "string" }
                   },
                   required: ["front", "back"]
                 }
@@ -66,7 +68,9 @@ const FIVE_PHASE_LESSON_SCHEMA = {
                     question: { type: "string" },
                     options: { type: "array", items: { type: "string" } },
                     correct_answer: { type: "string" },
-                    explanation: { type: "string" }
+                    explanation: { type: "string" },
+                    visual_a: { type: "string" },
+                    visual_b: { type: "string" }
                   },
                   required: ["question", "options", "correct_answer", "explanation"]
                 }
@@ -74,7 +78,11 @@ const FIVE_PHASE_LESSON_SCHEMA = {
               steps: { 
                 type: "array",
                 items: { type: "string" }
-              }
+              },
+              video_url: { type: "string" },
+              video_title: { type: "string" },
+              description: { type: "string" },
+              key_points: { type: "array", items: { type: "string" } }
             }
           }
         },
@@ -174,21 +182,17 @@ Tugas anda ialah membina SATU PAKEJ PELAJARAN LENGKAP 5-FASA DSKP bagi:
 - Taksonomi: ${taxonomy}
 
 SYARAT WAJIB OUTPUT JSON ANDA:
-Anda mesti menjana struktur JSON yang mengandungi 'lesson_title' (tajuk pembelajaran berdasarkan SP), 'sp_code' yang sepadan, dan tepat 5 blok pembelajaran berikutan 5 fasa pedagogi di bawah:
-
-1. Block 1 (phase: "ENGAGEMENT"): Hook / Set Induksi. (type: "TEXT_MARKDOWN")
-2. Block 2 (phase: "CONCEPT"): Pengajaran Konsep secara visual atau nota. (type: "MIND_MAP" atau "TEXT_MARKDOWN")
-3. Block 3 (phase: "PRACTICE"): Latihan Interaktif atau Kad Imbasan. (type: "FLASHCARD_DECK" atau "INTERACTIVE_GAME")
-4. Block 4 (phase: "APPLICATION"): Aplikasi Kemahiran / Ujian Praktikal. (type: "TEXT_MARKDOWN")
-5. Block 5 (phase: "PBD_ASSESSMENT"): Pentaksiran Akhir (type: "INTERACTIVE_GAME")
+1. Wajib menjana struktur JSON yang mengandungi 'lesson_title' (tajuk pembelajaran), 'sp_code' yang sepadan, dan TEPAT 5 blok pembelajaran berikutan 5 fasa pedagogi.
+2. PENTING UNTUK KSSR TAHUN 1-3: Anda MESTI menyertakan ilustrasi visual dalam bentuk emoji (cth: 🍎🍎 vs 🍏) atau deskripsi imej ('image_prompt') di dalam 'content' bagi blok naratif, kuiz, dan kad imbasan (Gunakan 'visual_a' dan 'visual_b' untuk perbandingan kuantiti).
+3. PETA MINDA: Untuk blok MIND_MAP, subnode MESTI mengandungi huraian konsep DSKP yang bermakna (Contoh: "Sama Banyak -> Kuantiti objek adalah sama"). DILARANG SAMA SEKALI menggunakan teks placeholder ('c1', 'c2', 'c3').
 
 Contoh struktur untuk blocks:
 [
-  { "id": "b1", "phase": "ENGAGEMENT", "type": "TEXT_MARKDOWN", "title": "Misteri Suku Penyu", "content": { "markdown": "Teks cerita berserta formatting..." } },
-  { "id": "b2", "phase": "CONCEPT", "type": "MIND_MAP", "title": "Peta Konsep", "content": { "nodes": [{ "id": "1", "label": "Konsep Utama", "children": [] }] } },
-  { "id": "b3", "phase": "PRACTICE", "type": "FLASHCARD_DECK", "title": "Kad Imbasan", "content": { "cards": [{ "front": "Soalan", "back": "Jawapan", "hint": "Klu" }] } },
-  { "id": "b4", "phase": "APPLICATION", "type": "WORKED_EXAMPLE", "title": "Contoh Terbimbing", "content": { "steps": ["Langkah 1", "Langkah 2"] } },
-  { "id": "b5", "phase": "PBD_ASSESSMENT", "type": "INTERACTIVE_GAME", "title": "Ujian Akhir PBD", "content": { "questions": [{ "question": "Berapakah...", "options": ["A", "B", "C"], "correct_answer": "A", "explanation": "Kerana..." }] } }
+  { "id": "b1", "phase": "ENGAGEMENT", "type": "TEXT_MARKDOWN", "title": "Misteri Suku Penyu", "content": { "markdown": "Teks cerita berserta formatting dan emoji visual 🐢..." } },
+  { "id": "b2", "phase": "CONCEPT", "type": "MIND_MAP", "title": "Peta Konsep", "content": { "nodes": [{ "id": "1", "label": "Membanding Kuantiti", "children": ["Sama Banyak: Bilangan objek adalah sama"] }] } },
+  { "id": "b3", "phase": "PRACTICE", "type": "FLASHCARD_DECK", "title": "Kad Imbasan", "content": { "cards": [{ "front": "Soalan", "back": "Jawapan", "visual_front": "🔵🔵🔵" }] } },
+  { "id": "b4", "phase": "APPLICATION", "type": "VIDEO_LESSON", "title": "Contoh Terbimbing Video", "content": { "video_url": "https://www.youtube.com/watch?v=EXAMPLE_ID", "video_title": "Panduan", "description": "Tonton video...", "key_points": ["Kenali kumpulan A dan B"] } },
+  { "id": "b5", "phase": "PBD_ASSESSMENT", "type": "INTERACTIVE_GAME", "title": "Ujian Akhir PBD", "content": { "questions": [{ "question": "Kumpulan manakah lebih banyak?", "options": ["A", "B"], "correct_answer": "A", "explanation": "A lebih banyak kerana 5 > 3", "visual_a": "🍎🍎🍎🍎🍎", "visual_b": "🍏🍏🍏" }] } }
 ]
 
 Sertakan juga objektif 'gamification' (xp_reward, coin_reward) dan 'assessment' array (30% Remember, 40% Understand/Apply, 30% HOTS/KBAT).`;
@@ -207,6 +211,27 @@ Sertakan juga objektif 'gamification' (xp_reward, coin_reward) dan 'assessment' 
     } catch (e) {
       generated = aiResponse;
     }
+
+    if (!generated || !generated.blocks || !Array.isArray(generated.blocks)) {
+      return Response.json(
+        { success: false, error: "Ralat format struktur AI. Sila jana semula (retry)." },
+        { status: 500 }
+      );
+    }
+    
+    // Auto-fix empty contents with basic templates
+    generated.blocks = generated.blocks.map((block: any) => {
+      if (!block.content || Object.keys(block.content).length === 0) {
+        if (block.type === "TEXT_MARKDOWN") block.content = { markdown: "Kandungan tidak dapat dijanakan dengan baik. Sila klik 'Jana Semula Blok' untuk mencuba lagi." };
+        else if (block.type === "MIND_MAP") block.content = { nodes: [{ id: "1", label: "Konsep DSKP (Sila Jana Semula)", children: [] }] };
+        else if (block.type === "FLASHCARD_DECK") block.content = { cards: [{ front: "Kandungan Rosak", back: "Sila jana semula blok ini", hint: "" }] };
+        else if (block.type === "INTERACTIVE_GAME") block.content = { questions: [{ question: "Sila jana semula blok ini", options: ["A", "B"], correct_answer: "A", explanation: "" }] };
+        else if (block.type === "WORKED_EXAMPLE") block.content = { steps: ["Sila jana semula"] };
+        else if (block.type === "VIDEO_LESSON") block.content = { video_url: "", video_title: "Sila jana semula", description: "", key_points: [] };
+        else block.content = { markdown: "Sila jana semula blok ini." };
+      }
+      return block;
+    });
 
     // Update LessonVersion entity
     await base44.asServiceRole.entities.LessonVersion.update(version.id, {

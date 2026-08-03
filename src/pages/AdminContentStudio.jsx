@@ -116,6 +116,60 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+function InlineVideoUrlEditor({ blockId, initialPayload, onSaved }) {
+  const [videoUrl, setVideoUrl] = useState(() => {
+    try {
+      const parsed = typeof initialPayload === "string" ? JSON.parse(initialPayload) : (initialPayload || {});
+      return parsed.video_url || "";
+    } catch { return ""; }
+  });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const parsed = typeof initialPayload === "string" ? JSON.parse(initialPayload) : (initialPayload || {});
+      parsed.video_url = videoUrl;
+      await base44.entities.LessonBlock.update(blockId, { payload: parsed });
+      setSaved(true);
+      if (onSaved) onSaved();
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e) {
+      alert("Gagal mengemaskini pautan video.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const isValid = videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be");
+
+  return (
+    <div className="mt-3 w-full p-3 bg-stone-900 border border-stone-800 rounded-xl space-y-2">
+      <div className="flex items-center gap-2 text-xs font-bold text-stone-300">
+        Pautan Video (YouTube / MP4)
+        {isValid && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+      </div>
+      <div className="flex gap-2">
+        <input
+          value={videoUrl}
+          onChange={(e) => setVideoUrl(e.target.value)}
+          placeholder="https://www.youtube.com/watch?v=..."
+          className="flex-1 bg-stone-950 border border-stone-800 text-stone-200 text-xs rounded-lg px-3 h-8 outline-none focus:border-amber-500/50"
+          disabled={saving}
+        />
+        <button
+          onClick={handleSave}
+          disabled={saving || !videoUrl}
+          className="px-3 h-8 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-[11px] font-bold rounded-lg flex items-center gap-1 transition-all"
+        >
+          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : (saved ? <CheckCircle2 className="w-3 h-3" /> : "Simpan Pautan")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminContentStudio() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -679,6 +733,13 @@ export default function AdminContentStudio() {
                               </span>
                             </div>
                             <h4 className="text-xs sm:text-sm font-black text-white">{block.title || `Blok Kandungan ${block.block_type}`}</h4>
+                            {block.block_type === "VIDEO_LESSON" && (
+                              <InlineVideoUrlEditor 
+                                blockId={block.id} 
+                                initialPayload={block.payload} 
+                                onSaved={fetchCompletenessAndBlocks} 
+                              />
+                            )}
                           </div>
 
                           <div className="flex items-center gap-2 w-full sm:w-auto">

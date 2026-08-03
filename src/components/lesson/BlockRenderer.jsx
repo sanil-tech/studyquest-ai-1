@@ -61,6 +61,10 @@ export const parseMarkdownToHTML = (text) => {
       htmlOutput.push(`<h2 class="text-sm sm:text-base font-black text-lime-400 my-2">✨ ${trimmed.replace("## ", "")}</h2>`);
       return;
     }
+    if (trimmed.startsWith("### ")) {
+      htmlOutput.push(`<h3 class="text-sm font-black text-cyan-300 my-1">${trimmed.replace("### ", "")}</h3>`);
+      return;
+    }
     htmlOutput.push(`<p class="text-xs sm:text-sm text-stone-200 font-bold mb-2">${trimmed}</p>`);
   });
 
@@ -249,7 +253,9 @@ function InlineQuizBlock({ questions = [], onCompleted, isCompleted, studentName
         question: personalize(q.question || q.stem || `Soalan ${idx + 1}`, studentName),
         options: optionsList.map((opt) => personalize(String(opt), studentName)),
         correctIndex: resolvedCorrectIndex,
-        explanation: personalize(q.explanation || q.reason || "", studentName)
+        explanation: personalize(q.explanation || q.reason || "", studentName),
+        visual_a: q.visual_a,
+        visual_b: q.visual_b
       };
     });
   }, [questions, studentName]);
@@ -297,6 +303,13 @@ function InlineQuizBlock({ questions = [], onCompleted, isCompleted, studentName
             <p className="text-xs sm:text-sm font-black text-amber-300">
               {qIdx + 1}. {q.question}
             </p>
+
+            {(q.visual_a || q.visual_b) && (
+              <div className="flex gap-6 my-3 text-3xl sm:text-4xl justify-center bg-black/40 p-3 rounded-2xl border border-stone-800">
+                {q.visual_a && <div className="text-center"><span className="text-[10px] font-black text-stone-500 uppercase block mb-1">Pilihan A</span>{q.visual_a}</div>}
+                {q.visual_b && <div className="text-center"><span className="text-[10px] font-black text-stone-500 uppercase block mb-1">Pilihan B</span>{q.visual_b}</div>}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 gap-2">
               {q.options.map((option, optIdx) => {
@@ -401,6 +414,81 @@ export default function BlockRenderer({
   const blockTitle = (!rawTitle || rawTitle === "Skrip Video (AI)" || rawTitle === "Skrip Video") ? "Taklimat Video" : rawTitle;
 
   switch (blockType) {
+    case "VIDEO_LESSON": {
+      let videoUrl = payload.video_url || "";
+      let videoId = null;
+      if (videoUrl) {
+        const str = String(videoUrl).trim();
+        if (/^[a-zA-Z0-9_-]{11}$/.test(str)) {
+          videoId = str;
+        } else {
+          const match = str.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/i);
+          if (match && match[1] && match[1].length === 11) videoId = match[1];
+        }
+      }
+
+      return (
+        <div className="space-y-4 text-left">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+            <h3 className="text-base font-black text-rose-300 flex items-center gap-2">
+              <Tv className="w-5 h-5 text-rose-400" /> {blockTitle || payload.video_title || "Video Pembelajaran"}
+            </h3>
+            <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+              {badgeInfo.label}
+            </span>
+          </div>
+
+          {!videoId ? (
+            <div className="p-5 bg-rose-950/40 border border-rose-500/40 rounded-2xl text-center space-y-2">
+              <Tv className="w-8 h-8 text-rose-400 mx-auto" />
+              <p className="text-xs font-bold text-rose-300">
+                Pautan video belum dimasukkan. Sila masukkan pautan YouTube di Langkah 4.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="aspect-video rounded-2xl overflow-hidden border border-stone-800 shadow-xl bg-black">
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}`}
+                  title={payload.video_title || "Video Lesson"}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+
+              {payload.description && (
+                <div className="p-4 bg-stone-900 border border-stone-800 rounded-xl space-y-2">
+                  <p className="text-sm font-bold text-stone-300">{payload.description}</p>
+                </div>
+              )}
+
+              {payload.key_points && Array.isArray(payload.key_points) && payload.key_points.length > 0 && (
+                <div className="p-4 bg-amber-950/20 border border-amber-500/20 rounded-xl space-y-3">
+                  <span className="text-xs font-black text-amber-400 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" /> Perkara Penting:
+                  </span>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {payload.key_points.map((pt, idx) => (
+                      <li key={idx} className="text-sm font-medium text-stone-200">
+                        {pt}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <Button
+                onClick={onComplete}
+                className="w-full h-11 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-sm rounded-xl border-b-4 border-emerald-700 active:translate-y-0.5 transition-all flex items-center justify-center gap-2"
+              >
+                {isCompleted ? "Video Selesai ✓" : "Selesai Menonton ➡️"}
+              </Button>
+            </div>
+          )}
+        </div>
+      );
+    }
     // 1. INDUCTION / SUKU MYSTERY HOOK
     case "INDUCTION":
       return (
