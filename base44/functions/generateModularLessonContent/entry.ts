@@ -30,7 +30,53 @@ const FIVE_PHASE_LESSON_SCHEMA = {
           phase: { type: "string", enum: ["ENGAGEMENT", "CONCEPT", "PRACTICE", "APPLICATION", "PBD_ASSESSMENT"] },
           type: { type: "string" },
           title: { type: "string" },
-          content: { type: "object" }
+          content: { 
+            type: "object",
+            properties: {
+              markdown: { type: "string" }, // For TEXT_MARKDOWN
+              nodes: { 
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    label: { type: "string" },
+                    children: { type: "array", items: { type: "string" } }
+                  },
+                  required: ["id", "label"]
+                }
+              },
+              cards: { 
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    front: { type: "string" },
+                    back: { type: "string" },
+                    hint: { type: "string" }
+                  },
+                  required: ["front", "back"]
+                }
+              },
+              questions: { 
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    question: { type: "string" },
+                    options: { type: "array", items: { type: "string" } },
+                    correct_answer: { type: "string" },
+                    explanation: { type: "string" }
+                  },
+                  required: ["question", "options", "correct_answer", "explanation"]
+                }
+              },
+              steps: { 
+                type: "array",
+                items: { type: "string" }
+              }
+            }
+          }
         },
         required: ["id", "phase", "type", "title", "content"]
       },
@@ -138,14 +184,14 @@ Anda mesti menjana struktur JSON yang mengandungi 'lesson_title' (tajuk pembelaj
 
 Contoh struktur untuk blocks:
 [
-  { "id": "b1", "phase": "ENGAGEMENT", "type": "TEXT_MARKDOWN", "title": "Misteri Suku Penyu", "content": {...} },
-  { "id": "b2", "phase": "CONCEPT", "type": "MIND_MAP", "title": "Peta Konsep", "content": {...} },
-  { "id": "b3", "phase": "PRACTICE", "type": "FLASHCARD_DECK", "title": "Kad Imbasan", "content": {...} },
-  { "id": "b4", "phase": "APPLICATION", "type": "TEXT_MARKDOWN", "title": "Aplikasi Konsep", "content": {...} },
-  { "id": "b5", "phase": "PBD_ASSESSMENT", "type": "INTERACTIVE_GAME", "title": "Ujian Akhir PBD", "content": {...} }
+  { "id": "b1", "phase": "ENGAGEMENT", "type": "TEXT_MARKDOWN", "title": "Misteri Suku Penyu", "content": { "markdown": "Teks cerita berserta formatting..." } },
+  { "id": "b2", "phase": "CONCEPT", "type": "MIND_MAP", "title": "Peta Konsep", "content": { "nodes": [{ "id": "1", "label": "Konsep Utama", "children": [] }] } },
+  { "id": "b3", "phase": "PRACTICE", "type": "FLASHCARD_DECK", "title": "Kad Imbasan", "content": { "cards": [{ "front": "Soalan", "back": "Jawapan", "hint": "Klu" }] } },
+  { "id": "b4", "phase": "APPLICATION", "type": "WORKED_EXAMPLE", "title": "Contoh Terbimbing", "content": { "steps": ["Langkah 1", "Langkah 2"] } },
+  { "id": "b5", "phase": "PBD_ASSESSMENT", "type": "INTERACTIVE_GAME", "title": "Ujian Akhir PBD", "content": { "questions": [{ "question": "Berapakah...", "options": ["A", "B", "C"], "correct_answer": "A", "explanation": "Kerana..." }] } }
 ]
 
-Sertakan juga objektif 'gamification' (xp_reward, coin_reward) dan 'assessment' array dengan soalan pelbagai aras Bloom (30% Remember, 40% Understand/Apply, 30% HOTS/KBAT).`;
+Sertakan juga objektif 'gamification' (xp_reward, coin_reward) dan 'assessment' array (30% Remember, 40% Understand/Apply, 30% HOTS/KBAT).`;
 
     const userPrompt = `Jana pakej pelajaran modul DSKP 5-Fasa bagi ${skCode} - ${spCode}. Pastikan ia mematuhi skema JSON yang ditetapkan.`;
 

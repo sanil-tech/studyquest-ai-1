@@ -231,12 +231,24 @@ function InlineQuizBlock({ questions = [], onCompleted, isCompleted, studentName
       }
 
       const correctIdx = q.correct_index ?? q.correctIndex ?? q.answer_index ?? q.correct_answer ?? 0;
+      
+      let resolvedCorrectIndex = 0;
+      if (typeof correctIdx === "number") {
+        resolvedCorrectIndex = correctIdx;
+      } else if (!isNaN(Number(correctIdx))) {
+        resolvedCorrectIndex = Number(correctIdx);
+      } else if (typeof correctIdx === "string") {
+        const foundIdx = optionsList.findIndex(o => String(o).trim().toLowerCase() === String(correctIdx).trim().toLowerCase());
+        if (foundIdx !== -1) {
+          resolvedCorrectIndex = foundIdx;
+        }
+      }
 
       return {
         id: idx,
         question: personalize(q.question || q.stem || `Soalan ${idx + 1}`, studentName),
         options: optionsList.map((opt) => personalize(String(opt), studentName)),
-        correctIndex: typeof correctIdx === "number" ? correctIdx : Number(correctIdx) || 0,
+        correctIndex: resolvedCorrectIndex,
         explanation: personalize(q.explanation || q.reason || "", studentName)
       };
     });
@@ -369,10 +381,20 @@ export default function BlockRenderer({
   const pedagogicalPhase = (block.pedagogical_phase || "").toUpperCase();
   const badgeInfo = getPedagogicalBadge(pedagogicalPhase, blockType);
 
-  // Safely resolve payload
   const payload = typeof block.payload === "string"
     ? (() => { try { return JSON.parse(block.payload); } catch { return { markdown: block.payload }; } })()
     : (block.payload || {});
+
+  if (!payload || Object.keys(payload).length === 0) {
+    return (
+      <div className="p-6 bg-rose-950/40 border-2 border-rose-500/40 rounded-3xl text-center space-y-3">
+        <XCircle className="w-10 h-10 text-rose-400 mx-auto" />
+        <h3 className="text-rose-300 font-black">Ralat Kandungan Blok</h3>
+        <p className="text-rose-400/80 text-xs">Tiada soalan/kandungan ditemui dalam payload blok ini.</p>
+        <Button onClick={onComplete} className="mt-4 bg-stone-800 hover:bg-stone-700 text-stone-200">Abai & Teruskan</Button>
+      </div>
+    );
+  }
 
   // Extract block title safely
   const rawTitle = replaceStudentVariables(block.title || "", studentName);
@@ -640,7 +662,7 @@ export default function BlockRenderer({
           if (rawMap.central_topic) centralTopic = personalize(rawMap.central_topic, studentName);
           const rawBranches = Array.isArray(rawMap)
             ? rawMap
-            : (Array.isArray(rawMap.branches) ? rawMap.branches : (Array.isArray(payload.branches) ? payload.branches : []));
+            : (Array.isArray(rawMap.branches) ? rawMap.branches : (Array.isArray(payload.branches) ? payload.branches : (Array.isArray(payload.nodes) ? payload.nodes : [])));
 
           branchesList = rawBranches.map((b) => {
             if (typeof b === "string") return { label: personalize(b, studentName), children: [] };
@@ -721,6 +743,27 @@ export default function BlockRenderer({
     case "INTERACTIVE":
     case "DRAG_DROP":
     case "MATCHING_GAME":
+      if (payload.questions && Array.isArray(payload.questions)) {
+        return (
+          <div className="space-y-4 text-left">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <h3 className="text-base font-black text-rose-300 flex items-center gap-2">
+                <Gamepad2 className="w-5 h-5 text-rose-400" /> {blockTitle || "Permainan Interaktif"}
+              </h3>
+              <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${badgeInfo.bg}`}>
+                {badgeInfo.label}
+              </span>
+            </div>
+            <InlineQuizBlock
+              questions={payload.questions}
+              onCompleted={onComplete}
+              isCompleted={isCompleted}
+              studentName={studentName}
+            />
+          </div>
+        );
+      }
+
       if (payload.widget_type === "base_ten_blocks") {
         return (
           <div className="space-y-4 text-left">
