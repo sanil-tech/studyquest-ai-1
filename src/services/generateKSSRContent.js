@@ -99,6 +99,7 @@ export function build9StepKSSRMissionPackage({
   topicTitle = "Kuantiti & Nilai Nombor"
 }) {
   const mode = getKSSRModeByGrade(grade);
+  const mascotName = mode === "SENIOR" ? "Ejen Suku 🦊" : "Suku Penyu 🐢";
 
   const missionPackage = {
     spCode,
@@ -108,21 +109,21 @@ export function build9StepKSSRMissionPackage({
     pbdTarget,
     world: {
       world_name: `Dunia ${subject}`,
-      world_icon: subject.toLowerCase().includes("matematik") ? "🔢" : "📚",
+      world_icon: subject.toLowerCase().includes("matematik") ? "🔢" : (subject.toLowerCase().includes("sains") ? "🔬" : "📚"),
       theme: "Pengembaraan KSSR Semakan",
-      description: `Meneroka tajuk ${topicTitle} bersama Suku Penyu 🐢`
+      description: `Meneroka tajuk ${topicTitle} bersama ${mascotName}`
     },
     adventure_story: {
       title: `Kembara ${topicTitle}`,
-      introduction: `Selamat datang ke modul KSSR ${grade}!`,
-      problem: `Selesaikan cabaran ${spCode} untuk mencapai ${pbdTarget}!`,
-      mission_goal: `Kuasai ${topicTitle} mengikut standard KPM.`
+      introduction: `Selamat datang ke modul KSSR ${grade}! Mari kita terokai tajuk ${topicTitle}.`,
+      problem: `Selesaikan cabaran SP ${spCode} untuk mencapai sasaran PBD ${pbdTarget}!`,
+      mission_goal: `Kuasai kemahiran ${topicTitle} mengikut standard KPM KSSR Semakan.`
     },
     otan_companion: {
-      greeting: "Hai Pengembara! Suku Penyu sedia membimbing kamu!",
-      encouragement: ["Teruskan usaha!", "Kamu hampir berjaya!", "Bagus sekali!"],
-      hint_messages: ["Fikirkan nilai tempat terlebih dahulu.", "Bandingkan angka dari kiri ke kanan."],
-      celebration_messages: ["Tahniah! Misi berjaya diselesaikan dengan cemerlang! 🎉"]
+      greeting: `Hai Pengembara! ${mascotName} sedia membimbing kamu dalam tajuk ${topicTitle}!`,
+      encouragement: ["Teruskan usaha!", `Kamu semakin menguasai ${topicTitle}!`, "Bagus sekali!"],
+      hint_messages: [`Fikirkan konsep asas SP ${spCode}.`, `Bandingkan jawapan dengan prinsip SK ${skCode}.`],
+      celebration_messages: [`Tahniah! Misi ${topicTitle} berjaya diselesaikan dengan cemerlang! 🎉`]
     },
     steps: [
       {
@@ -130,8 +131,8 @@ export function build9StepKSSRMissionPackage({
         step_type: "BRIEFING",
         title: "Pengenalan Misi",
         payload: {
-          story_hook: `Di Dunia ${subject}, nombor dan ayat memerlukan perhatian anda!`,
-          mascot_dialogue: `Hai! Saya Suku Penyu. Hari ini kita akan pelajari ${topicTitle} (${spCode}).`
+          story_hook: `Di Dunia ${subject}, cabaran ${topicTitle} memerlukan perhatian anda!`,
+          mascot_dialogue: `Hai! Saya ${mascotName}. Hari ini kita akan mempelajari ${topicTitle} (SP ${spCode}).`
         }
       },
       {
@@ -141,23 +142,23 @@ export function build9StepKSSRMissionPackage({
         cpa_blocks: [
           {
             block_type: "VISUAL_STORY",
-            title: "Kisah Visual Nombor",
-            content: { text: "Lihat susunan objek yang dipadankan satu demi satu." }
+            title: `Kisah Visual ${topicTitle}`,
+            content: { text: `Visual perwakilan danilustrasi objek bagi pemahaman tajuk ${topicTitle}.` }
           },
           {
             block_type: "COMPARISON_SPLIT",
-            title: "Perbandingan Kumpulan",
-            content: { left: "Kumpulan A (10)", right: "Kumpulan B (5)" }
+            title: `Perbandingan Kumpulan ${topicTitle}`,
+            content: { left: `Kumpulan Utama A (${topicTitle})`, right: `Kumpulan Pembanding B (${topicTitle})` }
           },
           {
             block_type: "STEP_BY_STEP",
-            title: "Langkah Pembilang",
-            content: { steps: ["Kira kumpulan A", "Kira kumpulan B", "Bandingkan jumlah"] }
+            title: `Langkah Pembelajaran ${topicTitle}`,
+            content: { steps: [`Fahami masalah ${topicTitle}`, `Terapkan formulasi SP ${spCode}`, `Semak jawapan mengikut SK ${skCode}`] }
           },
           {
             block_type: "MYTH_BUSTER",
-            title: "Mitos & Fakta Nombor",
-            content: { myth: "Saiz fizikal menentukan jumlah", fact: "Bilangan unit menentukan jumlah kuantiti" }
+            title: `Mitos & Fakta ${topicTitle}`,
+            content: { myth: `Tajuk ${topicTitle} sangat sukar dikuasai`, fact: `Dengan bimbingan berstruktur SP ${spCode}, semua murid boleh mencapai ${pbdTarget}!` }
           }
         ]
       },
@@ -166,11 +167,11 @@ export function build9StepKSSRMissionPackage({
         step_type: "LESSON",
         title: "Pecahan Konsep Utama",
         payload: {
-          concept_summary: `Konsep asas ${topicTitle} berpandukan SK ${skCode} dan SP ${spCode}.`,
+          concept_summary: `Konsep asas ${topicTitle} berpandukan SK ${skCode} dan SP ${spCode} untuk murid ${grade}.`,
           key_points: [
-            "Kenali simbol dan kuantiti",
-            "Fahami nilai tempat (Puluh dan Sa)",
-            "Kuasai perbandingan kuantiti"
+            `Memahami takrifan asas bagi ${topicTitle}`,
+            `Mengaplikasikan kemahiran SP ${spCode} dalam latihan harian`,
+            `Mencapai penguasaan PBD sasaran ${pbdTarget}`
           ]
         }
       },
@@ -180,7 +181,7 @@ export function build9StepKSSRMissionPackage({
         title: "Latihan Interaktif Widget",
         payload: {
           widget_type: subject.toLowerCase().includes("matematik") ? "base_ten_blocks" : "sentence_builder",
-          interactive_data: { targetNumber: 42, targetSentence: "Keluarga Ahmad berkelah" }
+          interactive_data: { topic: topicTitle, targetNumber: 42, targetSentence: `Murid mengulangkaji ${topicTitle}` }
         }
       },
       {
@@ -188,8 +189,8 @@ export function build9StepKSSRMissionPackage({
         step_type: "FLASHCARDS",
         title: "Kad Imbasan Terma Utama",
         cards: [
-          { term: "Nilai Tempat", definition: "Kedudukan digit dalam sesuatu nombor (contoh: Sa, Puluh)." },
-          { term: "Nilai Digit", definition: "Nilai nombor mengikut kedudukannya." }
+          { term: topicTitle, definition: `Istilah utama kurikulum KSSR ${grade} bagi SP ${spCode}.` },
+          { term: `Standard Kandungan ${skCode}`, definition: `Rangka kemahiran asas yang menyokong pembelajaran ${topicTitle}.` }
         ]
       },
       {
@@ -198,7 +199,7 @@ export function build9StepKSSRMissionPackage({
         title: "Permainan Mini Pembelajaran",
         payload: {
           game_type: "SortingGame",
-          game_config: { items: ["10", "20", "30"], targetCategory: "Ascending" }
+          game_config: { items: [`Item 1 (${topicTitle})`, `Item 2 (${topicTitle})`, `Item 3 (${topicTitle})`], targetCategory: "Kategori Utama" }
         }
       },
       {
@@ -207,10 +208,10 @@ export function build9StepKSSRMissionPackage({
         title: "Penilaian PBD",
         questions: [
           {
-            question: "Apakah nilai tempat bagi digit 4 dalam nombor 42?",
-            options: ["Puluh", "Sa", "Ratus"],
+            question: `Apakah konsep utama bagi tajuk ${topicTitle} mengikut SP ${spCode}?`,
+            options: [`Pilihan A (Konsep Tepat SP ${spCode})`, `Pilihan B (Kurang Tepat)`, `Pilihan C (Salah)`],
             correct_index: 0,
-            explanation: "Digit 4 berada di kedudukan puluh.",
+            explanation: `Pilihan A berpandukan piawaian SK ${skCode} KSSR ${grade}.`,
             tp_level: pbdTarget
           }
         ]
@@ -222,7 +223,7 @@ export function build9StepKSSRMissionPackage({
         payload: {
           xp_earned: 100,
           coins_earned: 25,
-          mastery_summary: `Anda telah menguasai SP ${spCode} pada Tahap ${pbdTarget}!`
+          mastery_summary: `Tahniah! Anda telah menguasai ${topicTitle} (SP ${spCode}) pada Tahap ${pbdTarget}!`
         }
       },
       {
@@ -230,9 +231,9 @@ export function build9StepKSSRMissionPackage({
         step_type: "REWARD",
         title: "Ganjaran Lencana Misi",
         payload: {
-          badge: "Wira KSSR Matematik",
-          item_drop: "Mahkota Suku Penyu 👑",
-          item_icon: "👑"
+          badge: `Wira KSSR ${subject}`,
+          item_drop: `Pingat Gemilang ${topicTitle} 🏅`,
+          item_icon: "🏅"
         }
       }
     ]

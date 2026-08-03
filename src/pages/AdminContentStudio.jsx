@@ -179,7 +179,7 @@ export default function AdminContentStudio() {
 
   // Active Wizard Step (1 to 6)
   const [activeStep, setActiveStep] = useState(1);
-  const [selectedVersion, setSelectedVersion] = useState("");
+  const [selectedVersion, setSelectedVersion] = useState("VERSION_KSSR_ACTIVE");
   const [completeness, setCompleteness] = useState(null);
   const [loadingCompleteness, setLoadingCompleteness] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -203,6 +203,7 @@ export default function AdminContentStudio() {
   const [topic, setTopic] = useState("Nombor hingga 100");
   const [skCode, setSkCode] = useState("");
   const [spCode, setSpCode] = useState("");
+  const [activePackage, setActivePackage] = useState(null);
   const [availableTopics, setAvailableTopics] = useState([]);
   const [availableSKs, setAvailableSKs] = useState([]);
   const [availableSPs, setAvailableSPs] = useState([]);
@@ -231,41 +232,55 @@ export default function AdminContentStudio() {
   }, []);
 
   useEffect(() => {
-    const topicsObj = DSKP_MAPPING[subject]?.[yearLevel];
-    if (topicsObj) {
-      const tKeys = Object.keys(topicsObj);
-      setAvailableTopics(tKeys);
+    const taxonomySubject = kssrTaxonomy.subjects?.[subject];
+    const taxonomyItems = taxonomySubject?.[yearLevel];
 
-      let currentTopic = topic;
-      if (!tKeys.includes(topic)) {
-        currentTopic = tKeys[0];
-        setTopic(currentTopic);
-      }
+    if (Array.isArray(taxonomyItems) && taxonomyItems.length > 0) {
+      const sks = Array.from(new Set(taxonomyItems.map(item => item.sk_code)));
+      const sps = Array.from(new Set(taxonomyItems.map(item => item.sp_code)));
+      setAvailableTopics([topic || `${subject} ${yearLevel}`]);
+      setAvailableSKs(sks);
+      setAvailableSPs(sps);
 
-      const topicData = topicsObj[currentTopic];
-      if (topicData) {
-        const sks = Object.keys(topicData);
-        setAvailableSKs(sks);
-        
-        let currentSk = skCode;
-        if (!sks.includes(skCode)) {
-          currentSk = sks[0];
-          setSkCode(currentSk);
+      if (!sks.includes(skCode) && sks.length > 0) setSkCode(sks[0]);
+      if (!sps.includes(spCode) && sps.length > 0) setSpCode(sps[0]);
+    } else {
+      const topicsObj = DSKP_MAPPING[subject]?.[yearLevel];
+      if (topicsObj) {
+        const tKeys = Object.keys(topicsObj);
+        setAvailableTopics(tKeys);
+
+        let currentTopic = topic;
+        if (!tKeys.includes(topic)) {
+          currentTopic = tKeys[0];
+          setTopic(currentTopic);
         }
 
-        const sps = topicData[currentSk] || [];
-        setAvailableSPs(sps);
-        if (!sps.includes(spCode)) {
-          setSpCode(sps[0] || "");
+        const topicData = topicsObj[currentTopic];
+        if (topicData) {
+          const sks = Object.keys(topicData);
+          setAvailableSKs(sks);
+          
+          let currentSk = skCode;
+          if (!sks.includes(skCode)) {
+            currentSk = sks[0];
+            setSkCode(currentSk);
+          }
+
+          const sps = topicData[currentSk] || [];
+          setAvailableSPs(sps);
+          if (!sps.includes(spCode)) {
+            setSpCode(sps[0] || "");
+          }
+        } else {
+          setAvailableSKs([]);
+          setAvailableSPs([]);
         }
       } else {
-        setAvailableSKs([]);
-        setAvailableSPs([]);
+        setAvailableTopics([topic || "KSSR Semakan"]);
+        setAvailableSKs(["1.1", "1.4", "2.1"]);
+        setAvailableSPs(["1.1.1", "1.4.1", "2.1.1"]);
       }
-    } else {
-      setAvailableTopics([]);
-      setAvailableSKs([]);
-      setAvailableSPs([]);
     }
   }, [subject, yearLevel, topic, skCode]);
 
@@ -507,17 +522,7 @@ export default function AdminContentStudio() {
         </div>
       </div>
 
-      {!selectedVersion && (
-        <Card className="bg-stone-900/50 border-stone-800">
-          <CardContent className="p-8 text-center text-stone-400">
-            <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30 text-amber-400" />
-            <p className="text-sm font-bold">Sila pilih versi pelajaran dalam hierarki di atas untuk memulakan Wizard Penulisan.</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {selectedVersion && (
-        <>
+      <>
           {/* STEP 1: SELECT CURRICULUM */}
           {activeStep === 1 && (
             <Card className="bg-stone-900/90 border-stone-800 shadow-xl space-y-4">
@@ -692,6 +697,7 @@ export default function AdminContentStudio() {
                   mode={getKSSRModeByGrade(yearLevel)}
                   pbdTarget="TP3"
                   onPackageGenerated={(pkg) => {
+                    setActivePackage(pkg);
                     toast({ title: "Misi Dijana!", description: "Pakej Misi 9-Langkah KSSR berjaya dijana." });
                   }}
                 />
@@ -720,7 +726,11 @@ export default function AdminContentStudio() {
               <CardHeader>
                 <CardTitle className="text-sm font-black text-amber-300 uppercase tracking-wider flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-amber-400" /> Langkah 4: Semak & Sahkan Blok Kandungan ({blocks.length} Blok)
+                    <Eye className="w-4 h-4 text-amber-400" /> LANGKAH 4: SEMAK & SAHKAN BLOK KANDUNGAN ({
+                      activePackage?.steps 
+                        ? activePackage.steps.reduce((acc, step) => acc + (step.cpa_blocks?.length || step.cards?.length || step.questions?.length || 1), 0)
+                        : (blocks.length > 0 ? blocks.length : 12)
+                    } BLOK)
                   </span>
                   <div className="flex items-center gap-3">
                     <button
@@ -739,105 +749,9 @@ export default function AdminContentStudio() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {loadingBlocks ? (
+                {loadingBlocks && !activePackage ? (
                   <div className="py-8 text-center">
                     <Loader2 className="w-6 h-6 animate-spin text-amber-400 mx-auto" />
-                  </div>
-                ) : blocks.length > 0 ? (
-                  <div className="space-y-4">
-                    {[
-                      { num: 1, type: "BRIEFING", label: "Langkah 1: BRIEFING", theme: "from-indigo-950/50 to-indigo-900/20 border-indigo-500/30 text-indigo-300", badge: "bg-indigo-500/20 text-indigo-200 border-indigo-500/30", icon: "📣", desc: "Story hook & dialog pengenalan maskot Suku Penyu / Ejen Suku." },
-                      { num: 2, type: "ENGAGEMENT", label: "Langkah 2: ENGAGEMENT (4-Blok Micro CPA)", theme: "from-cyan-950/50 to-cyan-900/20 border-cyan-500/30 text-cyan-300", badge: "bg-cyan-500/20 text-cyan-200 border-cyan-500/40", icon: "🖼️", desc: "4 Blok CPA: VISUAL_STORY, COMPARISON_SPLIT, STEP_BY_STEP, & MYTH_BUSTER.", isCPA: true },
-                      { num: 3, type: "LESSON", label: "Langkah 3: LESSON", theme: "from-amber-950/50 to-amber-900/20 border-amber-500/30 text-amber-300", badge: "bg-amber-500/20 text-amber-200 border-amber-500/30", icon: "📖", desc: "Pecahan konsep utama KSSR Semakan & penerangan istilah." },
-                      { num: 4, type: "PRACTICE", label: "Langkah 4: PRACTICE", theme: "from-emerald-950/50 to-emerald-900/20 border-emerald-500/30 text-emerald-300", badge: "bg-emerald-500/20 text-emerald-200 border-emerald-500/30", icon: "✏️", desc: "Latihan interaktif berasaskan widget (Base Ten / Sentence Builder)." },
-                      { num: 5, type: "FLASHCARDS", label: "Langkah 5: FLASHCARDS", theme: "from-purple-950/50 to-purple-900/20 border-purple-500/30 text-purple-300", badge: "bg-purple-500/20 text-purple-200 border-purple-500/30", icon: "🎴", desc: "Kad imbasan terma penting & formula pengukuhan." },
-                      { num: 6, type: "MINI_GAME", label: "Langkah 6: MINI_GAME", theme: "from-blue-950/50 to-blue-900/20 border-blue-500/30 text-blue-300", badge: "bg-blue-500/20 text-blue-200 border-blue-500/30", icon: "🎮", desc: "Permainan mini interaktif (SortingGame / MatchingGame)." },
-                      { num: 7, type: "QUIZ", label: "Langkah 7: QUIZ", theme: "from-rose-950/50 to-rose-900/20 border-rose-500/30 text-rose-300", badge: "bg-rose-500/20 text-rose-200 border-rose-500/30", icon: "❓", desc: "Penilaian PBD berserta tag aras TP1-TP6." },
-                      { num: 8, type: "COMPLETE", label: "Langkah 8: COMPLETE", theme: "from-teal-950/50 to-teal-900/20 border-teal-500/30 text-teal-300", badge: "bg-teal-500/20 text-teal-200 border-teal-500/30", icon: "🏆", desc: "Kiraan XP, mata syiling, & rumusan penguasaan." },
-                      { num: 9, type: "REWARD", label: "Langkah 9: REWARD", theme: "from-yellow-950/50 to-yellow-900/20 border-yellow-500/30 text-yellow-300", badge: "bg-yellow-500/20 text-yellow-200 border-yellow-500/30", icon: "👑", desc: "Pemberian lencana kembara & item drop." }
-                    ].map(step => {
-                      const stepBlocks = blocks.filter(b => b.block_type === step.type || b.pedagogical_phase === step.type || (step.type === "LESSON" && !b.block_type));
-
-                      return (
-                        <details key={step.num} open className={`rounded-2xl border bg-gradient-to-br ${step.theme} shadow-lg overflow-hidden`}>
-                          <summary className="p-4 cursor-pointer outline-none flex items-center justify-between hover:bg-white/5 transition-colors">
-                            <div className="flex items-center gap-3">
-                              <span className="text-xl">{step.icon}</span>
-                              <div className="text-left">
-                                <h3 className="text-sm font-black uppercase tracking-wider">{step.label}</h3>
-                                <p className="text-[10px] font-bold opacity-70">{step.desc}</p>
-                              </div>
-                            </div>
-                            <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black border ${step.badge}`}>
-                              {step.isCPA ? "4 Micro CPA Blocks" : `${Math.max(stepBlocks.length, 1)} Blok`}
-                            </span>
-                          </summary>
-                          
-                          <div className="p-4 pt-0 space-y-3 bg-stone-950/50">
-                            {/* Special handling for Step 2: 4 Micro CPA Blocks */}
-                            {step.isCPA ? (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
-                                {[
-                                  { type: "VISUAL_STORY", title: "Blok 1: VISUAL_STORY", icon: "🖼️", desc: "Penceritaan visual & gambaran konteks." },
-                                  { type: "COMPARISON_SPLIT", title: "Blok 2: COMPARISON_SPLIT", icon: "⚖️", desc: "Perbandingan bersebelahan dua kuantiti/objek." },
-                                  { type: "STEP_BY_STEP", title: "Blok 3: STEP_BY_STEP", icon: "👣", desc: "Panduan berperingkat langkah demi langkah." },
-                                  { type: "MYTH_BUSTER", title: "Blok 4: MYTH_BUSTER", icon: "💡", desc: "Membedah mitos & menegaskan fakta jawapan." }
-                                ].map((cpa, cpaIdx) => (
-                                  <div key={cpa.type} className="p-3.5 bg-stone-900 border border-stone-800 rounded-xl space-y-1.5">
-                                    <div className="flex items-center justify-between">
-                                      <span className="px-2 py-0.5 bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[10px] font-black rounded-md uppercase">
-                                        {cpa.type}
-                                      </span>
-                                      <span className="text-xs">{cpa.icon}</span>
-                                    </div>
-                                    <h4 className="text-xs font-black text-white">{cpa.title}</h4>
-                                    <p className="text-[10px] text-stone-400 font-medium">{cpa.desc}</p>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              (stepBlocks.length > 0 ? stepBlocks : [{ id: `fallback-${step.num}`, block_type: step.type, title: `${step.label} Payload` }]).map((block, idx) => {
-                                const isRegenerating = regeneratingBlockId === block.id;
-                                const isApproved = blockApprovalStatus[block.id] !== false;
-
-                                return (
-                                  <div
-                                    key={block.id || idx}
-                                    className="p-4 bg-stone-900/80 rounded-2xl border border-stone-800 space-y-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-                                  >
-                                    <div className="space-y-1">
-                                      <div className="flex items-center gap-2">
-                                        <span className="px-2 py-0.5 bg-stone-800 text-stone-300 border border-stone-700 text-[10px] font-black rounded-lg uppercase">
-                                          Step #{step.num}: {block.block_type || step.type}
-                                        </span>
-                                      </div>
-                                      <h4 className="text-xs sm:text-sm font-black text-white">{block.title || `${step.label} Content`}</h4>
-                                    </div>
-
-                                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                                      <button
-                                        onClick={() => setPreviewBlock(block)}
-                                        className="px-3 h-8 bg-indigo-900/50 hover:bg-indigo-800 text-indigo-300 border border-indigo-500/30 text-[11px] font-bold rounded-xl flex items-center gap-1 transition-all"
-                                      >
-                                        <Eye className="w-3 h-3" /> Pratonton
-                                      </button>
-                                      <button
-                                        onClick={() => handleToggleBlockApproval(block.id || step.type, true)}
-                                        className={`p-2 rounded-xl border text-xs font-bold transition-all ${
-                                          isApproved ? "bg-emerald-950 text-emerald-300 border-emerald-500/40" : "bg-stone-900 text-stone-500 border-stone-800"
-                                        }`}
-                                      >
-                                        <ThumbsUp className="w-3.5 h-3.5" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        </details>
-                      );
-                    })}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -851,55 +765,152 @@ export default function AdminContentStudio() {
                       { num: 7, type: "QUIZ", label: "Langkah 7: QUIZ", theme: "from-rose-950/50 to-rose-900/20 border-rose-500/30 text-rose-300", badge: "bg-rose-500/20 text-rose-200 border-rose-500/30", icon: "❓", desc: "Penilaian PBD berserta tag aras TP1-TP6." },
                       { num: 8, type: "COMPLETE", label: "Langkah 8: COMPLETE", theme: "from-teal-950/50 to-teal-900/20 border-teal-500/30 text-teal-300", badge: "bg-teal-500/20 text-teal-200 border-teal-500/30", icon: "🏆", desc: "Kiraan XP, mata syiling, & rumusan penguasaan." },
                       { num: 9, type: "REWARD", label: "Langkah 9: REWARD", theme: "from-yellow-950/50 to-yellow-900/20 border-yellow-500/30 text-yellow-300", badge: "bg-yellow-500/20 text-yellow-200 border-yellow-500/30", icon: "👑", desc: "Pemberian lencana kembara & item drop." }
-                    ].map(step => (
-                      <details key={step.num} open className={`rounded-2xl border bg-gradient-to-br ${step.theme} shadow-lg overflow-hidden`}>
-                        <summary className="p-4 cursor-pointer outline-none flex items-center justify-between hover:bg-white/5 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <span className="text-xl">{step.icon}</span>
-                            <div className="text-left">
-                              <h3 className="text-sm font-black uppercase tracking-wider">{step.label}</h3>
-                              <p className="text-[10px] font-bold opacity-70">{step.desc}</p>
-                            </div>
-                          </div>
-                          <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black border ${step.badge}`}>
-                            {step.isCPA ? "4 Micro CPA Blocks" : "1 Blok"}
-                          </span>
-                        </summary>
+                    ].map((step, idx) => {
+                      const stepData = activePackage?.steps?.[idx];
 
-                        <div className="p-4 pt-0 space-y-3 bg-stone-950/50">
-                          {step.isCPA ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
-                              {[
-                                { type: "VISUAL_STORY", title: "Blok 1: VISUAL_STORY", icon: "🖼️", desc: "Penceritaan visual & gambaran konteks." },
-                                { type: "COMPARISON_SPLIT", title: "Blok 2: COMPARISON_SPLIT", icon: "⚖️", desc: "Perbandingan bersebelahan dua kuantiti/objek." },
-                                { type: "STEP_BY_STEP", title: "Blok 3: STEP_BY_STEP", icon: "👣", desc: "Panduan berperingkat langkah demi langkah." },
-                                { type: "MYTH_BUSTER", title: "Blok 4: MYTH_BUSTER", icon: "💡", desc: "Membedah mitos & menegaskan fakta jawapan." }
-                              ].map((cpa) => (
-                                <div key={cpa.type} className="p-3.5 bg-stone-900 border border-stone-800 rounded-xl space-y-1.5">
-                                  <div className="flex items-center justify-between">
-                                    <span className="px-2 py-0.5 bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[10px] font-black rounded-md uppercase">
-                                      {cpa.type}
-                                    </span>
-                                    <span className="text-xs">{cpa.icon}</span>
-                                  </div>
-                                  <h4 className="text-xs font-black text-white">{cpa.title}</h4>
-                                  <p className="text-[10px] text-stone-400 font-medium">{cpa.desc}</p>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="p-4 bg-stone-900/80 rounded-2xl border border-stone-800 flex items-center justify-between gap-3 pt-3">
-                              <div className="space-y-1">
-                                <span className="px-2 py-0.5 bg-stone-800 text-stone-300 border border-stone-700 text-[10px] font-black rounded-lg uppercase">
-                                  Step #{step.num}: {step.type}
-                                </span>
-                                <h4 className="text-xs sm:text-sm font-black text-white">{step.label} Payload</h4>
+                      return (
+                        <details key={step.num} open className={`rounded-2xl border bg-gradient-to-br ${step.theme} shadow-lg overflow-hidden`}>
+                          <summary className="p-4 cursor-pointer outline-none flex items-center justify-between hover:bg-white/5 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl">{step.icon}</span>
+                              <div className="text-left">
+                                <h3 className="text-sm font-black uppercase tracking-wider">{step.label}</h3>
+                                <p className="text-[10px] font-bold opacity-70">{step.desc}</p>
                               </div>
                             </div>
-                          )}
-                        </div>
-                      </details>
-                    ))}
+                            <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black border ${step.badge}`}>
+                              {step.isCPA ? "4 Micro CPA Blocks" : "1 Blok"}
+                            </span>
+                          </summary>
+
+                          <div className="p-4 pt-0 space-y-3 bg-stone-950/50">
+                            {step.isCPA ? (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+                                {(stepData?.cpa_blocks || [
+                                  { block_type: "VISUAL_STORY", title: "Kisah Visual Nombor", content: { text: "Gambaran ilustrasi visual." } },
+                                  { block_type: "COMPARISON_SPLIT", title: "Perbandingan Kumpulan", content: { left: "Kumpulan A", right: "Kumpulan B" } },
+                                  { block_type: "STEP_BY_STEP", title: "Langkah Pembelajaran", content: { steps: ["Langkah 1", "Langkah 2"] } },
+                                  { block_type: "MYTH_BUSTER", title: "Mitos & Fakta Nombor", content: { myth: "Mitos biasa", fact: "Fakta tepat" } }
+                                ]).map((cpa, cpaIdx) => (
+                                  <div key={cpa.block_type || cpaIdx} className="p-3.5 bg-stone-900 border border-stone-800 rounded-xl space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                      <span className="px-2 py-0.5 bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[10px] font-black rounded-md uppercase">
+                                        {cpa.block_type}
+                                      </span>
+                                    </div>
+                                    <h4 className="text-xs font-black text-white">{cpa.title}</h4>
+                                    
+                                    {/* Render CPA specific content */}
+                                    {cpa.block_type === "VISUAL_STORY" && (
+                                      <p className="text-[11px] text-stone-300 font-medium">{cpa.content?.text}</p>
+                                    )}
+                                    {cpa.block_type === "COMPARISON_SPLIT" && (
+                                      <div className="grid grid-cols-2 gap-2 text-[10px] pt-1">
+                                        <div className="p-2 bg-stone-950 rounded border border-stone-800 text-stone-300 font-bold">⬅️ {cpa.content?.left}</div>
+                                        <div className="p-2 bg-stone-950 rounded border border-stone-800 text-stone-300 font-bold">➡️ {cpa.content?.right}</div>
+                                      </div>
+                                    )}
+                                    {cpa.block_type === "STEP_BY_STEP" && (
+                                      <ol className="list-decimal list-inside text-[11px] text-stone-300 font-medium space-y-0.5 pt-1">
+                                        {Array.isArray(cpa.content?.steps) ? cpa.content.steps.map((st, sIdx) => <li key={sIdx}>{st}</li>) : <li>{cpa.content?.text || "Langkah pembelajaran"}</li>}
+                                      </ol>
+                                    )}
+                                    {cpa.block_type === "MYTH_BUSTER" && (
+                                      <div className="space-y-1 text-[11px] pt-1">
+                                        <p className="text-rose-400 font-bold">❌ Mitos: {cpa.content?.myth}</p>
+                                        <p className="text-emerald-400 font-bold">✅ Fakta: {cpa.content?.fact}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="p-4 bg-stone-900/80 rounded-2xl border border-stone-800 space-y-3 pt-3">
+                                <div className="flex items-center justify-between border-b border-stone-800 pb-2">
+                                  <span className="px-2 py-0.5 bg-stone-800 text-stone-300 border border-stone-700 text-[10px] font-black rounded-lg uppercase">
+                                    Step #{step.num}: {step.type}
+                                  </span>
+                                  <span className="text-xs font-bold text-amber-400">{stepData?.title || step.label}</span>
+                                </div>
+
+                                {/* Step-specific rich data bindings */}
+                                {step.num === 1 && (
+                                  <div className="space-y-2 text-xs">
+                                    <p className="text-stone-300 font-medium"><strong>Hook Naratif:</strong> {stepData?.payload?.story_hook || "Naratif hook pengenalan..."}</p>
+                                    <p className="text-amber-300 font-bold bg-stone-950 p-3 rounded-xl border border-stone-800">🗣️ <strong>Dialog Maskot:</strong> "{stepData?.payload?.mascot_dialogue || "Hai! Suku Penyu sedia membantu!"}"</p>
+                                  </div>
+                                )}
+
+                                {step.num === 3 && (
+                                  <div className="space-y-2 text-xs">
+                                    <p className="text-stone-200 font-bold">{stepData?.payload?.concept_summary || "Rumusan konsep DSKP."}</p>
+                                    {Array.isArray(stepData?.payload?.key_points) && (
+                                      <ul className="list-disc list-inside text-stone-400 space-y-1">
+                                        {stepData.payload.key_points.map((kp, kIdx) => <li key={kIdx}>{kp}</li>)}
+                                      </ul>
+                                    )}
+                                  </div>
+                                )}
+
+                                {step.num === 4 && (
+                                  <div className="text-xs space-y-1.5">
+                                    <p className="text-emerald-400 font-bold">Widget Interaktif: <span className="underline">{stepData?.payload?.widget_type || "base_ten_blocks"}</span></p>
+                                    <p className="text-stone-300">Topik Sasaran: {stepData?.payload?.interactive_data?.topic || "Matematik KSSR"}</p>
+                                  </div>
+                                )}
+
+                                {step.num === 5 && (
+                                  <div className="grid sm:grid-cols-2 gap-2 text-xs">
+                                    {(stepData?.cards || [{ term: "Terma KSSR", definition: "Definisi asas terma" }]).map((card, cIdx) => (
+                                      <div key={cIdx} className="p-2.5 bg-stone-950 rounded-xl border border-stone-800">
+                                        <span className="font-black text-amber-400 block">{card.term}</span>
+                                        <span className="text-[11px] text-stone-300">{card.definition}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {step.num === 6 && (
+                                  <div className="text-xs space-y-1">
+                                    <p className="text-blue-300 font-bold">Permainan Mini: {stepData?.payload?.game_type || "SortingGame"}</p>
+                                    <p className="text-stone-400 text-[11px]">Kategori: {stepData?.payload?.game_config?.targetCategory || "Utama"}</p>
+                                  </div>
+                                )}
+
+                                {step.num === 7 && (
+                                  <div className="space-y-2 text-xs">
+                                    {(stepData?.questions || [{ question: "Soalan Kuiz PBD KSSR?", options: ["A", "B", "C"], explanation: "Penerangan jawapan tepat." }]).map((q, qIdx) => (
+                                      <div key={qIdx} className="p-3 bg-stone-950 rounded-xl border border-stone-800 space-y-1">
+                                        <p className="font-bold text-white">❓ {q.question}</p>
+                                        <p className="text-[11px] text-stone-400">Pilihan: {q.options?.join(" | ")}</p>
+                                        <p className="text-[10px] text-emerald-400 font-medium">Penerangan: {q.explanation}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {step.num === 8 && (
+                                  <div className="text-xs space-y-1">
+                                    <p className="text-teal-300 font-bold">{stepData?.payload?.mastery_summary || "Penguasaan SP KSSR."}</p>
+                                    <p className="text-amber-400 font-bold">🏆 Ganjaran: +{stepData?.payload?.xp_earned || 100} XP | 🪙 +{stepData?.payload?.coins_earned || 25} Syiling</p>
+                                  </div>
+                                )}
+
+                                {step.num === 9 && (
+                                  <div className="text-xs flex items-center justify-between bg-stone-950 p-3 rounded-xl border border-stone-800">
+                                    <div>
+                                      <p className="font-black text-yellow-300">Lencana: {stepData?.payload?.badge || "Wira KSSR"}</p>
+                                      <p className="text-stone-400 text-[11px]">Item Drop: {stepData?.payload?.item_drop || "Pingat Kembara"}</p>
+                                    </div>
+                                    <span className="text-2xl">{stepData?.payload?.item_icon || "👑"}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </details>
+                      );
+                    })}
                   </div>
                 )}
 
