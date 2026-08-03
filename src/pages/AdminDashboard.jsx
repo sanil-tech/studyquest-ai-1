@@ -149,8 +149,7 @@ export default function AdminDashboard() {
         setRecentLessons(sortedLessons);
       } catch (err) {
         console.warn("Admin init non-blocking error:", err);
-      } font: "font-sans"
-      finally {
+      } finally {
         setLoading(false);
       }
     };
