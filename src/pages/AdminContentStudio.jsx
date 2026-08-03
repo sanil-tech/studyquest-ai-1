@@ -64,7 +64,7 @@ const DSKP_MAPPING = {
 import kssrTaxonomy from "@/data/kssrTaxonomy.json";
 import { getKSSRModeByGrade } from "@/services/generateKSSRContent";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ContentHierarchy from "@/components/admin/ContentHierarchy";
