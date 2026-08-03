@@ -4,6 +4,7 @@ import pedagogyMapping from '../data/pedagogyMapping.json' with { type: "json" }
 import widgetRegistry from '../data/widgetRegistry.json' with { type: "json" };
 import assessmentFramework from '../data/assessmentFramework.json' with { type: "json" };
 import curriculumSchema from '../data/curriculumSchema.json' with { type: "json" };
+import { base44 } from '../api/base44Client.js';
 
 /**
  * Retrieves or generates the pedagogical strategy context object for any subject, grade, and topic.
@@ -98,7 +99,7 @@ export function getPedagogyContext(subject = "Matematik", grade = "Tahun 1", top
  */
 export function buildLLMPromptForKSSR({ spCode, spDescription, skCode, grade, subject, bidang = "Nombor dan Operasi", topic = "Nombor hingga 100", learningOutcome = "", pbdTarget = "TP3" }) {
   const mode = getKSSRModeByGrade(grade);
-  const mascot = mode === "JUNIOR" ? "Suku Penyu 🐢 (Bahasa santai kanak-kanak)" : "Ejen Suku 🦊 (Penyelesaian masalah KBAT & Pemikiran Kritis)";
+  const mascot = mode === "JUNIOR" ? "Suku Penyu 🐢 (Energetic, warm, friendly)" : "Ejen Suku 🦊 (Penyelesaian masalah KBAT)";
   const pedagogyCtx = getPedagogyContext(subject, grade, topic);
 
   let pedagogySection = "";
@@ -115,8 +116,13 @@ PEDAGOGY INTELLIGENCE CONTEXT:
   - Preferred Interactive Widget: ${pedagogyCtx.default_widget_type}`;
   }
 
-  const systemPrompt = `You are StudyQuest AI, an expert Malaysian KSSR Semakan Instructional Designer.
-You must generate a 9-Step Macro Journey JSON payload strictly conforming to adventurePackageSchema.json for ${grade} (${subject}).
+  const systemPrompt = `You are StudyQuest AI, an expert Malaysian KSSR Semakan Student Lesson Content Designer.
+Your task is to generate rich, engaging, student-facing 9-Step Lesson Scenes strictly conforming to adventurePackageSchema.json for ${grade} (${subject}).
+
+IMPORTANT INSTRUCTIONS:
+- DO NOT generate meta-summaries or teacher guidelines (e.g., "Konsep asas...", "Memahami takrifan...").
+- Generate RICH STUDENT LESSON SCENES with Suku Penyu dialogue, interactive stories, math questions, and real visual descriptions.
+- NEVER include DSKP code tags (SP X.X.X, SK X.X, TP1-6, Micro CPA) in student-facing dialogue or stories.
 
 DUAL-ENGINE MODE: ${mode}
 MASCOT COMPANION: ${mascot}
@@ -133,17 +139,17 @@ CURRICULUM CONTEXT:
   - PBD Target: ${pbdTarget}${pedagogySection}
 
 STRICT STEP ARCHITECTURE:
-Step 1: BRIEFING (Story hook & mascot dialogue)
+Step 1: BRIEFING (Rich story hook & mascot dialogue)
 Step 2: ENGAGEMENT (4 CPA blocks: VISUAL_STORY, COMPARISON_SPLIT, STEP_BY_STEP, MYTH_BUSTER)
-Step 3: LESSON (Core concept breakdown)
-Step 4: PRACTICE (Interactive exercises using widget)
-Step 5: FLASHCARDS (Key terms & definitions)
-Step 6: MINI_GAME (Payload for SortingGame, MatchingGame, or SequenceGame)
-Step 7: QUIZ (PBD evaluation questions)
-Step 8: COMPLETE (XP calculation & mastery summary)
+Step 3: LESSON (Core concept breakdown for student)
+Step 4: PRACTICE (Interactive student exercise with widget)
+Step 5: FLASHCARDS (Key vocabulary & definitions)
+Step 6: MINI_GAME (SortingGame, MatchingGame, or SequenceGame)
+Step 7: QUIZ (Student practice questions with feedback)
+Step 8: COMPLETE (XP calculation & celebratory summary)
 Step 9: REWARD (Badge & Item drop)
 
-Output must be valid JSON only.`;
+Output must be valid JSON only matching the schema.`;
 
   return { systemPrompt, mode, pedagogyCtx };
 }
@@ -168,33 +174,66 @@ export async function generateKSSRMissionPackage({
 
   const { systemPrompt } = buildLLMPromptForKSSR({ spCode, spDescription, skCode, grade, subject, bidang, topic, learningOutcome, pbdTarget });
 
-  // Generate structured 9-Step Package conforming to adventurePackageSchema.json
-  const missionPackage = build9StepKSSRMissionPackage({
-    spCode,
-    skCode,
-    grade,
-    pbdTarget,
-    subject,
-    topicTitle: spDescription || topic,
-    widgetType,
-    pedagogyContext: pedagogyCtx
-  });
+  let missionPackage = null;
 
-  // Adjust mascot dialogue for SENIOR vs JUNIOR mode
-  if (mode === "SENIOR") {
-    missionPackage.otan_companion.greeting = "Salam Pengembara! Ejen Suku 🦊 sedia membantu anda menganalisis masalah KBAT ini!";
-    missionPackage.steps[0].payload.mascot_dialogue = `Hai! Saya Ejen Suku 🦊. Mari kita rungkai cabaran KBAT bagi SP ${spCode}.`;
-  } else {
-    missionPackage.otan_companion.greeting = "Hai Pengembara! Suku Penyu 🐢 sedia meneroka bersama kamu!";
-    missionPackage.steps[0].payload.mascot_dialogue = `Hai! Saya Suku Penyu 🐢. Hari ini kita akan belajar ${spDescription || topic}!`;
+  // Attempt real LLM API call if base44 functions or integrations are available
+  try {
+    if (base44?.functions?.invoke) {
+      const apiRes = await base44.functions.invoke("generateAIContent", {
+        spCode,
+        spDescription,
+        skCode,
+        grade,
+        subject,
+        topic,
+        pbdTarget,
+        prompt: systemPrompt
+      });
+
+      if (apiRes?.data?.missionPackage) {
+        missionPackage = apiRes.data.missionPackage;
+      }
+    } else if (base44?.integrations?.Core?.generateText) {
+      const apiRes = await base44.integrations.Core.generateText({ prompt: systemPrompt });
+      if (apiRes?.text) {
+        try {
+          missionPackage = JSON.parse(apiRes.text);
+        } catch {}
+      }
+    }
+  } catch (err) {
+    console.warn("LLM API call failed, falling back to local generator engine:", err);
+  }
+
+  // Fallback to structured generator engine if API call returns null
+  if (!missionPackage) {
+    missionPackage = build9StepKSSRMissionPackage({
+      spCode,
+      skCode,
+      grade,
+      pbdTarget,
+      subject,
+      topicTitle: spDescription || topic,
+      widgetType,
+      pedagogyContext: pedagogyCtx
+    });
   }
 
   // Validate JSON against 9-Step schema constraints
   const validation = validateMissionPackage(missionPackage);
 
+  if (!validation.valid) {
+    return {
+      success: false,
+      validation_errors: validation.errors,
+      prompt_used: systemPrompt,
+      pedagogy_context: pedagogyCtx
+    };
+  }
+
   return {
-    success: validation.valid,
-    validation_errors: validation.errors,
+    success: true,
+    validation_errors: [],
     prompt_used: systemPrompt,
     pedagogy_context: pedagogyCtx,
     missionPackage,

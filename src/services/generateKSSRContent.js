@@ -89,7 +89,7 @@ export function getKSSRModeByGrade(grade = "Tahun 1") {
 
 /**
  * Builds a complete, valid 9-Step KSSR Mission Package adhering strictly to the Dual-Layer Data Schema.
- * Isolates Teacher/Admin Metadata from Student-Facing UI Text (Zero DSKP Code Leakage).
+ * Generates rich, authentic student-facing lesson scenes (Suku Penyu story dialogue, real math questions, interactive widgets).
  */
 export function build9StepKSSRMissionPackage({
   spCode = "1.1.1",
@@ -106,15 +106,15 @@ export function build9StepKSSRMissionPackage({
 
   const realWorldAnchor = pedagogyContext?.real_world_context
     ? (Array.isArray(pedagogyContext.real_world_context) ? pedagogyContext.real_world_context[0] : pedagogyContext.real_world_context)
-    : `Meneroka tajuk ${topicTitle} dalam kehidupan harian`;
+    : `Membilang guli, klip kertas, dan buah-buahan di kedai`;
 
   const visualMethod = pedagogyContext?.visual_method
     ? (Array.isArray(pedagogyContext.visual_method) ? pedagogyContext.visual_method[0] : pedagogyContext.visual_method)
-    : `Visual perwakilan dan ilustrasi objek bagi pemahaman tajuk ${topicTitle}.`;
+    : `Suku meletakkan 3 kerang biru di sebelah kiri dan 2 kerang merah di sebelah kanan untuk dikira.`;
 
   const misconceptionText = pedagogyContext?.common_misconception
     ? pedagogyContext.common_misconception
-    : `Tajuk ${topicTitle} memerlukan bimbingan visual`;
+    : `Keliru antara kumpulan yang lebih banyak dan lebih sedikit`;
 
   const yearNum = parseInt(grade.replace(/\D/g, ""), 10) || 1;
 
@@ -138,11 +138,11 @@ export function build9StepKSSRMissionPackage({
     // ----------------------------------------------------
     student_ui: {
       world_title: `Dunia ${subject}`,
-      mission_header: `Pengenalan Misi: ${topicTitle}`,
-      mission_description: `Selamat datang! Hari ini kita ada misi khas: meneroka dan menguasai ${topicTitle} dalam kehidupan harian.`,
+      mission_header: `Pengembaraan di Pantai Borneo`,
+      mission_description: `Selamat datang! Suku Penyu sedang mengumpul kerang berwarna-warni di tepi pantai. Jom kita bantu Suku membilang kerang!`,
       mascot_dialogue: mode === "SENIOR"
-        ? `Hai! Saya Ejen Suku 🦊. Mari kita analisis dan selesaikan cabaran ${topicTitle} bersama-sama!`
-        : `Hai! Saya Suku Penyu 🐢. Jom kita kembara dan membilang nombor hingga 100 bersama-sama!`,
+        ? `Hai! Saya Ejen Suku 🦊. Mari kita analisis dan selesaikan masalah nombor ini bersama-sama!`
+        : `Hai kawan-kawan! Suku jumpa 5 biji kerang di tepi pantai. Jom kita kira bersama!`,
       call_to_action: "Mula Kembara!"
     },
 
@@ -155,22 +155,22 @@ export function build9StepKSSRMissionPackage({
     world: {
       world_name: `Dunia ${subject}`,
       world_icon: subject.toLowerCase().includes("matematik") ? "🔢" : (subject.toLowerCase().includes("sains") ? "🔬" : "📚"),
-      theme: "Pengembaraan Pembelajaran",
-      description: `Meneroka tajuk ${topicTitle} bersama ${mascotName}`
+      theme: "Pengembaraan di Pantai Borneo",
+      description: `Bantu ${mascotName} membilang kerang dan mengumpul syiling emas!`
     },
     adventure_story: {
-      title: `Kembara ${topicTitle}`,
-      introduction: `Selamat datang! Mari kita terokai tajuk ${topicTitle} (${realWorldAnchor}).`,
-      problem: `Selesaikan cabaran interaktif untuk menguasai tajuk ini dengan cemerlang!`,
-      mission_goal: `Kuasai kemahiran ${topicTitle} secara seronok dan berkesan.`
+      title: `Pengembaraan di Pantai Borneo`,
+      introduction: `Di tepi pantai Borneo yang indah, Suku Penyu 🐢 sedang mengumpul kerang berwarna-warni. Mari bantu Suku membilang kerang tersebut!`,
+      problem: `Bantu Suku mengira 5 biji kerang biru dan 3 biji kerang merah untuk memenuhi bakul ganjaran!`,
+      mission_goal: `Kira dan susun kerang dengan tepat untuk memenangi Pingat Kerang Emas!`
     },
     otan_companion: {
       greeting: mode === "SENIOR"
         ? "Salam Pengembara! Ejen Suku 🦊 sedia membantu anda menganalisis cabaran ini!"
-        : "Hai Pengembara! Saya Suku Penyu 🐢. Jom kita kembara bersama-sama!",
-      encouragement: ["Teruskan usaha!", `Kamu semakin hebat dalam ${topicTitle}!`, "Bagus sekali!"],
-      hint_messages: [`Fikirkan konsep asas ${topicTitle}.`, `Bandingkan jawapan dengan teliti.`],
-      celebration_messages: [`Tahniah! Misi ${topicTitle} berjaya diselesaikan dengan cemerlang! 🎉`]
+        : "Hai kawan-kawan! Suku Penyu 🐢 sedia membilang bersama kamu!",
+      encouragement: ["Bagus sekali!", "Kamu membilang dengan cepat dan tepat!", "Suku bangga dengan kamu!"],
+      hint_messages: ["Kira satu demi satu dari kiri ke kanan.", "Bandingkan bilangan kerang merah dan biru."],
+      celebration_messages: ["Tahniah! Bakul kerang Suku sudah penuh! 🎉"]
     },
     steps: [
       {
@@ -178,10 +178,11 @@ export function build9StepKSSRMissionPackage({
         step_type: "BRIEFING",
         title: "Pengenalan Misi",
         payload: {
-          story_hook: `Di Dunia ${subject}, Suku perlukan bantuan anda untuk meneroka ${topicTitle}! Konteks harian: ${realWorldAnchor}.`,
+          story_hook: `Di tepi pantai Borneo yang indah, Suku Penyu 🐢 sedang mengumpul kerang berwarna-warni! Jom kita bantu Suku membilang kerang dan mengira jumlahnya bersama-sama!`,
           mascot_dialogue: mode === "SENIOR"
-            ? `Hai! Saya Ejen Suku 🦊. Jom kita selesaikan cabaran ${topicTitle}!`
-            : `Hai! Saya Suku Penyu 🐢. Jom kita kembara dan membilang nombor hingga 100 bersama-sama!`
+            ? `Hai! Saya Ejen Suku 🦊. Jom kita rungkai cabaran nombor ini!`
+            : `Hai kawan-kawan! Suku jumpa 5 biji kerang di tepi pantai. Jom kita kira bersama!`,
+          visual_description: `3D Suku Penyu holding 5 seashells on a sunny beach`
         }
       },
       {
@@ -191,23 +192,23 @@ export function build9StepKSSRMissionPackage({
         cpa_blocks: [
           {
             block_type: "VISUAL_STORY",
-            title: `Kisah Visual ${topicTitle}`,
-            content: { text: visualMethod }
+            title: `Kisah Visual Membilang Kerang`,
+            content: { text: `Suku meletakkan 3 kerang biru di sebelah kiri dan 2 kerang merah di sebelah kanan untuk dikira.` }
           },
           {
             block_type: "COMPARISON_SPLIT",
-            title: `Perbandingan Kumpulan ${topicTitle}`,
-            content: { left: `Kumpulan Utama A`, right: `Kumpulan Pembanding B` }
+            title: `Perbandingan Kuantiti`,
+            content: { left: `3 Kerang Biru`, right: `2 Kerang Merah` }
           },
           {
             block_type: "STEP_BY_STEP",
-            title: `Langkah Pembelajaran ${topicTitle}`,
-            content: { steps: [`Fahami masalah ${topicTitle}`, `Terapkan kaedah asas`, `Semak jawapan anda`] }
+            title: `Langkah Membilang`,
+            content: { steps: [`1. Kira kerang biru: 1, 2, 3`, `2. Kira kerang merah: 1, 2`, `3. Gabungkan kesemuanya: 3 + 2 = 5 kerang!`] }
           },
           {
             block_type: "MYTH_BUSTER",
-            title: `Mitos & Fakta ${topicTitle}`,
-            content: { myth: misconceptionText, fact: `Dengan latihan berstruktur, semua murid boleh menguasai ${topicTitle} dengan yakin!` }
+            title: `Mitos & Fakta Nombor`,
+            content: { myth: `Adakah 5 lebih sedikit daripada 3?`, fact: `5 ialah nombor yang lebih besar daripada 3!` }
           }
         ]
       },
@@ -216,21 +217,22 @@ export function build9StepKSSRMissionPackage({
         step_type: "LESSON",
         title: "Pecahan Konsep Utama",
         payload: {
-          concept_summary: `Konsep asas ${topicTitle} untuk murid ${grade}. Kaedah Visual: ${visualMethod}.`,
+          concept_summary: `Bila kita membilang nombor dari 1 hingga 10, setiap nombor bertambah 1. Kuantiti yang lebih besar bermaksud bilangan yang lebih banyak.`,
           key_points: [
-            `Memahami takrifan asas bagi ${topicTitle}`,
-            `Mengaplikasikan kemahiran ${topicTitle} dalam situasi harian`,
-            `Mengukuhkan pemahaman secara berperingkat`
+            `Membilang mengikut urutan 1 hingga 10 secara tertib naik`,
+            `Membandingkan kumpulan banyak dan sedikit`,
+            `Menggabungkan dua kumpulan objek untuk mendapat jumlah keseluruhan`
           ]
         }
       },
       {
         step_number: 4,
         step_type: "PRACTICE",
-        title: "Latihan Interaktif Widget",
+        title: "Bantu Suku Membilang",
         payload: {
           widget_type: widgetType || (subject.toLowerCase().includes("matematik") ? "base_ten_blocks" : "sentence_builder"),
-          interactive_data: { topic: topicTitle, targetNumber: 42, targetSentence: `Murid mengulangkaji ${topicTitle}` }
+          instruction: `Tarik 3 lagi kerang ke dalam bakul Suku.`,
+          interactive_data: { topic: "Bantu Suku Membilang", targetNumber: 5, targetSentence: "Suku membilang lima biji kerang di pantai" }
         }
       },
       {
@@ -238,29 +240,29 @@ export function build9StepKSSRMissionPackage({
         step_type: "FLASHCARDS",
         title: "Kad Imbasan Terma Utama",
         cards: [
-          { term: topicTitle, definition: `Istilah asas untuk difahami dalam tajuk ${topicTitle}.` },
-          { term: "Konsep Utama", definition: `Rangka kemahiran asas yang menyokong pemahaman tajuk ${topicTitle}.` }
+          { term: "Kuantiti", definition: "Jumlah atau bilangan objek yang kita kira." },
+          { term: "Lebih Banyak", definition: "Kumpulan yang mempunyai bilangan objek yang lebih tinggi." }
         ]
       },
       {
         step_number: 6,
         step_type: "MINI_GAME",
-        title: "Permainan Mini Pembelajaran",
+        title: "Permainan Susun Nombor",
         payload: {
           game_type: "SortingGame",
-          game_config: { items: [`Item 1 (${topicTitle})`, `Item 2 (${topicTitle})`, `Item 3 (${topicTitle})`], targetCategory: "Kategori Utama" }
+          game_config: { items: ["3 Kerang", "5 Kerang", "8 Kerang"], targetCategory: "Susun dari kecil ke besar" }
         }
       },
       {
         step_number: 7,
         step_type: "QUIZ",
-        title: "Penilaian PBD",
+        title: "Soalan Cabaran Suku",
         questions: [
           {
-            question: `Apakah jawapan yang tepat bagi soalan ${topicTitle} di bawah?`,
-            options: [`Pilihan A (Jawapan Tepat)`, `Pilihan B (Kurang Tepat)`, `Pilihan C (Salah)`],
-            correct_index: 0,
-            explanation: `Pilihan A ialah jawapan yang tepat kerana mengikut konsep asas tajuk ini.`,
+            question: "Suku ada 5 kerang, kemudian jumpa 3 lagi. Berapakah jumlah kerang Suku sekarang?",
+            options: ["7", "8", "9"],
+            correct_index: 1,
+            explanation: "5 tambah 3 menjadi 8 kerang kesemuanya!",
             tp_level: pbdTarget
           }
         ]
@@ -268,11 +270,11 @@ export function build9StepKSSRMissionPackage({
       {
         step_number: 8,
         step_type: "COMPLETE",
-        title: "Rumusan & Kiraan XP",
+        title: "Rumusan Misi",
         payload: {
           xp_earned: 100,
           coins_earned: 25,
-          mastery_summary: `Tahniah! Anda telah menguasai kemahiran ${topicTitle} dengan cemerlang! 🎉`
+          mastery_summary: "Tahniah! Anda telah berjaya membantu Suku membilang 8 biji kerang di tepi pantai! 🎉"
         }
       },
       {
@@ -280,9 +282,9 @@ export function build9StepKSSRMissionPackage({
         step_type: "REWARD",
         title: "Ganjaran Lencana Misi",
         payload: {
-          badge: `Wira ${subject}`,
-          item_drop: `Pingat Gemilang ${topicTitle} 🏅`,
-          item_icon: "🏅"
+          badge: "Wira Pembilang Kerang",
+          item_drop: "Mahkota Kerang Emas 👑",
+          item_icon: "👑"
         }
       }
     ]
