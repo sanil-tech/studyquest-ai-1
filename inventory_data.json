@@ -1,0 +1,138 @@
+[
+  {
+    "topic": "Nombor hingga 100",
+    "sk": "1.1 - Kuantiti Secara Intuitif",
+    "sp": "1.1.1 - Menyatakan kuantiti secara membandingkan banyak atau sedikit",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Nombor hingga 100",
+    "sk": "1.2 - Nilai Nombor",
+    "sp": "1.2.1 - Menamai nombor hingga 100 mengikut bilangan objek",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Nombor hingga 100",
+    "sk": "1.4 - Nilai Tempat dan Nilai Digit",
+    "sp": "1.4.1 - Menyatakan nilai tempat dan nilai digit bagi sebarang nombor hingga 100",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Nombor hingga 100",
+    "sk": "1.5 - Membandingkan Nilai Nombor",
+    "sp": "1.5.1 - Membandingkan nilai dua nombor dan menentukan lebih atau kurang",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Tambah dan Tolak",
+    "sk": "2.1 - Konsep Tambah dan Tolak",
+    "sp": "2.1.1 - Menggunakan perbendaharaan kata dan simbol tambah (+), tolak (-), dan sama dengan (=)",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Tambah dan Tolak",
+    "sk": "2.2 - Tambah dalam Lingkungan 100",
+    "sp": "2.2.1 - Menambah dua nombor tanpa mengumpul semula dalam lingkungan 100",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Tambah dan Tolak",
+    "sk": "2.3 - Tolak dalam Lingkungan 100",
+    "sp": "2.3.1 - Menolak dua nombor tanpa mengumpul semula dalam lingkungan 100",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Pecahan",
+    "sk": "3.1 - Konsep Satu Perdua dan Satu Perempat",
+    "sp": "3.1.1 - Mengenal pasti satu perdua dan satu perempat daripada satu objek",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Wang",
+    "sk": "4.1 - Wang Kertas dan Syiling",
+    "sp": "4.1.1 - Mengenal pasti mata wang Malaysia sehingga RM10",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Wang",
+    "sk": "4.2 - Tambah dan Tolak Wang",
+    "sp": "4.2.1 - Menambah dan menolak nilai wang dalam lingkungan RM10",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Masa dan Waktu",
+    "sk": "5.1 - Hari dan Bulan",
+    "sp": "5.1.1 - Menyatakan waktu dalam sehari dan urutan hari dalam seminggu",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Masa dan Waktu",
+    "sk": "5.2 - Muka Jam",
+    "sp": "5.2.1 - Menyebut dan menulis waktu dalam jam dan setengah jam",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Panjang, Jisim dan Isi Padu Cecair",
+    "sk": "6.1 - Unit Bukan Piawai",
+    "sp": "6.1.1 - Membandingkan panjang, jisim dan isi padu menggunakan unit bukan piawai",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Bentuk",
+    "sk": "7.1 - Bentuk Tiga Dimensi (3D)",
+    "sp": "7.1.1 - Menamakan bentuk kubus, kuboid, piramid, silinder dan kon",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Bentuk",
+    "sk": "7.2 - Bentuk Dua Dimensi (2D)",
+    "sp": "7.2.1 - Menamakan bentuk segi empat sama, segi empat tepat, segi tiga dan bulatan",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Data",
+    "sk": "8.1 - Pengumpulan Data",
+    "sp": "8.1.1 - Mengumpul data berdasarkan situasi harian",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  },
+  {
+    "topic": "Data",
+    "sk": "8.2 - Piktograf",
+    "sp": "8.2.1 - Membaca dan memperoleh maklumat daripada piktograf",
+    "status": "APPROVED",
+    "qualityScore": 100,
+    "teacherScore": 90
+  }
+]

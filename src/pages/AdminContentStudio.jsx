@@ -8,7 +8,8 @@ import { base44 } from "@/api/base44Client";
 import kssrTaxonomy from "@/data/kssrTaxonomy.json";
 import { getKSSRModeByGrade } from "@/services/generateKSSRContent";
 import { validateCurriculumCoverage } from "@/services/curriculumValidator";
-import { validateLessonQuality, saveLessonReview } from "@/services/contentQualityService";
+import { validateLessonQuality, saveLessonReview, validateAIContentAuthenticity } from "@/services/contentQualityService";
+import { generateBatchLessons } from "@/services/contentFactoryService";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ContentHierarchy from "@/components/admin/ContentHierarchy";
@@ -229,6 +230,12 @@ export default function AdminContentStudio() {
   const [currentStageText, setCurrentStageText] = useState("");
   const [evaluatingQuality, setEvaluatingQuality] = useState(false);
   const [qualityReport, setQualityReport] = useState(null);
+  const [authenticityReport, setAuthenticityReport] = useState(null);
+
+  // Phase 6: Content Factory State
+  const [batchRunning, setBatchRunning] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0, currentItem: null });
+  const [batchReport, setBatchReport] = useState(null);
 
   const handleHierarchySelect = useCallback((selection) => {
     setSelectedVersion(selection.version);
@@ -477,6 +484,18 @@ export default function AdminContentStudio() {
       const report = await validateLessonQuality(lessonObj, true);
       setQualityReport(report);
       await saveLessonReview(selectedVersion, report);
+
+      // AI Authenticity Validation Gate
+      const authReport = validateAIContentAuthenticity({
+        subject,
+        grade: yearLevel,
+        topic,
+        skCode,
+        spCode,
+        spDescription: topic,
+        missionPackage: activePackage || { steps: blocks, adventure_story: { title: completeness.title } }
+      });
+      setAuthenticityReport(authReport);
     } catch (err) {
       console.error("Evaluate quality error:", err);
     } finally {
@@ -1098,7 +1117,7 @@ export default function AdminContentStudio() {
             </Card>
           )}
 
-          {/* STEP 6: PUBLISH WITH QUALITY SHIELD */}
+          {/* STEP 6: PUBLISH WITH MANDATORY QUALITY & AUTHENTICITY GATES */}
           {activeStep === 6 && (
             <Card className="bg-stone-900/90 border-stone-800 shadow-xl space-y-4">
               <CardHeader>
@@ -1108,15 +1127,82 @@ export default function AdminContentStudio() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-xs text-stone-300 font-medium leading-relaxed">
-                  Modul yang diterbitkan akan terus muncul dalam Dashboard Pembelajaran Murid. Perisai Kualiti AI akan memastikan skor kualiti mencapai sekurang-kurangnya 80% sebelum menerbit.
+                  Modul yang diterbitkan akan terus muncul dalam Dashboard Pembelajaran Murid. Pintu gerbang wajib memerlukan pematuhan 4 syarat penerbitan utama.
                 </p>
+
+                {/* 4 MANDATORY PUBLISHING GATES BADGES */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-stone-950 p-3 rounded-2xl border border-stone-800 text-xs">
+                  <div className="p-2 rounded-xl bg-stone-900 border border-stone-800 space-y-0.5">
+                    <span className="text-[10px] text-stone-400 block font-bold">1. Kurikulum DSKP</span>
+                    <span className="font-black text-emerald-400 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> LULUS
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-stone-900 border border-stone-800 space-y-0.5">
+                    <span className="text-[10px] text-stone-400 block font-bold">2. Skor Kualiti</span>
+                    <span className={`font-black flex items-center gap-1 ${qualityReport?.quality_score >= 80 ? "text-emerald-400" : "text-rose-400"}`}>
+                      {qualityReport?.quality_score >= 80 ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                      {qualityReport?.quality_score || 0}% / 80%
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-stone-900 border border-stone-800 space-y-0.5">
+                    <span className="text-[10px] text-stone-400 block font-bold">3. Keautentikan AI</span>
+                    <span className={`font-black flex items-center gap-1 ${authenticityReport?.passed ? "text-emerald-400" : "text-rose-400"}`}>
+                      {authenticityReport?.passed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                      {authenticityReport?.authenticity_score || 0}% / 85%
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-stone-900 border border-stone-800 space-y-0.5">
+                    <span className="text-[10px] text-stone-400 block font-bold">4. Pratonton Murid</span>
+                    <span className={`font-black flex items-center gap-1 ${previewApproved ? "text-emerald-400" : "text-amber-400"}`}>
+                      {previewApproved ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                      {previewApproved ? "Selesai" : "Belum Lulus"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* AI AUTHENTICITY PUBLISH BLOCKING CONTAINER */}
+                {authenticityReport && !authenticityReport.passed && (
+                  <div className="p-4 bg-rose-950/90 border-2 border-rose-500/50 rounded-2xl space-y-3 text-left">
+                    <div className="flex items-center gap-2 text-rose-300 font-black text-sm">
+                      <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0" />
+                      <span>Lesson cannot be published because AI Content Authenticity validation failed.</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 bg-stone-950 p-3 rounded-xl border border-stone-800 text-xs">
+                      <div>
+                        <span className="text-stone-400 block font-bold">AI Authenticity Score:</span>
+                        <span className="text-lg font-black text-rose-400">{authenticityReport.authenticity_score} / 100</span>
+                      </div>
+                      <div>
+                        <span className="text-stone-400 block font-bold">Required Score:</span>
+                        <span className="text-lg font-black text-emerald-400">85 / 100</span>
+                      </div>
+                    </div>
+
+                    {authenticityReport.issues?.length > 0 && (
+                      <div className="space-y-1">
+                        <span className="text-xs font-bold text-stone-300 uppercase tracking-wider block">Failed Checks (Isu Dikesan):</span>
+                        <ul className="list-disc list-inside text-xs text-rose-200 space-y-1 pl-1 font-medium">
+                          {authenticityReport.issues.map((issue, idx) => (
+                            <li key={idx}>{issue}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 font-bold">
+                      💡 Suggested action: Admin must regenerate or manually fix content before publishing.
+                    </div>
+                  </div>
+                )}
 
                 <div className="bg-stone-950 p-4 rounded-2xl border border-stone-800 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-stone-300">Pratonton Pelajar (Wajib)</span>
                     <button
                       onClick={handlePreview}
-                      disabled={qualityReport?.quality_score < 80}
+                      disabled={qualityReport?.quality_score < 80 || (authenticityReport && !authenticityReport.passed)}
                       className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-black text-[10px] rounded-xl flex items-center gap-1.5 transition-all"
                     >
                       <Eye className="w-3.5 h-3.5" /> Buka Pratonton
@@ -1140,7 +1226,7 @@ export default function AdminContentStudio() {
 
                   <button
                     onClick={handleApprovePreview}
-                    disabled={approvingPreview || previewApproved || !previewChecklist.content || !previewChecklist.interactive || !previewChecklist.reward}
+                    disabled={approvingPreview || previewApproved || !previewChecklist.content || !previewChecklist.interactive || !previewChecklist.reward || (authenticityReport && !authenticityReport.passed)}
                     className="w-full h-10 bg-emerald-600 hover:bg-emerald-500 disabled:bg-stone-800 text-white disabled:text-stone-500 font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all"
                   >
                     {approvingPreview ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
@@ -1150,7 +1236,7 @@ export default function AdminContentStudio() {
 
                 <button
                   onClick={handlePublish}
-                  disabled={publishing || !previewApproved}
+                  disabled={publishing || !previewApproved || (qualityReport && qualityReport.quality_score < 80) || (authenticityReport && !authenticityReport.passed)}
                   className="w-full sm:w-auto h-12 px-8 bg-amber-500 hover:bg-amber-400 disabled:bg-stone-800 text-stone-950 disabled:text-stone-500 font-black text-xs rounded-xl border-b-4 disabled:border-b-0 border-amber-700 active:translate-y-0.5 transition-all flex items-center justify-center gap-2"
                 >
                   {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

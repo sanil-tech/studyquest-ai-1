@@ -1,0 +1,166 @@
+{
+  "Matematik": {
+    "Tahun 1": {
+      "NOMBOR_HINGGA_100": {
+        "domain_name": "Nombor hingga 100",
+        "default_widget_type": "base_ten_blocks",
+        "teaching_strategy": [
+          "Perwakilan Konkrit-Bergambar-Abstrak (CPA)",
+          "Pengumpulan Kumpulan Puluh dan Sa"
+        ],
+        "real_world_context": [
+          "Membilang guli, klip kertas, dan buah-buahan di kedai",
+          "Membilang bilangan murid di dalam kelas"
+        ],
+        "visual_method": [
+          "Blok asas sepuluh (Base-10) berwarna biru (Puluh) dan kuning (Sa)",
+          "Garis nombor interaktif 0 hingga 100"
+        ],
+        "teacher_instruction_style": "Bimbingan santai, membilang satu demi satu dan secara sepuluh-sepuluh",
+        "common_misconception": "Keliru antara nilai tempat puluh dan sa (contoh: menganggap 45 dan 54 sama nilai)",
+        "suggested_activity": "Susun blok asas sepuluh untuk membina nombor sasaran",
+        "assessment_focus": "Keupayaan membezakan nilai tempat puluh/sa dan menyatakan nilai digit"
+      },
+      "TAMBAH_DAN_TOLAK": {
+        "domain_name": "Tambah dan Tolak",
+        "default_widget_type": "number_scale",
+        "teaching_strategy": [
+          "Penceritaan Situasi Harian",
+          "Garis Nombor dan Penggabungan Kumpulan"
+        ],
+        "real_world_context": [
+          "Menerima biskut tambahan atau memakan beberapa biji gula-gula",
+          "Menderma mainan kepada rakan"
+        ],
+        "visual_method": [
+          "Pengumpulan objek fizikal & lompatan garis nombor ke hadapan/belakang",
+          "Bentuk lazim tambah dan tolak dengan perwakilan gambar"
+        ],
+        "teacher_instruction_style": "Galakan visual dengan perbendaharaan kata 'jumlah', 'baki', 'beza'",
+        "common_misconception": "Menolak nombor kecil daripada nombor besar tanpa mengira kedudukan ayat matematik",
+        "suggested_activity": "Lompat pada garis nombor interaktif untuk mencari jawapan",
+        "assessment_focus": "Penguasaan fakta asas tambah/tolak dalam lingkungan 100"
+      },
+      "PECAHAN": {
+        "domain_name": "Pecahan",
+        "default_widget_type": "fraction_slicer",
+        "teaching_strategy": [
+          "Pembahagian Objek Utuh Secara Adil",
+          "Perbandingan Setengah dan Suku"
+        ],
+        "real_world_context": [
+          "Membahagi kek hari jadi, pizza, dan kepingan roti bersama rakan",
+          "Memotong buah tembikai secara sama rata"
+        ],
+        "visual_method": [
+          "Bulatan dan segi empat tepat dibelah 2 bahagian (setengah) dan 4 bahagian (suku)",
+          "Warna kawasan potongan pecahan secara separa"
+        ],
+        "teacher_instruction_style": "Inkuiri berpandu berasaskan perkongsian secara rata dan adil",
+        "common_misconception": "Menganggap bahagian yang tidak sama saiz sebagai pecahan yang sah",
+        "suggested_activity": "Potong bentuk geometrik secara interaktif menggunakan FractionSlicer",
+        "assessment_focus": "Mengenal pasti satu perdua (setengah) dan satu perempat (suku) daripada objek utuh"
+      },
+      "WANG": {
+        "domain_name": "Wang Kertas dan Syiling",
+        "default_widget_type": "money_counter",
+        "teaching_strategy": [
+          "Simulasi Jual Beli Kantin Sekolah",
+          "Pertukaran Nilai Wang Sama Nilai"
+        ],
+        "real_world_context": [
+          "Membeli makanan di kantin sekolah dan menyimpan wang saku dalam tabung",
+          "Membeli alat tulis di kedai buku sekolah"
+        ],
+        "visual_method": [
+          "Duit syiling Malaysia (5c, 10c, 20c, 50c) & wang kertas (RM1, RM5, RM10)",
+          "Jadual harga barang kantin sekolah"
+        ],
+        "teacher_instruction_style": "Bermain peranan (role-play) peniaga dan pembeli di kedai",
+        "common_misconception": "Menganggap fizikal syiling besar sentiasa lebih besar nilai berbanding syiling kecil",
+        "suggested_activity": "Kira dan gabungkan duit syiling untuk membayar harga barang",
+        "assessment_focus": "Menyatakan nilai wang kertas/syiling dan menukar wang sama nilai"
+      },
+      "MASA_DAN_WAKTU": {
+        "domain_name": "Masa dan Waktu",
+        "default_widget_type": "clock_face",
+        "teaching_strategy": [
+          "Pemerhatian Jarum Jam dan Minit",
+          "Urutan Peristiwa Rutin Harian"
+        ],
+        "real_world_context": [
+          "Waktu bangun pagi, waktu persekolahan, waktu makan tengah hari, dan waktu tidur",
+          "Jadual waktu kelas dan aktiviti kokurikulum"
+        ],
+        "visual_method": [
+          "Muka jam analog berkembar dengan jarum jam (pendek) dan jarum minit (panjang)",
+          "Carta 7 hari seminggu dan 12 bulan setahun"
+        ],
+        "teacher_instruction_style": "Pengisahan waktu rutin harian dan pergerakan jam",
+        "common_misconception": "Keliru fungsi jarum pendek (jam) dan jarum panjang (minit)",
+        "suggested_activity": "Putar jarum jam analog interaktif ke waktu yang diminta",
+        "assessment_focus": "Menyebut dan menulis waktu tepat, suku jam, dan setengah jam"
+      },
+      "UKURAN_DAN_SUKATAN": {
+        "domain_name": "Panjang, Jisim dan Isi Padu",
+        "default_widget_type": "balance_scale",
+        "teaching_strategy": [
+          "Pengukuran Unit Bukan Piawai",
+          "Perbandingan Langsung Objek Harian"
+        ],
+        "real_world_context": [
+          "Mengukur panjang meja guna jengkal dan menimbang berat buku guna klip kertas",
+          "Menyukat air sirap guna cawan"
+        ],
+        "visual_method": [
+          "Imbangan penimbang jungkit-jangkit & cawan penyukat isi padu cecair",
+          "Jengkal, depa, langkah, dan klip kertas"
+        ],
+        "teacher_instruction_style": "Eksperimen amali dan penerokaan ukuran Fizikal",
+        "common_misconception": "Menganggap objek lebih tinggi sentiasa lebih berat berbanding objek rendah",
+        "suggested_activity": "Imbang objek pada penimbang imbang interaktif",
+        "assessment_focus": "Membandingkan dan mengukur panjang, jisim dan isi padu guna unit bukan piawai"
+      },
+      "BENTUK": {
+        "domain_name": "Bentuk 2D dan 3D",
+        "default_widget_type": "shape_sorter",
+        "teaching_strategy": [
+          "Pengelasan Ciri Permukaan dan Sisi",
+          "Pengecaman Bentuk di Persekitaran"
+        ],
+        "real_world_context": [
+          "Mengenal bentuk dadu (kubus), tin minuman (silinder), dan bola (sfera)",
+          "Mengenal bentuk pembaris segi tiga dan pemadam"
+        ],
+        "visual_method": [
+          "Model 3D berputar (kubus, kuboid, kon, sfera) & kad bentuk 2D (segi tiga, bulatan)",
+          "Visual permukaan rata dan permukaan melengkung"
+        ],
+        "teacher_instruction_style": "Sentuhan dan penerokaan ciri binaan bentuk",
+        "common_misconception": "Keliru antara bentuk 2D (rata) dan bentuk 3D (bongkah bongkar)",
+        "suggested_activity": "Asingkan bongkah 3D mengikut ciri permukaannya",
+        "assessment_focus": "Mengenal pasti bentuk 2D dan 3D serta menyatakan ciri sisinya"
+      },
+      "DATA": {
+        "domain_name": "Pengurusan Data",
+        "default_widget_type": "piktograf_chart",
+        "teaching_strategy": [
+          "Pengumpulan Kaedah Gundal",
+          "Pentafsiran Piktograf Bersimbol"
+        ],
+        "real_world_context": [
+          "Merekodkan warna kegemaran, buah kegemaran, atau haiwan peliharaan rakan sekelas",
+          "Membaca graf kehadiran murid di papan kenyataan"
+        ],
+        "visual_method": [
+          "Jadual gundalan (tally chart) & piktograf bersimbol gambar mudah",
+          "Simbol gambar mewakili 1 unit"
+        ],
+        "teacher_instruction_style": "Pengumpulan data interaktif bersama kelas",
+        "common_misconception": "Mengira bilangan simbol tanpa merujuk kunci petunjuk nilai simbol",
+        "suggested_activity": "Bina dan baca piktograf interaktif daripada data gundalan",
+        "assessment_focus": "Membaca dan memperoleh maklumat daripada piktograf bersimbol"
+      }
+    }
+  }
+}

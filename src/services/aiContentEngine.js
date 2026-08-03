@@ -1,12 +1,32 @@
 import { build9StepKSSRMissionPackage, validateMissionPackage, getKSSRModeByGrade } from './generateKSSRContent.js';
 import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
+import pedagogyMapping from '../data/pedagogyMapping.json' with { type: "json" };
 
 /**
- * AI Content Engine - Generates KSSR 9-Step Adventure Package
- * 
- * Constructs LLM prompt constraints and fallback generators for KSSR SK/SP Standards
- * in Dual-Engine Mode (JUNIOR: Prasekolah-T3 vs SENIOR: T4-T6).
+ * Retrieves the pedagogical strategy context object for a given subject, grade, and topic.
+ * @param {string} subject - e.g. "Matematik"
+ * @param {string} grade - e.g. "Tahun 1"
+ * @param {string} topic - e.g. "Nombor hingga 100", "Pecahan"
+ * @returns {object|null}
  */
+export function getPedagogyContext(subject = "Matematik", grade = "Tahun 1", topic = "Nombor hingga 100") {
+  if (!subject || !grade || !topic) return null;
+
+  const subjectObj = pedagogyMapping?.[subject]?.[grade];
+  if (!subjectObj) return null;
+
+  const tLower = topic.toLowerCase();
+
+  // Search by exact topic key or domain name
+  const topicKey = Object.keys(subjectObj).find((key) => {
+    const item = subjectObj[key];
+    const dName = (item.domain_name || "").toLowerCase();
+    const keyClean = key.toLowerCase().replace(/_/g, " ");
+    return tLower.includes(dName) || dName.includes(tLower) || tLower.includes(keyClean) || keyClean.includes(tLower);
+  });
+
+  return topicKey ? subjectObj[topicKey] : null;
+}
 
 /**
  * Formulates prompt instructions for LLM generation matching adventurePackageSchema.json
@@ -14,6 +34,21 @@ import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
 export function buildLLMPromptForKSSR({ spCode, spDescription, skCode, grade, subject, bidang = "Nombor dan Operasi", topic = "Nombor hingga 100", learningOutcome = "", pbdTarget = "TP3" }) {
   const mode = getKSSRModeByGrade(grade);
   const mascot = mode === "JUNIOR" ? "Suku Penyu 🐢 (Bahasa santai kanak-kanak)" : "Ejen Suku 🦊 (Penyelesaian masalah KBAT & Pemikiran Kritis)";
+  const pedagogyCtx = getPedagogyContext(subject, grade, topic);
+
+  let pedagogySection = "";
+  if (pedagogyCtx) {
+    pedagogySection = `
+PEDAGOGY INTELLIGENCE CONTEXT:
+  - Teaching Strategy: ${Array.isArray(pedagogyCtx.teaching_strategy) ? pedagogyCtx.teaching_strategy.join(", ") : pedagogyCtx.teaching_strategy}
+  - Real-World Anchor: ${Array.isArray(pedagogyCtx.real_world_context) ? pedagogyCtx.real_world_context.join(", ") : pedagogyCtx.real_world_context}
+  - Visual Method: ${Array.isArray(pedagogyCtx.visual_method) ? pedagogyCtx.visual_method.join(", ") : pedagogyCtx.visual_method}
+  - Teacher Instruction Style: ${pedagogyCtx.teacher_instruction_style}
+  - Misconception Shield: ${pedagogyCtx.common_misconception}
+  - Suggested Activity: ${pedagogyCtx.suggested_activity}
+  - Assessment Focus: ${pedagogyCtx.assessment_focus}
+  - Preferred Interactive Widget: ${pedagogyCtx.default_widget_type}`;
+  }
 
   const systemPrompt = `You are StudyQuest AI, an expert Malaysian KSSR Semakan Instructional Designer.
 You must generate a 9-Step Macro Journey JSON payload strictly conforming to adventurePackageSchema.json for ${grade} (${subject}).
@@ -30,7 +65,7 @@ CURRICULUM CONTEXT:
   - SP Code: ${spCode}
   - SP Description: ${spDescription || topic}
   - Learning Outcome: ${learningOutcome || spDescription || topic}
-  - PBD Target: ${pbdTarget}
+  - PBD Target: ${pbdTarget}${pedagogySection}
 
 STRICT STEP ARCHITECTURE:
 Step 1: BRIEFING (Story hook & mascot dialogue)
@@ -45,7 +80,7 @@ Step 9: REWARD (Badge & Item drop)
 
 Output must be valid JSON only.`;
 
-  return { systemPrompt, mode };
+  return { systemPrompt, mode, pedagogyCtx };
 }
 
 /**
@@ -63,6 +98,9 @@ export async function generateKSSRMissionPackage({
   pbdTarget = "TP3"
 }) {
   const mode = getKSSRModeByGrade(grade);
+  const pedagogyCtx = getPedagogyContext(subject, grade, topic);
+  const widgetType = pedagogyCtx?.default_widget_type;
+
   const { systemPrompt } = buildLLMPromptForKSSR({ spCode, spDescription, skCode, grade, subject, bidang, topic, learningOutcome, pbdTarget });
 
   // Generate structured 9-Step Package conforming to adventurePackageSchema.json
@@ -72,7 +110,9 @@ export async function generateKSSRMissionPackage({
     grade,
     pbdTarget,
     subject,
-    topicTitle: spDescription || topic
+    topicTitle: spDescription || topic,
+    widgetType,
+    pedagogyContext: pedagogyCtx
   });
 
   // Adjust mascot dialogue for SENIOR vs JUNIOR mode
@@ -91,6 +131,7 @@ export async function generateKSSRMissionPackage({
     success: validation.valid,
     validation_errors: validation.errors,
     prompt_used: systemPrompt,
+    pedagogy_context: pedagogyCtx,
     missionPackage,
     adventurePackage: missionPackage // for compatibility with AdventurePreview
   };

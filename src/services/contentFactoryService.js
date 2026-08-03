@@ -1,76 +1,144 @@
+import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
+import { generateKSSRMissionPackage } from './aiContentEngine.js';
+import { validateLessonQuality, validateAIContentAuthenticity } from './contentQualityService.js';
+
 /**
- * Content Factory Service
- * Automates the identification of missing curriculum content and manages the AI generation queue.
+ * StudyQuest Content LifeCycle Status Constants
  */
-import rules from '../data/contentFactoryRules.json';
-import kssrTahun1 from '../data/kssr_matematik_tahun_1.json';
-
-// Simulated state for demonstration
-let missingSpQueue = [
-  { sp_code: "1.4.1", topic: "Nilai Tempat", subject: "Matematik", year: "Tahun 1" },
-  { sp_code: "1.5.1", topic: "Membundar Nombor", subject: "Matematik", year: "Tahun 1" },
-  { sp_code: "2.1.2", topic: "Tolak Asas", subject: "Matematik", year: "Tahun 1" }
-];
-
-let approvalQueue = [
-  { id: "L_NEW_1", sp_code: "1.2.2", title: "Banding Dua Nombor", status: "QUALITY_CHECK", scores: { alignment: 90, pedagogy: 85, assessment: 100 } }
-];
-
-export const analyzeCurriculumGaps = async () => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // Calculate total SPs in curriculum
-  const totalSps = kssrTahun1.topics.flatMap(t => t.standard_pembelajaran).length;
-  const coveredSps = totalSps - missingSpQueue.length - approvalQueue.length;
-  
-  return {
-    totalSps,
-    coveredSps,
-    missingSps: missingSpQueue.length,
-    pendingApprovalSps: approvalQueue.length,
-    completionPercentage: Math.round((coveredSps / totalSps) * 100)
-  };
+export const CONTENT_STATUS = {
+  DRAFT: "DRAFT",
+  AI_GENERATED: "AI_GENERATED",
+  QUALITY_CHECKED: "QUALITY_CHECKED",
+  AUTHENTICITY_PASSED: "AUTHENTICITY_PASSED",
+  READY_FOR_REVIEW: "READY_FOR_REVIEW",
+  NEEDS_REVIEW: "NEEDS_REVIEW",
+  PUBLISHED: "PUBLISHED"
 };
 
-export const getMissingSps = async () => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-  return [...missingSpQueue];
-};
+/**
+ * Executes a controlled batch production pipeline for an entire subject & grade framework.
+ * 
+ * @param {object} params
+ * @param {string} params.subject - e.g. "Matematik"
+ * @param {string} params.grade - e.g. "Tahun 1"
+ * @param {number} params.limit - Max items to process (0 = all items)
+ * @param {boolean} params.autoValidate - Execute quality & authenticity gates
+ * @param {function} params.onProgress - Progress callback function (item, index, total)
+ * @returns {Promise<object>} Batch Production Report
+ */
+export async function generateBatchLessons({
+  subject = "Matematik",
+  grade = "Tahun 1",
+  limit = 0,
+  autoValidate = true,
+  onProgress = null
+}) {
+  const taxonomySubject = kssrTaxonomy.subjects?.[subject];
+  const spItems = taxonomySubject?.[grade] || [];
 
-export const triggerGeneration = async (spCode) => {
-  await new Promise(resolve => setTimeout(resolve, 800)); // Simulating AI call
-  
-  // Remove from missing queue
-  missingSpQueue = missingSpQueue.filter(sp => sp.sp_code !== spCode);
-  
-  // Add to approval queue with simulated quality pass
-  const newLesson = {
-    id: `L_NEW_${Date.now()}`,
-    sp_code: spCode,
-    title: `Generated Lesson for ${spCode}`,
-    status: "QUALITY_CHECK",
-    scores: { alignment: 95, pedagogy: 88, assessment: 100 }
-  };
-  
-  approvalQueue.push(newLesson);
-  return newLesson;
-};
-
-export const getApprovalQueue = async () => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-  return [...approvalQueue];
-};
-
-export const approveLesson = async (lessonId) => {
-  await new Promise(resolve => setTimeout(resolve, 400));
-  
-  const index = approvalQueue.findIndex(l => l.id === lessonId);
-  if (index > -1) {
-    const lesson = approvalQueue[index];
-    lesson.status = "APPROVED";
-    // In reality, this would now move to the resourceLibraryService
-    approvalQueue.splice(index, 1);
-    return lesson;
+  if (!Array.isArray(spItems) || spItems.length === 0) {
+    return {
+      total_generated: 0,
+      passed_quality: 0,
+      passed_authenticity: 0,
+      failed: 0,
+      error: `Tiada data SP KSSR ditemui bagi subjek ${subject} (${grade}).`,
+      lessons: []
+    };
   }
-  throw new Error("Lesson not found in queue.");
-};
+
+  const itemsToProcess = limit > 0 ? spItems.slice(0, limit) : spItems;
+  const lessons = [];
+
+  for (let idx = 0; idx < itemsToProcess.length; idx++) {
+    const item = itemsToProcess[idx];
+
+    // 1. Invoke AI Content Engine
+    const genResult = await generateKSSRMissionPackage({
+      spCode: item.sp_code,
+      skCode: item.sk_code,
+      grade: grade,
+      subject: subject,
+      bidang: item.bidang || "Nombor dan Operasi",
+      topic: item.topic || "Nombor hingga 100",
+      spDescription: item.title,
+      learningOutcome: item.title,
+      pbdTarget: "TP3"
+    });
+
+    const missionPackage = genResult.missionPackage;
+
+    // 2. Execute Quality & Authenticity Gates
+    let qualityReport = { overall: { score: 100, approved: true }, checks: { alignment: { notes: [] } } };
+    let authReport = { authenticity_score: 100, passed: true, issues: [] };
+
+    if (autoValidate) {
+      const lessonObj = {
+        title: item.title,
+        learning_objective: item.title,
+        content_blocks: missionPackage.steps
+      };
+
+      qualityReport = await validateLessonQuality(lessonObj, true);
+
+      authReport = validateAIContentAuthenticity({
+        subject,
+        grade,
+        topic: item.topic || "Nombor hingga 100",
+        skCode: item.sk_code,
+        spCode: item.sp_code,
+        spDescription: item.title,
+        missionPackage
+      });
+    }
+
+    const qualityPassed = qualityReport.overall.score >= 80;
+    const authenticityPassed = authReport.passed && authReport.authenticity_score >= 85;
+    const isFullyApproved = qualityPassed && authenticityPassed;
+
+    const content_status = isFullyApproved
+      ? CONTENT_STATUS.READY_FOR_REVIEW
+      : CONTENT_STATUS.NEEDS_REVIEW;
+
+    const lessonRecord = {
+      sp_code: item.sp_code,
+      sk_code: item.sk_code,
+      topic: item.topic,
+      bidang: item.bidang,
+      title: item.title,
+      content_status,
+      quality_score: qualityReport.overall.score,
+      authenticity_score: authReport.authenticity_score,
+      quality_passed: qualityPassed,
+      authenticity_passed: authenticityPassed,
+      passed: isFullyApproved,
+      issues: [
+        ...(qualityReport.checks?.alignment?.notes || []),
+        ...(authReport.issues || [])
+      ],
+      generated_at: new Date().toISOString(),
+      generated_by: "StudyQuest AI",
+      missionPackage
+    };
+
+    lessons.push(lessonRecord);
+
+    if (typeof onProgress === "function") {
+      onProgress(lessonRecord, idx + 1, itemsToProcess.length);
+    }
+  }
+
+  const passedQualityCount = lessons.filter(l => l.quality_passed).length;
+  const passedAuthenticityCount = lessons.filter(l => l.authenticity_passed).length;
+  const totalPassed = lessons.filter(l => l.passed).length;
+  const totalFailed = lessons.length - totalPassed;
+
+  return {
+    total_generated: lessons.length,
+    passed_quality: passedQualityCount,
+    passed_authenticity: passedAuthenticityCount,
+    passed_all: totalPassed,
+    failed: totalFailed,
+    lessons
+  };
+}

@@ -96,10 +96,24 @@ export function build9StepKSSRMissionPackage({
   grade = "Tahun 1",
   pbdTarget = "TP3",
   subject = "Matematik",
-  topicTitle = "Kuantiti & Nilai Nombor"
+  topicTitle = "Kuantiti & Nilai Nombor",
+  widgetType = null,
+  pedagogyContext = null
 }) {
   const mode = getKSSRModeByGrade(grade);
   const mascotName = mode === "SENIOR" ? "Ejen Suku 🦊" : "Suku Penyu 🐢";
+
+  const realWorldAnchor = pedagogyContext?.real_world_context
+    ? (Array.isArray(pedagogyContext.real_world_context) ? pedagogyContext.real_world_context[0] : pedagogyContext.real_world_context)
+    : `Meneroka tajuk ${topicTitle}`;
+
+  const visualMethod = pedagogyContext?.visual_method
+    ? (Array.isArray(pedagogyContext.visual_method) ? pedagogyContext.visual_method[0] : pedagogyContext.visual_method)
+    : `Visual perwakilan danilustrasi objek bagi pemahaman tajuk ${topicTitle}.`;
+
+  const misconceptionText = pedagogyContext?.common_misconception
+    ? pedagogyContext.common_misconception
+    : `Tajuk ${topicTitle} sangat sukar dikuasai`;
 
   const missionPackage = {
     spCode,
@@ -115,7 +129,7 @@ export function build9StepKSSRMissionPackage({
     },
     adventure_story: {
       title: `Kembara ${topicTitle}`,
-      introduction: `Selamat datang ke modul KSSR ${grade}! Mari kita terokai tajuk ${topicTitle}.`,
+      introduction: `Selamat datang ke modul KSSR ${grade}! Mari kita terokai tajuk ${topicTitle} (${realWorldAnchor}).`,
       problem: `Selesaikan cabaran SP ${spCode} untuk mencapai sasaran PBD ${pbdTarget}!`,
       mission_goal: `Kuasai kemahiran ${topicTitle} mengikut standard KPM KSSR Semakan.`
     },
@@ -131,7 +145,7 @@ export function build9StepKSSRMissionPackage({
         step_type: "BRIEFING",
         title: "Pengenalan Misi",
         payload: {
-          story_hook: `Di Dunia ${subject}, cabaran ${topicTitle} memerlukan perhatian anda!`,
+          story_hook: `Di Dunia ${subject}, cabaran ${topicTitle} memerlukan perhatian anda! Konteks harian: ${realWorldAnchor}.`,
           mascot_dialogue: `Hai! Saya ${mascotName}. Hari ini kita akan mempelajari ${topicTitle} (SP ${spCode}).`
         }
       },
@@ -143,7 +157,7 @@ export function build9StepKSSRMissionPackage({
           {
             block_type: "VISUAL_STORY",
             title: `Kisah Visual ${topicTitle}`,
-            content: { text: `Visual perwakilan danilustrasi objek bagi pemahaman tajuk ${topicTitle}.` }
+            content: { text: visualMethod }
           },
           {
             block_type: "COMPARISON_SPLIT",
@@ -158,7 +172,7 @@ export function build9StepKSSRMissionPackage({
           {
             block_type: "MYTH_BUSTER",
             title: `Mitos & Fakta ${topicTitle}`,
-            content: { myth: `Tajuk ${topicTitle} sangat sukar dikuasai`, fact: `Dengan bimbingan berstruktur SP ${spCode}, semua murid boleh mencapai ${pbdTarget}!` }
+            content: { myth: misconceptionText, fact: `Dengan bimbingan berstruktur SP ${spCode}, semua murid boleh mencapai ${pbdTarget}!` }
           }
         ]
       },
@@ -167,7 +181,7 @@ export function build9StepKSSRMissionPackage({
         step_type: "LESSON",
         title: "Pecahan Konsep Utama",
         payload: {
-          concept_summary: `Konsep asas ${topicTitle} berpandukan SK ${skCode} dan SP ${spCode} untuk murid ${grade}.`,
+          concept_summary: `Konsep asas ${topicTitle} berpandukan SK ${skCode} dan SP ${spCode} untuk murid ${grade}. Kaedah Visual: ${visualMethod}.`,
           key_points: [
             `Memahami takrifan asas bagi ${topicTitle}`,
             `Mengaplikasikan kemahiran SP ${spCode} dalam latihan harian`,
@@ -180,7 +194,7 @@ export function build9StepKSSRMissionPackage({
         step_type: "PRACTICE",
         title: "Latihan Interaktif Widget",
         payload: {
-          widget_type: subject.toLowerCase().includes("matematik") ? "base_ten_blocks" : "sentence_builder",
+          widget_type: widgetType || (subject.toLowerCase().includes("matematik") ? "base_ten_blocks" : "sentence_builder"),
           interactive_data: { topic: topicTitle, targetNumber: 42, targetSentence: `Murid mengulangkaji ${topicTitle}` }
         }
       },
