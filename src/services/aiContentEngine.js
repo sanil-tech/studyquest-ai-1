@@ -1,31 +1,96 @@
 import { build9StepKSSRMissionPackage, validateMissionPackage, getKSSRModeByGrade } from './generateKSSRContent.js';
 import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
 import pedagogyMapping from '../data/pedagogyMapping.json' with { type: "json" };
+import widgetRegistry from '../data/widgetRegistry.json' with { type: "json" };
+import assessmentFramework from '../data/assessmentFramework.json' with { type: "json" };
+import curriculumSchema from '../data/curriculumSchema.json' with { type: "json" };
 
 /**
- * Retrieves the pedagogical strategy context object for a given subject, grade, and topic.
- * @param {string} subject - e.g. "Matematik"
+ * Retrieves or generates the pedagogical strategy context object for any subject, grade, and topic.
+ * Supports STEM (Matematik, Sains) and Humanities (Bahasa Melayu, English).
+ * @param {string} subject - e.g. "Matematik", "Sains", "Bahasa Melayu", "English"
  * @param {string} grade - e.g. "Tahun 1"
- * @param {string} topic - e.g. "Nombor hingga 100", "Pecahan"
- * @returns {object|null}
+ * @param {string} topic - e.g. "Nombor hingga 100", "Pernafasan Manusia", "Tatabahasa"
+ * @returns {object}
  */
 export function getPedagogyContext(subject = "Matematik", grade = "Tahun 1", topic = "Nombor hingga 100") {
   if (!subject || !grade || !topic) return null;
 
+  // 1. Try explicit lookup from pedagogyMapping.json first
   const subjectObj = pedagogyMapping?.[subject]?.[grade];
-  if (!subjectObj) return null;
+  if (subjectObj) {
+    const tLower = topic.toLowerCase();
+    const topicKey = Object.keys(subjectObj).find((key) => {
+      const item = subjectObj[key];
+      const dName = (item.domain_name || "").toLowerCase();
+      const keyClean = key.toLowerCase().replace(/_/g, " ");
+      return tLower.includes(dName) || dName.includes(tLower) || tLower.includes(keyClean) || keyClean.includes(tLower);
+    });
 
-  const tLower = topic.toLowerCase();
+    if (topicKey) {
+      return subjectObj[topicKey];
+    }
+  }
 
-  // Search by exact topic key or domain name
-  const topicKey = Object.keys(subjectObj).find((key) => {
-    const item = subjectObj[key];
-    const dName = (item.domain_name || "").toLowerCase();
-    const keyClean = key.toLowerCase().replace(/_/g, " ");
-    return tLower.includes(dName) || dName.includes(tLower) || tLower.includes(keyClean) || keyClean.includes(tLower);
-  });
+  // 2. Universal Learning Model Fallback for non-mapped subjects/topics
+  const assessmentRule = assessmentFramework.subject_assessment_rules?.[subject] || {
+    focus: "Penguasaan objektif pembelajaran DSKP dan kemahiran asas."
+  };
 
-  return topicKey ? subjectObj[topicKey] : null;
+  if (subject === "Bahasa Melayu") {
+    return {
+      domain_name: topic,
+      default_widget_type: "sentence_builder",
+      teaching_strategy: ["Pendekatan Komunikatif", "Pengembangan Kosa Kata & Tatabahasa"],
+      real_world_context: ["Penceritaan rutin harian, kebudayaan dan situasi sekolah"],
+      visual_method: ["Kad kata interaktif & pengatur grafik susun ayat"],
+      teacher_instruction_style: "Bimbingan bacaan lancar dan pembentukan ayat gramatis",
+      common_misconception: "Penggunaan imbuhan dan struktur ayat yang tidak tepat",
+      suggested_activity: "Susun perkataan menjadi ayat yang lengkap dan berstruktur",
+      assessment_focus: assessmentRule.focus
+    };
+  }
+
+  if (subject === "English") {
+    return {
+      domain_name: topic,
+      default_widget_type: "word_matching",
+      teaching_strategy: ["Communicative Language Teaching", "Phonics & Contextual Learning"],
+      real_world_context: ["Daily routines, school, hobbies, and social interactions"],
+      visual_method: ["Flashcard vocabulary pairing & interactive sentence frames"],
+      teacher_instruction_style: "Encouraging pronunciation and vocabulary building",
+      common_misconception: "Confusing subject-verb agreement and tenses",
+      suggested_activity: "Match target vocabulary with correct picture and sentence clues",
+      assessment_focus: assessmentRule.focus
+    };
+  }
+
+  if (subject === "Sains") {
+    return {
+      domain_name: topic,
+      default_widget_type: "organ_system_explorer",
+      teaching_strategy: ["Inkuiri Penemuan & Kemahiran Proses Sains (KPS)", "Pemerhatian Amali & Eksperimen"],
+      real_world_context: ["Pemerhatian alam sekitar, organisma hidup, dan fenomena fizik harian"],
+      visual_method: ["Simulasi makmal interaktif & diagram pengelasan visual"],
+      teacher_instruction_style: "Inkuiri sains berpandu dan pemikiran krisis",
+      common_misconception: "Keliru pemboleh ubah bergerak balas dan pemboleh ubah dimalarkan",
+      suggested_activity: "Teroka diagram interaktif dan jalankan simulasi eksperimen sains",
+      assessment_focus: assessmentRule.focus
+    };
+  }
+
+  // Generic STEM Math fallback
+  return {
+    domain_name: topic,
+    default_widget_type: "number_scale",
+    teaching_strategy: ["Pendekatan Konkrit-Pictorial-Abstrak (CPA)", "Penyelesaian Masalah Rutin"],
+    real_world_context: ["Aplikasi nombor dan pengiraan situasi harian"],
+    visual_method: ["Garis nombor & objek manipulatif visual"],
+    teacher_instruction_style: "Bimbingan langkah demi langkah",
+    common_misconception: "Penyusunan digit dan fakta asas matematik",
+    suggested_activity: "Gunakan widget interaktif untuk mengukuhkan konsep",
+    assessment_focus: assessmentRule.focus
+  };
 }
 
 /**

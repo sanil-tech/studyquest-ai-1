@@ -1,0 +1,29 @@
+{
+  "framework_name": "Pentaksiran Bilik Darjah (PBD) KSSR Semakan",
+  "levels": {
+    "TP1": { "name": "Tahu", "description": "Mengingat kembali pengetahuan asas dan istilah", "cognitive_tier": "REMEMBER" },
+    "TP2": { "name": "Tahu dan Faham", "description": "Memahami dan menerangkan konsep utama", "cognitive_tier": "UNDERSTAND" },
+    "TP3": { "name": "Tahu, Faham dan Boleh Buat", "description": "Mengaplikasikan kemahiran asas dalam situasi mudah", "cognitive_tier": "APPLY" },
+    "TP4": { "name": "Tahu, Faham dan Boleh Buat dengan Beradab", "description": "Menyelesaikan masalah rutin secara bersistem", "cognitive_tier": "ANALYZE" },
+    "TP5": { "name": "Tahu, Faham dan Boleh Buat dengan Beradab Terpuji", "description": "Menyelesaikan masalah kompleks dan KBAT", "cognitive_tier": "EVALUATE" },
+    "TP6": { "name": "Tahu, Faham dan Boleh Buat dengan Beradab Mithali", "description": "Mencipta penyelesaian kreatif dan berkomunikasi dengan berkesan", "cognitive_tier": "CREATE" }
+  },
+  "subject_assessment_rules": {
+    "Matematik": {
+      "focus": "Penguasaan konsep nombor, fakta asas, operasi lazim, dan penyelesaian masalah harian.",
+      "tp_quiz_distribution": { "TP1_TP2": 2, "TP3_TP4": 2, "TP5_TP6": 1 }
+    },
+    "Sains": {
+      "focus": "Kemahiran Proses Sains (KPS), pemikiran inkuiri, pemboleh ubah eksperimen, dan celik sains.",
+      "tp_quiz_distribution": { "TP1_TP2": 2, "TP3_TP4": 2, "TP5_TP6": 1 }
+    },
+    "Bahasa Melayu": {
+      "focus": "Kemahiran mendengar, membaca, menulis, kecekapan tatabahasa, dan pemahaman petikan.",
+      "tp_quiz_distribution": { "TP1_TP2": 2, "TP3_TP4": 2, "TP5_TP6": 1 }
+    },
+    "English": {
+      "focus": "Listening, Speaking, Reading comprehension, Vocabulary matching, and Writing syntax.",
+      "tp_quiz_distribution": { "TP1_TP2": 2, "TP3_TP4": 2, "TP5_TP6": 1 }
+    }
+  }
+}

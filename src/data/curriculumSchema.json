@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StudyQuest Universal Curriculum Schema",
+  "description": "Standardized schema definition for KSSR Semakan & KSSM DSKP entries across STEM and Humanities subjects.",
+  "type": "object",
+  "required": [
+    "subject",
+    "grade",
+    "bidang",
+    "topic",
+    "sk_code",
+    "sp_code",
+    "title",
+    "mode",
+    "bloom_level"
+  ],
+  "properties": {
+    "subject_code": { "type": "string", "example": "MAT_Y1_01" },
+    "subject": {
+      "type": "string",
+      "enum": ["Matematik", "Sains", "Bahasa Melayu", "English"]
+    },
+    "grade": {
+      "type": "string",
+      "enum": ["Tahun 1", "Tahun 2", "Tahun 3", "Tahun 4", "Tahun 5", "Tahun 6", "Tingkatan 1", "Tingkatan 2", "Tingkatan 3"]
+    },
+    "bidang": { "type": "string" },
+    "topic": { "type": "string" },
+    "sk_code": { "type": "string" },
+    "sk_title": { "type": "string" },
+    "sp_code": { "type": "string" },
+    "title": { "type": "string" },
+    "mode": { "type": "string", "enum": ["JUNIOR", "SENIOR"] },
+    "bloom_level": { "type": "string", "enum": ["REMEMBER", "UNDERSTAND", "APPLY", "ANALYZE", "EVALUATE", "CREATE"] },
+    "prerequisites": { "type": "array", "items": { "type": "string" } },
+    "skill_domain": { "type": "string" },
+    "language_metadata": {
+      "type": "object",
+      "properties": {
+        "passage_type": { "type": "string", "enum": ["NARRATIVE", "EXPOSITORY", "DIALOGUE", "POEM", "INFO"] },
+        "target_vocabulary": { "type": "array", "items": { "type": "string" } },
+        "grammar_focus": { "type": "string" }
+      }
+    },
+    "science_metadata": {
+      "type": "object",
+      "properties": {
+        "science_process_skills": { "type": "array", "items": { "type": "string" } },
+        "manipulative_skills": { "type": "array", "items": { "type": "string" } },
+        "experiment_config": {
+          "type": "object",
+          "properties": {
+            "has_experiment": { "type": "boolean" },
+            "apparatus": { "type": "array", "items": { "type": "string" } },
+            "variables": {
+              "type": "object",
+              "properties": {
+                "manipulated": { "type": "string" },
+                "responding": { "type": "string" },
+                "constant": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "kbat_metadata": {
+      "type": "object",
+      "properties": {
+        "is_kbat": { "type": "boolean" },
+        "kbat_type": { "type": "string", "enum": ["Menganalisis", "Menilai", "Mencipta"] },
+        "scaffolding_steps": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "default_widget_type": { "type": "string" }
+  }
+}

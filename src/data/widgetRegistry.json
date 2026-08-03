@@ -1,0 +1,110 @@
+{
+  "version": "1.0",
+  "registry": {
+    "base_ten_blocks": {
+      "name": "Base Ten Blocks",
+      "subject": "Matematik",
+      "modes": ["JUNIOR"],
+      "description": "Blok asas sepuluh untuk mengira puluh dan sa",
+      "category": "NUMERACY"
+    },
+    "number_scale": {
+      "name": "Number Line Scale",
+      "subject": "Matematik",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Garis nombor interaktif untuk perbandingan dan lompatan operasi",
+      "category": "NUMERACY"
+    },
+    "fraction_slicer": {
+      "name": "Fraction Slicer",
+      "subject": "Matematik",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Pemotong pecahan visual bagi bentuk 2D dan set objek",
+      "category": "FRACTIONS"
+    },
+    "money_counter": {
+      "name": "Money Counter & Wallet",
+      "subject": "Matematik",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Pengiraan duit syiling dan wang kertas Malaysia",
+      "category": "FINANCIAL_LITERACY"
+    },
+    "clock_face": {
+      "name": "Interactive Clock Face",
+      "subject": "Matematik",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Jam analog interaktif dengan jarum jam dan minit",
+      "category": "TIME"
+    },
+    "balance_scale": {
+      "name": "Balance Scale",
+      "subject": "Matematik",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Penimbang imbangan untuk mengukur dan membandingkan jisim",
+      "category": "MEASUREMENT"
+    },
+    "shape_sorter": {
+      "name": "2D/3D Shape Sorter",
+      "subject": "Matematik",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Isih dan cam ciri-ciri bentuk 2D dan 3D",
+      "category": "GEOMETRY"
+    },
+    "piktograf_chart": {
+      "name": "Pictograph Builder",
+      "subject": "Matematik",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Pembina piktograf bersimbol dan carta data",
+      "category": "DATA"
+    },
+    "sentence_builder": {
+      "name": "Sentence Structure Builder",
+      "subject": "Bahasa Melayu",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Penyusunan blok kata untuk membina ayat yang gramatis",
+      "category": "LANGUAGE_SYNTAX"
+    },
+    "cloze_passage_fill": {
+      "name": "Cloze Passage Filler",
+      "subject": "Bahasa Melayu",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Melengkapkan tempat kosong dalam petikan cerita",
+      "category": "COMPREHENSION"
+    },
+    "word_matching": {
+      "name": "Vocabulary Matching Pair",
+      "subject": "English",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Matching target vocabulary with visual pictures and meanings",
+      "category": "VOCABULARY"
+    },
+    "phonics_sound_board": {
+      "name": "Phonics & Pronunciation Board",
+      "subject": "English",
+      "modes": ["JUNIOR"],
+      "description": "Interactive board for letter sounds, digraphs, and blendings",
+      "category": "PHONICS"
+    },
+    "science_lab_simulator": {
+      "name": "Virtual Science Lab",
+      "subject": "Sains",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Simulasi radas makmal dan amali eksperimen sains",
+      "category": "EXPERIMENT"
+    },
+    "organ_system_explorer": {
+      "name": "Organ System & Anatomy Diagram",
+      "subject": "Sains",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Penerokaan diagram organ badan manusia dan haiwan",
+      "category": "ANATOMY"
+    },
+    "lifecycle_sequencer": {
+      "name": "Lifecycle & Food Chain Sequencer",
+      "subject": "Sains",
+      "modes": ["JUNIOR", "SENIOR"],
+      "description": "Susunan urutan kitaran hidup dan rantai makanan",
+      "category": "ECOLOGY"
+    }
+  }
+}

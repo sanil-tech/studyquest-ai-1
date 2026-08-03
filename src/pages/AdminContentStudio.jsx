@@ -233,9 +233,39 @@ export default function AdminContentStudio() {
   const [authenticityReport, setAuthenticityReport] = useState(null);
 
   // Phase 6: Content Factory State
+  const [studioMode, setStudioMode] = useState("SINGLE"); // "SINGLE" | "BATCH"
   const [batchRunning, setBatchRunning] = useState(false);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0, currentItem: null });
   const [batchReport, setBatchReport] = useState(null);
+
+  const handleGenerateBatch = async () => {
+    setBatchRunning(true);
+    setBatchReport(null);
+    setBatchProgress({ current: 0, total: 0, currentItem: null });
+
+    try {
+      const report = await generateBatchLessons({
+        subject,
+        grade: yearLevel,
+        limit: 0,
+        autoValidate: true,
+        onProgress: (item, current, total) => {
+          setBatchProgress({ current, total, currentItem: item });
+        }
+      });
+      setBatchReport(report);
+      if (report.failed === 0 && report.total_generated > 0) {
+        toast({ title: "Batch Selesai!", description: `Berjaya menjana ${report.total_generated} pelajaran.` });
+      } else {
+        toast({ title: "Amaran Batch", description: `Ada ${report.failed} yang gagal.`, variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Batch error:", error);
+      toast({ title: "Ralat Batch", description: error.message || "Gagal", variant: "destructive" });
+    } finally {
+      setBatchRunning(false);
+    }
+  };
 
   const handleHierarchySelect = useCallback((selection) => {
     setSelectedVersion(selection.version);
@@ -575,40 +605,57 @@ export default function AdminContentStudio() {
         </div>
       </div>
 
-      {/* Content Hierarchy Selection Header */}
-      <Card className="bg-stone-900/90 border-stone-800 shadow-xl">
-        <CardContent className="p-4">
-          <ContentHierarchy onSelect={handleHierarchySelect} />
-        </CardContent>
-      </Card>
-
-      {/* 6-STEP WIZARD PROGRESS BAR */}
-      <div className="p-4 bg-stone-900/90 border border-stone-800 rounded-3xl shadow-xl">
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
-          {WIZARD_STEPS.map((s) => {
-            const isActive = activeStep === s.num;
-            const isDone = activeStep > s.num;
-            return (
-              <button
-                key={s.num}
-                onClick={() => setActiveStep(s.num)}
-                className={`p-2.5 rounded-2xl border text-xs font-black transition-all flex flex-col items-center gap-1 ${
-                  isActive
-                    ? "bg-amber-400 text-stone-950 border-amber-500 shadow-lg scale-105"
-                    : isDone
-                    ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/30"
-                    : "bg-stone-950 text-stone-500 border-stone-800"
-                }`}
-              >
-                <span className="text-[10px] font-black uppercase">Langkah {s.num}</span>
-                <span className="truncate max-w-full">{s.label}</span>
-              </button>
-            );
-          })}
-        </div>
+      {/* STUDIO MODE SWITCHER */}
+      <div className="flex bg-stone-900 border border-stone-800 rounded-xl p-1 max-w-md mx-auto my-4">
+        <button
+          onClick={() => setStudioMode("SINGLE")}
+          className={`flex-1 py-2 text-xs font-black rounded-lg transition-all flex items-center justify-center gap-2 ${studioMode === "SINGLE" ? "bg-amber-500 text-stone-950 shadow-md" : "text-stone-400 hover:text-white"}`}
+        >
+          <BookOpen className="w-3.5 h-3.5" /> Single Lesson
+        </button>
+        <button
+          onClick={() => setStudioMode("BATCH")}
+          className={`flex-1 py-2 text-xs font-black rounded-lg transition-all flex items-center justify-center gap-2 ${studioMode === "BATCH" ? "bg-indigo-600 text-white shadow-md" : "text-stone-400 hover:text-white"}`}
+        >
+          <Layers className="w-3.5 h-3.5" /> Content Factory
+        </button>
       </div>
 
-      <>
+      {studioMode === "SINGLE" ? (
+        <>
+          {/* Content Hierarchy Selection Header */}
+          <Card className="bg-stone-900/90 border-stone-800 shadow-xl">
+            <CardContent className="p-4">
+              <ContentHierarchy onSelect={handleHierarchySelect} />
+            </CardContent>
+          </Card>
+
+          {/* 6-STEP WIZARD PROGRESS BAR */}
+          <div className="p-4 bg-stone-900/90 border border-stone-800 rounded-3xl shadow-xl">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
+              {WIZARD_STEPS.map((s) => {
+                const isActive = activeStep === s.num;
+                const isDone = activeStep > s.num;
+                return (
+                  <button
+                    key={s.num}
+                    onClick={() => setActiveStep(s.num)}
+                    className={`p-2.5 rounded-2xl border text-xs font-black transition-all flex flex-col items-center gap-1 ${
+                      isActive
+                        ? "bg-amber-400 text-stone-950 border-amber-500 shadow-lg scale-105"
+                        : isDone
+                        ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/30"
+                        : "bg-stone-950 text-stone-500 border-stone-800"
+                    }`}
+                  >
+                    <span className="text-[10px] font-black uppercase">Langkah {s.num}</span>
+                    <span className="truncate max-w-full">{s.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* STEP 1: SELECT CURRICULUM */}
           {activeStep === 1 && (
             <Card className="bg-stone-900/90 border-stone-800 shadow-xl space-y-4">
@@ -1263,6 +1310,121 @@ export default function AdminContentStudio() {
             </Card>
           )}
         </>
+      ) : (
+        <Card className="bg-stone-900/90 border-stone-800 shadow-xl space-y-4">
+          <CardHeader>
+            <CardTitle className="text-sm font-black text-indigo-300 uppercase tracking-wider flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-indigo-400" /> Kilang Kandungan KSSR (Batch Production & Simulation)
+              </span>
+              <span className="text-[10px] font-bold px-3 py-1 bg-indigo-950 text-indigo-300 border border-indigo-500/30 rounded-full">
+                {batchReport?.simulation_mode ? "MOD SIMULASI" : "MOD PRODUKSI"}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-stone-300">Subjek</label>
+                <select
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  className="w-full bg-stone-950 border border-stone-800 text-white text-xs rounded-xl p-3 font-bold"
+                >
+                  <option value="Matematik">Matematik</option>
+                  <option value="Sains">Sains</option>
+                  <option value="Bahasa Melayu">Bahasa Melayu</option>
+                  <option value="English">English</option>
+                  <option value="Sejarah">Sejarah</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-stone-300">Tahun</label>
+                <select
+                  value={yearLevel}
+                  onChange={(e) => setYearLevel(e.target.value)}
+                  className="w-full bg-stone-950 border border-stone-800 text-white text-xs rounded-xl p-3 font-bold"
+                >
+                  <option value="Tahun 1">Tahun 1</option>
+                  <option value="Tahun 2">Tahun 2</option>
+                  <option value="Tahun 3">Tahun 3</option>
+                  <option value="Tahun 4">Tahun 4</option>
+                  <option value="Tahun 5">Tahun 5</option>
+                  <option value="Tahun 6">Tahun 6</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="bg-stone-950 p-4 rounded-xl border border-stone-800">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-stone-300">Status Penjanaan Batch</span>
+                <span className="text-xs font-black text-indigo-400">
+                  {batchProgress.current} / {batchProgress.total} Selesai
+                </span>
+              </div>
+              <div className="w-full bg-stone-900 rounded-full h-2 overflow-hidden border border-stone-800">
+                <div
+                  className="bg-indigo-500 h-2 transition-all duration-300"
+                  style={{ width: `${batchProgress.total > 0 ? (batchProgress.current / batchProgress.total) * 100 : 0}%` }}
+                ></div>
+              </div>
+              {batchProgress.currentItem && (
+                <p className="text-[10px] text-stone-400 mt-2 font-medium truncate">
+                  Memproses: {batchProgress.currentItem.sp_code} - {batchProgress.currentItem.title}
+                </p>
+              )}
+            </div>
+
+            {/* PRODUCTION ANALYTICS DASHBOARD (PHASE 7.4) */}
+            {batchReport && (
+              <div className="space-y-3">
+                <div className="p-4 bg-stone-950 rounded-xl border border-stone-800 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] text-stone-400 font-bold uppercase">Modul Dijana</p>
+                    <p className="text-lg font-black text-white">{batchReport.total_generated}</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] text-stone-400 font-bold uppercase">Lulus Kualiti (≥80%)</p>
+                    <p className="text-lg font-black text-emerald-400">{batchReport.passed_quality}</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] text-stone-400 font-bold uppercase">Keautentikan (≥85%)</p>
+                    <p className="text-lg font-black text-emerald-400">{batchReport.passed_authenticity}</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] text-stone-400 font-bold uppercase">Gagal / Semakan</p>
+                    <p className="text-lg font-black text-rose-400">{batchReport.failed || batchReport.failed_validation || 0}</p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-indigo-950/40 border border-indigo-500/30 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <span className="text-[10px] text-indigo-300 block font-bold uppercase">💰 Kos AI (Est. USD)</span>
+                    <span className="text-base font-black text-white">${batchReport.analytics?.estimated_cost_usd || "0.000"} USD</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-indigo-300 block font-bold uppercase">⚡ Unjur Jumlah Token</span>
+                    <span className="text-base font-black text-white">{(batchReport.analytics?.total_tokens || 0).toLocaleString()} Tokens</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-indigo-300 block font-bold uppercase">✨ Skor Keunikan Story</span>
+                    <span className="text-base font-black text-emerald-400">{batchReport.duplicate_audit?.uniqueness_score || 100}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={handleGenerateBatch}
+              disabled={batchRunning}
+              className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 disabled:bg-stone-800 text-white disabled:text-stone-500 font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all"
+            >
+              {batchRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+              {batchRunning ? "Kilang AI Sedang Beroperasi..." : `Jana Keseluruhan Topik ${yearLevel}`}
+            </button>
+          </CardContent>
+        </Card>
       )}
 
       {/* INDIVIDUAL BLOCK PREVIEW MODAL */}
