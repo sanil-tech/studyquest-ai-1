@@ -2,6 +2,49 @@
 // Phase 4: Modernized 6-Step Malaysian Curriculum (KSSR Semakan / KSSM & DSKP) Lesson Authoring Studio
 // Step 1: Select Curriculum ➔ Step 2: Choose Topic & Standard ➔ Step 3: Generate AI Package ➔ Step 4: Review Blocks ➔ Step 5: AI Quality Check ➔ Step 6: Publish
 
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
+import kssrTaxonomy from "@/data/kssrTaxonomy.json";
+import { getKSSRModeByGrade } from "@/services/generateKSSRContent";
+import { validateCurriculumCoverage } from "@/services/curriculumValidator";
+import { validateLessonQuality, saveLessonReview } from "@/services/contentQualityService";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ContentHierarchy from "@/components/admin/ContentHierarchy";
+import CompletenessDashboard from "@/components/admin/CompletenessDashboard";
+import AIGenerationPanel from "@/components/admin/AIGenerationPanel";
+import LessonVideoField from "@/components/admin/LessonVideoField";
+import ManualContentPanel from "@/components/admin/ManualContentPanel";
+import ContentQualityPanel from "@/components/admin/ContentQualityPanel";
+import BlockRenderer from "@/components/lesson/BlockRenderer";
+import { useToast } from "@/components/ui/use-toast";
+
+import {
+  BookOpen,
+  Loader2,
+  Send,
+  ArrowLeft,
+  Sparkles,
+  Layers,
+  Award,
+  ChevronRight,
+  ChevronLeft,
+  Eye,
+  CheckCircle2,
+  AlertCircle,
+  ShieldAlert,
+  Zap,
+  RefreshCw,
+  Sliders,
+  Check,
+  Video,
+  FileEdit,
+  RotateCcw,
+  ThumbsUp,
+  ThumbsDown
+} from "lucide-react";
+
 const DSKP_MAPPING = {
   "Matematik": {
     "Tahun 1": {
@@ -60,44 +103,6 @@ const DSKP_MAPPING = {
     }
   }
 };
-
-import kssrTaxonomy from "@/data/kssrTaxonomy.json";
-import { getKSSRModeByGrade } from "@/services/generateKSSRContent";
-import { validateCurriculumCoverage } from "@/services/curriculumValidator";
-
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import ContentHierarchy from "@/components/admin/ContentHierarchy";
-import CompletenessDashboard from "@/components/admin/CompletenessDashboard";
-import AIGenerationPanel from "@/components/admin/AIGenerationPanel";
-import LessonVideoField from "@/components/admin/LessonVideoField";
-import ManualContentPanel from "@/components/admin/ManualContentPanel";
-import ContentQualityPanel from "@/components/admin/ContentQualityPanel";
-import { validateLessonQuality, saveLessonReview } from "@/services/contentQualityService";
-import {
-  BookOpen,
-  Loader2,
-  Send,
-  ArrowLeft,
-  Sparkles,
-  CheckCircle2,
-  ShieldAlert,
-  Award,
-  Zap,
-  RefreshCw,
-  ChevronRight,
-  Sliders,
-  Check,
-  RotateCcw,
-  ThumbsUp,
-  ThumbsDown,
-  Eye
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
-import BlockRenderer from "@/components/lesson/BlockRenderer";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
