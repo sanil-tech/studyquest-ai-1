@@ -987,10 +987,26 @@ export default function BlockRenderer({
     // DEFAULT FALLBACK
     default:
       return (
-        <div className="p-6 bg-stone-900 border border-stone-800 rounded-2xl text-center space-y-3 text-left">
-          <HelpCircle className="w-8 h-8 text-amber-400 mx-auto" />
-          <p className="text-xs font-bold text-stone-200 text-center">Modul Pembelajaran ({block.block_type || "Modul"})</p>
-          <Button onClick={onComplete} className="w-full h-11 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs rounded-xl border-b-4 border-emerald-700 flex items-center justify-center gap-1.5">
+        <div className="p-6 bg-stone-900 border border-stone-800 rounded-2xl space-y-3 text-left overflow-hidden">
+          <div className="flex items-center gap-2 mb-2">
+            <HelpCircle className="w-5 h-5 text-amber-400" />
+            <h3 className="text-sm font-black text-amber-300">Modul Belum Disokong ({blockType})</h3>
+          </div>
+          
+          {payload.markdown ? (
+            <div
+              className="text-stone-300 font-medium text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words space-y-2 mb-4"
+              dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(payload.markdown || "") }}
+            />
+          ) : (
+            <div className="bg-stone-950 p-3 rounded-lg border border-stone-800 overflow-x-auto">
+              <pre className="text-[10px] text-stone-400">
+                {JSON.stringify(payload, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          <Button onClick={onComplete} className="w-full h-11 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs rounded-xl border-b-4 border-emerald-700 flex items-center justify-center gap-1.5 mt-4">
             {isCompleted ? "Selesai ✓" : <>Teruskan Misi ➡️</>}
           </Button>
         </div>

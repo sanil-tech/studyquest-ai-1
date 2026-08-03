@@ -27,6 +27,7 @@ const FIVE_PHASE_LESSON_SCHEMA = {
         type: "object",
         properties: {
           id: { type: "string" },
+          order_index: { type: "number" },
           phase: { type: "string", enum: ["ENGAGEMENT", "CONCEPT", "PRACTICE", "APPLICATION", "PBD_ASSESSMENT"] },
           type: { type: "string" },
           title: { type: "string" },
@@ -79,6 +80,38 @@ const FIVE_PHASE_LESSON_SCHEMA = {
                 type: "array",
                 items: { type: "string" }
               },
+              image_prompt: { type: "string" },
+              audio_script: { type: "string" },
+              annotated_sections: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    label: { type: "string" },
+                    explanation: { type: "string" }
+                  },
+                  required: ["label", "explanation"]
+                }
+              },
+              visual_comparison: {
+                type: "array",
+                items: { type: "string" }
+              },
+              pairs: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    left: { type: "string" },
+                    right: { type: "string" }
+                  },
+                  required: ["left", "right"]
+                }
+              },
+              hints: {
+                type: "array",
+                items: { type: "string" }
+              },
               video_url: { type: "string" },
               video_title: { type: "string" },
               description: { type: "string" },
@@ -86,10 +119,11 @@ const FIVE_PHASE_LESSON_SCHEMA = {
             }
           }
         },
-        required: ["id", "phase", "type", "title", "content"]
+        },
+        required: ["id", "order_index", "phase", "type", "title", "content"]
       },
-      minItems: 5,
-      maxItems: 5
+      minItems: 15,
+      maxItems: 15
     },
     assessment: {
       type: "array",
@@ -171,8 +205,8 @@ export default async function(req: Request): Promise<Response> {
     const language = body.language || "Bahasa Melayu";
     const taxonomy = body.taxonomy || "Bloom";
 
-    const systemPrompt = `Anda ialah Pakar Penggubal Kurikulum Kementerian Pendidikan Malaysia (KPM) berikutan standard ${curriculumType} (DSKP).
-Tugas anda ialah membina SATU PAKEJ PELAJARAN LENGKAP 5-FASA DSKP bagi:
+    const systemPrompt = `You are StudyQuest AI, an expert Malaysian KSSR/KSSM Curriculum Instructional Designer.
+Your task is to generate a comprehensive, highly structured, 15-block modular lesson JSON payload for primary/secondary students based on the following:
 - Subjek: ${subject}
 - Tingkat/Tahun: ${yearLevel}
 - Topik: ${topic}
@@ -181,21 +215,69 @@ Tugas anda ialah membina SATU PAKEJ PELAJARAN LENGKAP 5-FASA DSKP bagi:
 - Bahasa: ${language}
 - Taksonomi: ${taxonomy}
 
-SYARAT WAJIB OUTPUT JSON ANDA:
-1. Wajib menjana struktur JSON yang mengandungi 'lesson_title' (tajuk pembelajaran), 'sp_code' yang sepadan, dan TEPAT 5 blok pembelajaran berikutan 5 fasa pedagogi.
-2. PENTING UNTUK KSSR TAHUN 1-3: Anda MESTI menyertakan ilustrasi visual dalam bentuk emoji (cth: 🍎🍎 vs 🍏) atau deskripsi imej ('image_prompt') di dalam 'content' bagi blok naratif, kuiz, dan kad imbasan (Gunakan 'visual_a' dan 'visual_b' untuk perbandingan kuantiti).
-3. PETA MINDA: Untuk blok MIND_MAP, subnode MESTI mengandungi huraian konsep DSKP yang bermakna (Contoh: "Sama Banyak -> Kuantiti objek adalah sama"). DILARANG SAMA SEKALI menggunakan teks placeholder ('c1', 'c2', 'c3').
+STRICT GENERATION RULES:
+1. You MUST generate EXACTLY 15 blocks (order_index: 1 to 15).
+2. The lesson MUST be grouped into 5 DSKP Phases (exactly 3 micro-blocks per phase).
+3. The content MUST be written in professional, student-friendly Bahasa Melayu.
+4. DO NOT use placeholder text (e.g., "Node 1", "Lorem Ipsum", "c1/c2"). All content must be rich and complete.
 
-Contoh struktur untuk blocks:
-[
-  { "id": "b1", "phase": "ENGAGEMENT", "type": "TEXT_MARKDOWN", "title": "Misteri Suku Penyu", "content": { "markdown": "Teks cerita berserta formatting dan emoji visual 🐢..." } },
-  { "id": "b2", "phase": "CONCEPT", "type": "MIND_MAP", "title": "Peta Konsep", "content": { "nodes": [{ "id": "1", "label": "Membanding Kuantiti", "children": ["Sama Banyak: Bilangan objek adalah sama"] }] } },
-  { "id": "b3", "phase": "PRACTICE", "type": "FLASHCARD_DECK", "title": "Kad Imbasan", "content": { "cards": [{ "front": "Soalan", "back": "Jawapan", "visual_front": "🔵🔵🔵" }] } },
-  { "id": "b4", "phase": "APPLICATION", "type": "VIDEO_LESSON", "title": "Contoh Terbimbing Video", "content": { "video_url": "https://www.youtube.com/watch?v=EXAMPLE_ID", "video_title": "Panduan", "description": "Tonton video...", "key_points": ["Kenali kumpulan A dan B"] } },
-  { "id": "b5", "phase": "PBD_ASSESSMENT", "type": "INTERACTIVE_GAME", "title": "Ujian Akhir PBD", "content": { "questions": [{ "question": "Kumpulan manakah lebih banyak?", "options": ["A", "B"], "correct_answer": "A", "explanation": "A lebih banyak kerana 5 > 3", "visual_a": "🍎🍎🍎🍎🍎", "visual_b": "🍏🍏🍏" }] } }
-]
+================================================================================
+PHASE & BLOCK ARCHITECTURE SPECIFICATION
+================================================================================
 
-Sertakan juga objektif 'gamification' (xp_reward, coin_reward) dan 'assessment' array (30% Remember, 40% Understand/Apply, 30% HOTS/KBAT).`;
+--- PHASE 1: ENGAGEMENT (Blok 1, 2, 3) ---
+Goal: Hook students, spark curiosity, and link to real-world contexts.
+- Blok 1 (order_index: 1, type: "TEXT_MARKDOWN", phase: "ENGAGEMENT"):
+  Naratif pengenalan bermula dengan watak/cerita kehidupan harian murid.
+- Blok 2 (order_index: 2, type: "VISUAL_CARD", phase: "ENGAGEMENT"):
+  Situasi dunia sebenar dengan 'image_prompt' terperinci untuk penjanaan ilustrasi.
+- Blok 3 (order_index: 3, type: "AUDIO_HOOK", phase: "ENGAGEMENT"):
+  Soalan pencetus minda beserta 'audio_script'.
+
+--- PHASE 2: CONCEPT - MULTI-MEDIUM REQUIREMENT (Blok 4, 5, 6) ---
+Goal: Explain mathematical/scientific concepts using Visual-Concrete-Abstract (KPA) media.
+- Blok 4 (order_index: 4, type: "MIND_MAP", phase: "CONCEPT"):
+  Peta Pemikiran i-THINK (Peta Titi / Peta Pokok / Peta Buih) yang menstrukturkan konsep utama.
+  Must include nodes with clear titles, labels, and sub-items.
+- Blok 5 (order_index: 5, type: "INFOGRAPHIC", phase: "CONCEPT"):
+  Infografik visual berasaskan rajah. Must include:
+  - 'image_prompt': Detailed descriptive prompt for generating educational graphic.
+  - 'annotated_sections': Array of key visual callouts with labels and explanations.
+  - 'visual_comparison': Comparison table/items.
+- Blok 6 (order_index: 6, type: "CONCEPT_CARD", phase: "CONCEPT"):
+  Glosari istilah & contoh konkrit menggunakan emoji/ikon untuk perwakilan gambar-ke-abstrak.
+
+--- PHASE 3: PRACTICE (Blok 7, 8, 9) ---
+Goal: Procedural fluency and active recall.
+- Blok 7 (order_index: 7, type: "FLASHCARD_DECK", phase: "PRACTICE"):
+  Latihan ingatan pantas Tahap 1. Minimum 3 cards.
+- Blok 8 (order_index: 8, type: "FLASHCARD_DECK", phase: "PRACTICE"):
+  Latihan ingatan Tahap 2 dengan petunjuk gambar (visual_front / visual_back). Minimum 3 cards.
+- Blok 9 (order_index: 9, type: "MATCHING_GAME", phase: "PRACTICE"):
+  Aktiviti padanan (Pasangan Kiri & Kanan dalam 'pairs'). Minimum 4 pairs.
+
+--- PHASE 4: APPLICATION (Blok 10, 11, 12) ---
+Goal: Apply knowledge to problem-solving scenarios.
+- Blok 10 (order_index: 10, type: "VIDEO_LESSON", phase: "APPLICATION"):
+  Modul video interaktif. Must include 'video_url', 'video_title', 'key_points', and 'description'.
+- Blok 11 (order_index: 11, type: "WORKED_EXAMPLE", phase: "APPLICATION"):
+  Contoh penyelesaian masalah berserta 'steps'.
+- Blok 12 (order_index: 12, type: "GUIDED_PRACTICE", phase: "APPLICATION"):
+  Soalan aplikasi terbimbing dengan 'hints'.
+
+--- PHASE 5: PBD_ASSESSMENT (Blok 13, 14, 15) ---
+Goal: Measure DSKP Mastery Levels (TP1 - TP6) with gamification.
+- Blok 13 (order_index: 13, type: "INTERACTIVE_GAME", phase: "PBD_ASSESSMENT"):
+  Pentaksiran TP1 - TP2 (Soalan Asas). Minimum 2 questions.
+- Blok 14 (order_index: 14, type: "INTERACTIVE_GAME", phase: "PBD_ASSESSMENT"):
+  Pentaksiran TP3 - TP4 (Aplikasi Rutin). Minimum 2 questions.
+- Blok 15 (order_index: 15, type: "INTERACTIVE_GAME", phase: "PBD_ASSESSMENT"):
+  Pentaksiran TP5 - TP6 (Cabaran KBAT). Minimum 2 questions.
+
+================================================================================
+JSON OUTPUT STRUCTURE
+================================================================================
+Sertakan juga 'assessment' array dan 'gamification' mengikut skema.`;
 
     const userPrompt = `Jana pakej pelajaran modul DSKP 5-Fasa bagi ${skCode} - ${spCode}. Pastikan ia mematuhi skema JSON yang ditetapkan.`;
 
@@ -219,15 +301,30 @@ Sertakan juga objektif 'gamification' (xp_reward, coin_reward) dan 'assessment' 
       );
     }
     
-    // Auto-fix empty contents with basic templates
-    generated.blocks = generated.blocks.map((block: any) => {
+    const generatedBlocks = generated.blocks || [];
+    
+    // Safety check: Ensure we have exactly 15 blocks according to the strict specification
+    if (generatedBlocks.length !== 15) {
+      console.warn(`WARNING: Generasi AI mengembalikan ${generatedBlocks.length} blok, sepatutnya 15.`);
+    }
+
+    const validBlocks = generatedBlocks.map((block: any, idx: number) => {
+      if (!block.id) block.id = `block_${Date.now()}_${idx}`;
+      if (!block.order_index) block.order_index = idx + 1;
+      
+      // Fix empty payloads dynamically based on block type
       if (!block.content || Object.keys(block.content).length === 0) {
-        if (block.type === "TEXT_MARKDOWN") block.content = { markdown: "Kandungan tidak dapat dijanakan dengan baik. Sila klik 'Jana Semula Blok' untuk mencuba lagi." };
+        if (block.type === "TEXT_MARKDOWN" || block.type === "CONCEPT_CARD") block.content = { markdown: "Kandungan tidak dapat dijanakan dengan baik. Sila klik 'Jana Semula Blok' untuk mencuba lagi." };
         else if (block.type === "MIND_MAP") block.content = { nodes: [{ id: "1", label: "Konsep DSKP (Sila Jana Semula)", children: [] }] };
         else if (block.type === "FLASHCARD_DECK") block.content = { cards: [{ front: "Kandungan Rosak", back: "Sila jana semula blok ini", hint: "" }] };
         else if (block.type === "INTERACTIVE_GAME") block.content = { questions: [{ question: "Sila jana semula blok ini", options: ["A", "B"], correct_answer: "A", explanation: "" }] };
         else if (block.type === "WORKED_EXAMPLE") block.content = { steps: ["Sila jana semula"] };
         else if (block.type === "VIDEO_LESSON") block.content = { video_url: "", video_title: "Sila jana semula", description: "", key_points: [] };
+        else if (block.type === "VISUAL_CARD") block.content = { image_prompt: "Sila jana semula blok ini", markdown: "" };
+        else if (block.type === "AUDIO_HOOK") block.content = { audio_script: "Sila jana semula blok ini" };
+        else if (block.type === "INFOGRAPHIC") block.content = { image_prompt: "", annotated_sections: [], visual_comparison: [] };
+        else if (block.type === "MATCHING_GAME") block.content = { pairs: [{ left: "Soalan", right: "Jawapan" }] };
+        else if (block.type === "GUIDED_PRACTICE") block.content = { hints: ["Sila jana semula"] };
         else block.content = { markdown: "Sila jana semula blok ini." };
       }
       return block;
@@ -243,9 +340,9 @@ Sertakan juga objektif 'gamification' (xp_reward, coin_reward) dan 'assessment' 
     }).catch(() => {});
 
     // Save Modular LessonBlocks Dynamically
-    if (generated.blocks && Array.isArray(generated.blocks)) {
-      for (let i = 0; i < generated.blocks.length; i++) {
-        const block = generated.blocks[i];
+    if (validBlocks && Array.isArray(validBlocks)) {
+      for (let i = 0; i < validBlocks.length; i++) {
+        const block = validBlocks[i];
         
         let cognitiveLevel = "understand";
         if (block.phase === "ENGAGEMENT") cognitiveLevel = "remember";

@@ -713,76 +713,104 @@ export default function AdminContentStudio() {
                     <Loader2 className="w-6 h-6 animate-spin text-amber-400 mx-auto" />
                   </div>
                 ) : blocks.length > 0 ? (
-                  <div className="space-y-3">
-                    {blocks.map((block, idx) => {
-                      const isRegenerating = regeneratingBlockId === block.id;
-                      const isApproved = blockApprovalStatus[block.id] !== false;
+                  <div className="space-y-4">
+                    {[
+                      { id: "ENGAGEMENT", label: "Fasa 1: ENGAGEMENT", theme: "from-indigo-950/50 to-indigo-900/20 border-indigo-500/30 text-indigo-300", badge: "bg-indigo-500/20 text-indigo-200 border-indigo-500/30", icon: "🚀", desc: "Mencetuskan minat dan inkuiri murid." },
+                      { id: "CONCEPT", label: "Fasa 2: CONCEPT", theme: "from-cyan-950/50 to-cyan-900/20 border-cyan-500/30 text-cyan-300", badge: "bg-cyan-500/20 text-cyan-200 border-cyan-500/30", icon: "🧠", desc: "Menerangkan konsep DSKP secara berstruktur." },
+                      { id: "PRACTICE", label: "Fasa 3: PRACTICE", theme: "from-amber-950/50 to-amber-900/20 border-amber-500/30 text-amber-300", badge: "bg-amber-500/20 text-amber-200 border-amber-500/30", icon: "✏️", desc: "Latihan dan kad imbasan asas." },
+                      { id: "APPLICATION", label: "Fasa 4: APPLICATION", theme: "from-emerald-950/50 to-emerald-900/20 border-emerald-500/30 text-emerald-300", badge: "bg-emerald-500/20 text-emerald-200 border-emerald-500/30", icon: "🛠️", desc: "Pengaplikasian konsep dalam konteks." },
+                      { id: "PBD_ASSESSMENT", label: "Fasa 5: PBD_ASSESSMENT", theme: "from-rose-950/50 to-rose-900/20 border-rose-500/30 text-rose-300", badge: "bg-rose-500/20 text-rose-200 border-rose-500/30", icon: "🏆", desc: "Pentaksiran dan pengukuhan akhir." }
+                    ].map(phase => {
+                      const phaseBlocks = blocks.filter(b => b.pedagogical_phase === phase.id || (phase.id === "CONCEPT" && !b.pedagogical_phase));
+                      if (phaseBlocks.length === 0) return null;
 
                       return (
-                        <div
-                          key={block.id || idx}
-                          className="p-4 bg-stone-950/90 rounded-2xl border border-stone-800 space-y-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-                        >
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="px-2 py-0.5 bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[10px] font-black rounded-lg uppercase">
-                                Blok #{block.order_number || idx + 1}: {block.block_type}
-                              </span>
-                              <span className="text-[10px] font-bold text-stone-400 uppercase">
-                                Fasa: {block.pedagogical_phase || "CONCEPT"}
-                              </span>
+                        <details key={phase.id} open className={`rounded-2xl border bg-gradient-to-br ${phase.theme} shadow-lg overflow-hidden`}>
+                          <summary className="p-4 cursor-pointer outline-none flex items-center justify-between hover:bg-white/5 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl">{phase.icon}</span>
+                              <div className="text-left">
+                                <h3 className="text-sm font-black uppercase tracking-wider">{phase.label}</h3>
+                                <p className="text-[10px] font-bold opacity-70">{phase.desc}</p>
+                              </div>
                             </div>
-                            <h4 className="text-xs sm:text-sm font-black text-white">{block.title || `Blok Kandungan ${block.block_type}`}</h4>
-                            {block.block_type === "VIDEO_LESSON" && (
-                              <InlineVideoUrlEditor 
-                                blockId={block.id} 
-                                initialPayload={block.payload} 
-                                onSaved={fetchCompletenessAndBlocks} 
-                              />
-                            )}
+                            <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black border ${phase.badge}`}>
+                              {phaseBlocks.length} Blok Kandungan
+                            </span>
+                          </summary>
+                          
+                          <div className="p-4 pt-0 space-y-3 bg-stone-950/50">
+                            {phaseBlocks.map((block) => {
+                              const idx = blocks.findIndex(b => b.id === block.id);
+                              const isRegenerating = regeneratingBlockId === block.id;
+                              const isApproved = blockApprovalStatus[block.id] !== false;
+
+                              return (
+                                <div
+                                  key={block.id || idx}
+                                  className="p-4 bg-stone-900/80 rounded-2xl border border-stone-800 space-y-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                                >
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="px-2 py-0.5 bg-stone-800 text-stone-300 border border-stone-700 text-[10px] font-black rounded-lg uppercase">
+                                        Blok #{block.order_number || idx + 1}: {block.block_type}
+                                      </span>
+                                    </div>
+                                    <h4 className="text-xs sm:text-sm font-black text-white">{block.title || `Blok Kandungan ${block.block_type}`}</h4>
+                                    {block.block_type === "VIDEO_LESSON" && (
+                                      <InlineVideoUrlEditor 
+                                        blockId={block.id} 
+                                        initialPayload={block.payload} 
+                                        onSaved={fetchCompletenessAndBlocks} 
+                                      />
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <button
+                                      onClick={() => setPreviewBlock(block)}
+                                      className="px-3 h-8 bg-indigo-900/50 hover:bg-indigo-800 text-indigo-300 border border-indigo-500/30 text-[11px] font-bold rounded-xl flex items-center gap-1 transition-all"
+                                    >
+                                      <Eye className="w-3 h-3" /> Pratonton
+                                    </button>
+
+                                    <button
+                                      onClick={() => handleRegenerateBlock(block.id)}
+                                      disabled={isRegenerating}
+                                      className="px-3 h-8 bg-stone-800 hover:bg-stone-700 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold rounded-xl flex items-center gap-1"
+                                    >
+                                      {isRegenerating ? (
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                      ) : (
+                                        <>
+                                          <RotateCcw className="w-3 h-3" /> Semula
+                                        </>
+                                      )}
+                                    </button>
+
+                                    <button
+                                      onClick={() => handleToggleBlockApproval(block.id, true)}
+                                      className={`p-2 rounded-xl border text-xs font-bold transition-all ${
+                                        isApproved ? "bg-emerald-950 text-emerald-300 border-emerald-500/40" : "bg-stone-900 text-stone-500 border-stone-800"
+                                      }`}
+                                    >
+                                      <ThumbsUp className="w-3.5 h-3.5" />
+                                    </button>
+
+                                    <button
+                                      onClick={() => handleToggleBlockApproval(block.id, false)}
+                                      className={`p-2 rounded-xl border text-xs font-bold transition-all ${
+                                        !isApproved ? "bg-rose-950 text-rose-300 border-rose-500/40" : "bg-stone-900 text-stone-500 border-stone-800"
+                                      }`}
+                                    >
+                                      <ThumbsDown className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-
-                          <div className="flex items-center gap-2 w-full sm:w-auto">
-                            <button
-                              onClick={() => setPreviewBlock(block)}
-                              className="px-3 h-8 bg-indigo-900/50 hover:bg-indigo-800 text-indigo-300 border border-indigo-500/30 text-[11px] font-bold rounded-xl flex items-center gap-1 transition-all"
-                            >
-                              <Eye className="w-3 h-3" /> Pratonton
-                            </button>
-
-                            <button
-                              onClick={() => handleRegenerateBlock(block.id)}
-                              disabled={isRegenerating}
-                              className="px-3 h-8 bg-stone-800 hover:bg-stone-700 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold rounded-xl flex items-center gap-1"
-                            >
-                              {isRegenerating ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <>
-                                  <RotateCcw className="w-3 h-3" /> Semula
-                                </>
-                              )}
-                            </button>
-
-                            <button
-                              onClick={() => handleToggleBlockApproval(block.id, true)}
-                              className={`p-2 rounded-xl border text-xs font-bold transition-all ${
-                                isApproved ? "bg-emerald-950 text-emerald-300 border-emerald-500/40" : "bg-stone-900 text-stone-500 border-stone-800"
-                              }`}
-                            >
-                              <ThumbsUp className="w-3.5 h-3.5" />
-                            </button>
-
-                            <button
-                              onClick={() => handleToggleBlockApproval(block.id, false)}
-                              className={`p-2 rounded-xl border text-xs font-bold transition-all ${
-                                !isApproved ? "bg-rose-950 text-rose-300 border-rose-500/40" : "bg-stone-900 text-stone-500 border-stone-800"
-                              }`}
-                            >
-                              <ThumbsDown className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
+                        </details>
                       );
                     })}
                   </div>
