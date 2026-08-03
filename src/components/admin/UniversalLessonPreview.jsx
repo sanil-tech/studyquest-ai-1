@@ -22,12 +22,19 @@ import { getWidgetComponent, GenericWidgetFallback } from "@/lib/widgetRegistry"
 import BlockRenderer from "@/components/lesson/BlockRenderer";
 import Flashcards from "@/components/lesson/Flashcards";
 import confetti from "canvas-confetti";
+import { sanitizeStudentText } from "@/lib/sanitizeStudentText";
 
 /**
  * StoryScene Component (Step 1: Briefing)
  */
-function StoryScene({ data, mascotName = "Suku Penyu 🐢" }) {
+function StoryScene({ data, mascotName = "Suku Penyu 🐢", devView = false }) {
   const payload = data?.payload || {};
+  const rawHook = payload.story_hook || data.description || "Mari mulakan pengembaraan pembelajaran hari ini!";
+  const cleanHook = devView ? rawHook : sanitizeStudentText(rawHook);
+
+  const rawDialogue = payload.mascot_dialogue || "Hai Pengembara! Jom kita kembara bersama-sama!";
+  const cleanDialogue = devView ? rawDialogue : sanitizeStudentText(rawDialogue);
+
   return (
     <div className="space-y-4 text-left font-sans">
       <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2">
@@ -35,10 +42,10 @@ function StoryScene({ data, mascotName = "Suku Penyu 🐢" }) {
           📣 Pengenalan Misi Kembara
         </span>
         <h3 className="text-base font-black text-amber-200">
-          {data.title || "Kisah Misi KSSR"}
+          {devView ? (data.title || "Kisah Misi KSSR") : sanitizeStudentText(data.title || "Kisah Misi Kembara")}
         </h3>
         <p className="text-xs text-stone-300 leading-relaxed font-medium">
-          {payload.story_hook || data.description || "Mari mulakan pengembaraan pembelajaran hari ini!"}
+          {cleanHook}
         </p>
       </div>
 
@@ -49,7 +56,7 @@ function StoryScene({ data, mascotName = "Suku Penyu 🐢" }) {
         <div className="space-y-1">
           <h4 className="text-xs font-black text-amber-400">{mascotName}</h4>
           <p className="text-xs text-stone-200 font-bold leading-relaxed">
-            "{payload.mascot_dialogue || "Hai Pengembara! Sedia untuk meneroka bersama?"}"
+            "{cleanDialogue}"
           </p>
         </div>
       </div>
@@ -60,41 +67,55 @@ function StoryScene({ data, mascotName = "Suku Penyu 🐢" }) {
 /**
  * TeachingScene Component (Step 2 & 3: Engagement & Lesson)
  */
-function TeachingScene({ data }) {
+function TeachingScene({ data, devView = false }) {
   const payload = data?.payload || {};
   const cpaBlocks = data?.cpa_blocks || payload?.cpa_blocks;
 
   return (
     <div className="space-y-4 text-left font-sans">
-      {/* 4 CPA Blocks */}
+      {/* Visual Learning Blocks */}
       {Array.isArray(cpaBlocks) && cpaBlocks.length > 0 && (
         <div className="space-y-3">
           <span className="text-[10px] font-black text-cyan-400 uppercase tracking-wider block">
-            🖼️ Pembelajaran CPA (Konkrit-Bergambar-Abstrak)
+            {devView ? "🖼️ Pembelajaran CPA (Konkrit-Bergambar-Abstrak)" : "🖼️ Panduan Pembelajaran Visual"}
           </span>
           <div className="grid grid-cols-1 gap-2.5">
             {cpaBlocks.map((cpa, idx) => (
               <div key={idx} className="p-3 bg-stone-900 border border-stone-800 rounded-xl space-y-1">
-                <span className="text-[9px] font-black px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 uppercase">
-                  {cpa.block_type}
-                </span>
-                <h5 className="text-xs font-bold text-white mt-1">{cpa.title}</h5>
-                {cpa.block_type === "VISUAL_STORY" && <p className="text-xs text-stone-300">{cpa.content?.text}</p>}
+                {devView && (
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 uppercase">
+                    {cpa.block_type}
+                  </span>
+                )}
+                <h5 className="text-xs font-bold text-white mt-1">
+                  {devView ? cpa.title : sanitizeStudentText(cpa.title)}
+                </h5>
+                {cpa.block_type === "VISUAL_STORY" && (
+                  <p className="text-xs text-stone-300">
+                    {devView ? cpa.content?.text : sanitizeStudentText(cpa.content?.text)}
+                  </p>
+                )}
                 {cpa.block_type === "COMPARISON_SPLIT" && (
                   <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-                    <div className="p-2 bg-stone-950 rounded border border-stone-800 text-stone-300">⬅️ {cpa.content?.left}</div>
-                    <div className="p-2 bg-stone-950 rounded border border-stone-800 text-stone-300">➡️ {cpa.content?.right}</div>
+                    <div className="p-2 bg-stone-950 rounded border border-stone-800 text-stone-300">
+                      ⬅️ {devView ? cpa.content?.left : sanitizeStudentText(cpa.content?.left)}
+                    </div>
+                    <div className="p-2 bg-stone-950 rounded border border-stone-800 text-stone-300">
+                      ➡️ {devView ? cpa.content?.right : sanitizeStudentText(cpa.content?.right)}
+                    </div>
                   </div>
                 )}
                 {cpa.block_type === "STEP_BY_STEP" && (
                   <ol className="list-decimal list-inside text-xs text-stone-300 space-y-1 pt-1 font-medium">
-                    {Array.isArray(cpa.content?.steps) ? cpa.content.steps.map((st, sI) => <li key={sI}>{st}</li>) : <li>{cpa.content?.text}</li>}
+                    {Array.isArray(cpa.content?.steps)
+                      ? cpa.content.steps.map((st, sI) => <li key={sI}>{devView ? st : sanitizeStudentText(st)}</li>)
+                      : <li>{devView ? cpa.content?.text : sanitizeStudentText(cpa.content?.text)}</li>}
                   </ol>
                 )}
                 {cpa.block_type === "MYTH_BUSTER" && (
                   <div className="text-xs space-y-1 pt-1 font-bold">
-                    <p className="text-rose-400">❌ Mitos: {cpa.content?.myth}</p>
-                    <p className="text-emerald-400">✅ Fakta: {cpa.content?.fact}</p>
+                    <p className="text-rose-400">❌ Mitos: {devView ? cpa.content?.myth : sanitizeStudentText(cpa.content?.myth)}</p>
+                    <p className="text-emerald-400">✅ Fakta: {devView ? cpa.content?.fact : sanitizeStudentText(cpa.content?.fact)}</p>
                   </div>
                 )}
               </div>
@@ -107,12 +128,14 @@ function TeachingScene({ data }) {
       {payload.concept_summary && (
         <div className="p-4 bg-stone-900 border border-stone-800 rounded-2xl space-y-2">
           <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider block">
-            📖 Rumusan Konsep DSKP
+            {devView ? "📖 Rumusan Konsep DSKP" : "📖 Rumusan Konsep Pembelajaran"}
           </span>
-          <p className="text-xs text-stone-200 font-bold leading-relaxed">{payload.concept_summary}</p>
+          <p className="text-xs text-stone-200 font-bold leading-relaxed">
+            {devView ? payload.concept_summary : sanitizeStudentText(payload.concept_summary)}
+          </p>
           {Array.isArray(payload.key_points) && (
             <ul className="list-disc list-inside text-xs text-stone-400 space-y-1 pt-1">
-              {payload.key_points.map((kp, kI) => <li key={kI}>{kp}</li>)}
+              {payload.key_points.map((kp, kI) => <li key={kI}>{devView ? kp : sanitizeStudentText(kp)}</li>)}
             </ul>
           )}
         </div>
@@ -124,7 +147,7 @@ function TeachingScene({ data }) {
 /**
  * ActivityScene Component (Step 4: Practice Interactive Widget)
  */
-function ActivityScene({ data }) {
+function ActivityScene({ data, devView = false }) {
   const payload = data?.payload || {};
   const widgetType = payload.widget_type || data.widget_type || "base_ten_blocks";
   const WidgetComponent = getWidgetComponent(widgetType);
@@ -133,7 +156,9 @@ function ActivityScene({ data }) {
     <div className="space-y-4 text-left font-sans">
       <div className="p-3 bg-emerald-950/40 border border-emerald-500/30 rounded-xl flex items-center justify-between text-xs">
         <span className="font-black text-emerald-300">🎮 Aktiviti Interaktif</span>
-        <span className="font-mono text-[10px] text-stone-400 uppercase">Widget: {widgetType}</span>
+        {devView && (
+          <span className="font-mono text-[10px] text-stone-400 uppercase">Widget: {widgetType}</span>
+        )}
       </div>
 
       <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 shadow-inner">
@@ -155,9 +180,9 @@ function ActivityScene({ data }) {
 }
 
 /**
- * QuizScene Component (Step 7: PBD Assessment)
+ * QuizScene Component (Step 7: Assessment)
  */
-function QuizScene({ data }) {
+function QuizScene({ data, devView = false }) {
   const questions = data?.questions || data?.payload?.questions || [
     {
       question: "Apakah nilai tempat bagi digit 4 dalam nombor 45?",
@@ -172,23 +197,25 @@ function QuizScene({ data }) {
   const [submitted, setSubmitted] = useState(false);
 
   const currentQ = questions[0] || {};
+  const cleanQText = devView ? currentQ.question : sanitizeStudentText(currentQ.question);
 
   return (
     <div className="space-y-4 text-left font-sans">
       <div className="p-4 bg-stone-900 border border-stone-800 rounded-2xl space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500/30">
-            Pentaksiran PBD ({currentQ.pbd_level || "TP3"})
+            {devView ? `Pentaksiran PBD (${currentQ.pbd_level || "TP3"})` : "Soalan Latihan"}
           </span>
           <span className="text-xs font-bold text-stone-400">Soalan 1 daripada {questions.length}</span>
         </div>
 
-        <h4 className="text-sm font-black text-white leading-relaxed">❓ {currentQ.question}</h4>
+        <h4 className="text-sm font-black text-white leading-relaxed">❓ {cleanQText}</h4>
 
         <div className="space-y-2 pt-1">
           {Array.isArray(currentQ.options) && currentQ.options.map((opt, oI) => {
             const isSelected = selectedIdx === oI;
             const isCorrect = oI === (currentQ.correct_index ?? 0);
+            const cleanOpt = devView ? opt : sanitizeStudentText(opt);
 
             let btnStyle = "bg-stone-950 border-stone-800 text-stone-200 hover:border-stone-700";
             if (submitted) {
@@ -206,7 +233,7 @@ function QuizScene({ data }) {
                 }}
                 className={`w-full p-3 rounded-xl border text-xs font-bold text-left transition-all flex items-center justify-between ${btnStyle}`}
               >
-                <span>{opt}</span>
+                <span>{cleanOpt}</span>
                 {submitted && isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
               </button>
             );
@@ -228,7 +255,7 @@ function QuizScene({ data }) {
         {submitted && (
           <div className="p-3 bg-stone-950 rounded-xl border border-stone-800 text-xs space-y-1">
             <span className="font-bold text-amber-400 block">💡 Penerangan Jawapan:</span>
-            <p className="text-stone-300">{currentQ.explanation}</p>
+            <p className="text-stone-300">{devView ? currentQ.explanation : sanitizeStudentText(currentQ.explanation)}</p>
           </div>
         )}
       </div>
@@ -239,7 +266,7 @@ function QuizScene({ data }) {
 /**
  * RewardScene Component (Step 9: Rewards)
  */
-function RewardScene({ data }) {
+function RewardScene({ data, devView = false }) {
   const payload = data?.payload || {};
 
   return (
@@ -252,10 +279,10 @@ function RewardScene({ data }) {
           TAHNIAH! MISI SELESAI
         </span>
         <h3 className="text-xl font-black text-amber-100">
-          {payload.badge || "Wira KSSR Pembelajaran"}
+          {devView ? (payload.badge || "Wira KSSR Pembelajaran") : sanitizeStudentText(payload.badge || "Wira Pembelajaran")}
         </h3>
         <p className="text-xs text-stone-300 mt-1">
-          Item Drop: {payload.item_drop || "Pingat Kembara Kecemerlangan"}
+          Item Drop: {devView ? payload.item_drop : sanitizeStudentText(payload.item_drop || "Pingat Kembara Kecemerlangan")}
         </p>
       </div>
 
@@ -313,7 +340,7 @@ export default function UniversalLessonPreview({ lessonPackage, previewMode = tr
   };
 
   return (
-    <div className="space-y-4 max-w-4xl mx-auto text-left">
+    <div className="space-y-4 max-w-4xl mx-auto text-left font-sans">
       {/* SIMULATOR TOOLBAR */}
       <div className="p-3 bg-stone-900 border border-stone-800 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">
@@ -367,15 +394,27 @@ export default function UniversalLessonPreview({ lessonPackage, previewMode = tr
         </div>
       </div>
 
-      {/* DEVELOPER DEBUG PANEL */}
+      {/* DEVELOPER DEBUG PANEL (ADMIN METADATA INSPECTOR) */}
       {devView && (
-        <div className="p-3 bg-stone-950 border border-indigo-500/40 rounded-2xl text-[11px] font-mono text-indigo-300 space-y-1">
+        <div className="p-3 bg-stone-950 border border-indigo-500/40 rounded-2xl text-[11px] font-mono text-indigo-300 space-y-2">
           <div className="flex justify-between border-b border-indigo-900/50 pb-1">
             <span>SCENE TYPE: <strong>{stepType}</strong></span>
             <span>WIDGET: <strong>{currentScene?.payload?.widget_type || "default"}</strong></span>
             <span>SCENE INDEX: <strong>{sceneIndex + 1}/{stepsList.length}</strong></span>
           </div>
-          <p className="truncate text-[10px] text-stone-400">Payload Title: {currentScene?.title}</p>
+          {lessonPackage.admin_metadata && (
+            <div className="text-[10px] space-y-0.5 text-stone-400 bg-stone-900/80 p-2 rounded-xl border border-stone-800">
+              <span className="font-bold text-amber-400 block mb-1">🏷️ Admin Metadata (Teacher/Admin Layer Only):</span>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+                <span>Subjek: {lessonPackage.admin_metadata.subject}</span>
+                <span>Tahun: {lessonPackage.admin_metadata.year} ({lessonPackage.admin_metadata.grade})</span>
+                <span>Kod SK: {lessonPackage.admin_metadata.sk_code}</span>
+                <span>Kod SP: {lessonPackage.admin_metadata.sp_code}</span>
+                <span>Pedagogi: {lessonPackage.admin_metadata.pedagogy_block}</span>
+                <span>PBD Target: {lessonPackage.admin_metadata.target_tp}</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -389,7 +428,7 @@ export default function UniversalLessonPreview({ lessonPackage, previewMode = tr
             <div className="flex items-center gap-2">
               <span className="text-lg">🌎</span>
               <span className="text-xs font-black text-white truncate max-w-[140px]">
-                {lessonPackage.world?.world_name || lessonPackage.subject || "StudyQuest"}
+                {lessonPackage.student_ui?.world_title || lessonPackage.world?.world_name || `Dunia ${lessonPackage.subject || "StudyQuest"}`}
               </span>
             </div>
 
@@ -413,14 +452,14 @@ export default function UniversalLessonPreview({ lessonPackage, previewMode = tr
 
           {/* MAIN SCENE CONTENT AREA */}
           <div className="p-5 flex-1 overflow-y-auto bg-stone-950">
-            {stepType === "BRIEFING" && <StoryScene data={currentScene} />}
-            {(stepType === "ENGAGEMENT" || stepType === "LESSON") && <TeachingScene data={currentScene} />}
-            {stepType === "PRACTICE" && <ActivityScene data={currentScene} />}
+            {stepType === "BRIEFING" && <StoryScene data={currentScene} devView={devView} />}
+            {(stepType === "ENGAGEMENT" || stepType === "LESSON") && <TeachingScene data={currentScene} devView={devView} />}
+            {stepType === "PRACTICE" && <ActivityScene data={currentScene} devView={devView} />}
             {stepType === "FLASHCARDS" && (
-              <Flashcards cards={currentScene.cards || [{ term: "KSSR Terma", definition: "Definisi" }]} />
+              <Flashcards cards={currentScene.cards || [{ term: "Terma Pembelajaran", definition: "Definisi asas" }]} />
             )}
-            {stepType === "QUIZ" && <QuizScene data={currentScene} />}
-            {stepType === "REWARD" && <RewardScene data={currentScene} />}
+            {stepType === "QUIZ" && <QuizScene data={currentScene} devView={devView} />}
+            {stepType === "REWARD" && <RewardScene data={currentScene} devView={devView} />}
 
             {/* Fallback for other step types */}
             {!["BRIEFING", "ENGAGEMENT", "LESSON", "PRACTICE", "FLASHCARDS", "QUIZ", "REWARD"].includes(stepType) && (

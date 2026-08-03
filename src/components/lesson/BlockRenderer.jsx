@@ -33,11 +33,29 @@ import FractionSlicerWidget from "@/components/widgets/FractionSlicerWidget";
 import NumberScaleWidget from "@/components/widgets/NumberScaleWidget";
 
 // ==========================================
-// TEXT FORMATTING UTILITIES
+// TEXT FORMATTING UTILITIES & STUDENT CONTENT SANITIZER
 // ==========================================
-export const bersihkanTeksUntukSuara = (text) => {
+export const sanitizeStudentText = (text) => {
   if (!text) return "";
   return String(text)
+    .replace(/\bSP\s*\d+(\.\d+)*/gi, "")
+    .replace(/\bSK\s*\d+(\.\d+)*/gi, "")
+    .replace(/\bTP[1-6]\b/gi, "")
+    .replace(/\bMicro\s*CPA\b/gi, "")
+    .replace(/\bComparison_Split\b/gi, "")
+    .replace(/\bMyth_Buster\b/gi, "")
+    .replace(/\bStep\s*#?\d+\b/gi, "")
+    .replace(/Pelajaran SP\s*\d+(\.\d+)*/gi, "")
+    .replace(/\(SP\s*\d+(\.\d+)*\)/gi, "")
+    .replace(/\(SK\s*\d+(\.\d+)*\)/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+export const bersihkanTeksUntukSuara = (text) => {
+  if (!text) return "";
+  const cleaned = sanitizeStudentText(text);
+  return String(cleaned)
     .replace(/\\n/g, "\n")
     .replace(/[#*>\-_`🔸]/g, "")
     .replace(/\s+/g, " ")

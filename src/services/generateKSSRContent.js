@@ -88,7 +88,8 @@ export function getKSSRModeByGrade(grade = "Tahun 1") {
 }
 
 /**
- * Builds a complete, valid 9-Step KSSR Mission Package
+ * Builds a complete, valid 9-Step KSSR Mission Package adhering strictly to the Dual-Layer Data Schema.
+ * Isolates Teacher/Admin Metadata from Student-Facing UI Text (Zero DSKP Code Leakage).
  */
 export function build9StepKSSRMissionPackage({
   spCode = "1.1.1",
@@ -96,7 +97,7 @@ export function build9StepKSSRMissionPackage({
   grade = "Tahun 1",
   pbdTarget = "TP3",
   subject = "Matematik",
-  topicTitle = "Kuantiti & Nilai Nombor",
+  topicTitle = "Nombor hingga 100",
   widgetType = null,
   pedagogyContext = null
 }) {
@@ -105,17 +106,47 @@ export function build9StepKSSRMissionPackage({
 
   const realWorldAnchor = pedagogyContext?.real_world_context
     ? (Array.isArray(pedagogyContext.real_world_context) ? pedagogyContext.real_world_context[0] : pedagogyContext.real_world_context)
-    : `Meneroka tajuk ${topicTitle}`;
+    : `Meneroka tajuk ${topicTitle} dalam kehidupan harian`;
 
   const visualMethod = pedagogyContext?.visual_method
     ? (Array.isArray(pedagogyContext.visual_method) ? pedagogyContext.visual_method[0] : pedagogyContext.visual_method)
-    : `Visual perwakilan danilustrasi objek bagi pemahaman tajuk ${topicTitle}.`;
+    : `Visual perwakilan dan ilustrasi objek bagi pemahaman tajuk ${topicTitle}.`;
 
   const misconceptionText = pedagogyContext?.common_misconception
     ? pedagogyContext.common_misconception
-    : `Tajuk ${topicTitle} sangat sukar dikuasai`;
+    : `Tajuk ${topicTitle} memerlukan bimbingan visual`;
+
+  const yearNum = parseInt(grade.replace(/\D/g, ""), 10) || 1;
 
   const missionPackage = {
+    // ----------------------------------------------------
+    // DUAL-LAYER SCHEMA: TEACHER/ADMIN METADATA
+    // ----------------------------------------------------
+    admin_metadata: {
+      subject,
+      year: yearNum,
+      grade,
+      sk_code: skCode,
+      sp_code: spCode,
+      topic: topicTitle,
+      pedagogy_block: "MICRO_CPA_ENGAGEMENT",
+      target_tp: pbdTarget
+    },
+
+    // ----------------------------------------------------
+    // DUAL-LAYER SCHEMA: STUDENT-FACING INTERFACE TEXT
+    // ----------------------------------------------------
+    student_ui: {
+      world_title: `Dunia ${subject}`,
+      mission_header: `Pengenalan Misi: ${topicTitle}`,
+      mission_description: `Selamat datang! Hari ini kita ada misi khas: meneroka dan menguasai ${topicTitle} dalam kehidupan harian.`,
+      mascot_dialogue: mode === "SENIOR"
+        ? `Hai! Saya Ejen Suku 🦊. Mari kita analisis dan selesaikan cabaran ${topicTitle} bersama-sama!`
+        : `Hai! Saya Suku Penyu 🐢. Jom kita kembara dan membilang nombor hingga 100 bersama-sama!`,
+      call_to_action: "Mula Kembara!"
+    },
+
+    // Top-Level Legacy & Compatibility Fields
     spCode,
     skCode,
     grade,
@@ -124,19 +155,21 @@ export function build9StepKSSRMissionPackage({
     world: {
       world_name: `Dunia ${subject}`,
       world_icon: subject.toLowerCase().includes("matematik") ? "🔢" : (subject.toLowerCase().includes("sains") ? "🔬" : "📚"),
-      theme: "Pengembaraan KSSR Semakan",
+      theme: "Pengembaraan Pembelajaran",
       description: `Meneroka tajuk ${topicTitle} bersama ${mascotName}`
     },
     adventure_story: {
       title: `Kembara ${topicTitle}`,
-      introduction: `Selamat datang ke modul KSSR ${grade}! Mari kita terokai tajuk ${topicTitle} (${realWorldAnchor}).`,
-      problem: `Selesaikan cabaran SP ${spCode} untuk mencapai sasaran PBD ${pbdTarget}!`,
-      mission_goal: `Kuasai kemahiran ${topicTitle} mengikut standard KPM KSSR Semakan.`
+      introduction: `Selamat datang! Mari kita terokai tajuk ${topicTitle} (${realWorldAnchor}).`,
+      problem: `Selesaikan cabaran interaktif untuk menguasai tajuk ini dengan cemerlang!`,
+      mission_goal: `Kuasai kemahiran ${topicTitle} secara seronok dan berkesan.`
     },
     otan_companion: {
-      greeting: `Hai Pengembara! ${mascotName} sedia membimbing kamu dalam tajuk ${topicTitle}!`,
-      encouragement: ["Teruskan usaha!", `Kamu semakin menguasai ${topicTitle}!`, "Bagus sekali!"],
-      hint_messages: [`Fikirkan konsep asas SP ${spCode}.`, `Bandingkan jawapan dengan prinsip SK ${skCode}.`],
+      greeting: mode === "SENIOR"
+        ? "Salam Pengembara! Ejen Suku 🦊 sedia membantu anda menganalisis cabaran ini!"
+        : "Hai Pengembara! Saya Suku Penyu 🐢. Jom kita kembara bersama-sama!",
+      encouragement: ["Teruskan usaha!", `Kamu semakin hebat dalam ${topicTitle}!`, "Bagus sekali!"],
+      hint_messages: [`Fikirkan konsep asas ${topicTitle}.`, `Bandingkan jawapan dengan teliti.`],
       celebration_messages: [`Tahniah! Misi ${topicTitle} berjaya diselesaikan dengan cemerlang! 🎉`]
     },
     steps: [
@@ -145,8 +178,10 @@ export function build9StepKSSRMissionPackage({
         step_type: "BRIEFING",
         title: "Pengenalan Misi",
         payload: {
-          story_hook: `Di Dunia ${subject}, cabaran ${topicTitle} memerlukan perhatian anda! Konteks harian: ${realWorldAnchor}.`,
-          mascot_dialogue: `Hai! Saya ${mascotName}. Hari ini kita akan mempelajari ${topicTitle} (SP ${spCode}).`
+          story_hook: `Di Dunia ${subject}, Suku perlukan bantuan anda untuk meneroka ${topicTitle}! Konteks harian: ${realWorldAnchor}.`,
+          mascot_dialogue: mode === "SENIOR"
+            ? `Hai! Saya Ejen Suku 🦊. Jom kita selesaikan cabaran ${topicTitle}!`
+            : `Hai! Saya Suku Penyu 🐢. Jom kita kembara dan membilang nombor hingga 100 bersama-sama!`
         }
       },
       {
@@ -162,17 +197,17 @@ export function build9StepKSSRMissionPackage({
           {
             block_type: "COMPARISON_SPLIT",
             title: `Perbandingan Kumpulan ${topicTitle}`,
-            content: { left: `Kumpulan Utama A (${topicTitle})`, right: `Kumpulan Pembanding B (${topicTitle})` }
+            content: { left: `Kumpulan Utama A`, right: `Kumpulan Pembanding B` }
           },
           {
             block_type: "STEP_BY_STEP",
             title: `Langkah Pembelajaran ${topicTitle}`,
-            content: { steps: [`Fahami masalah ${topicTitle}`, `Terapkan formulasi SP ${spCode}`, `Semak jawapan mengikut SK ${skCode}`] }
+            content: { steps: [`Fahami masalah ${topicTitle}`, `Terapkan kaedah asas`, `Semak jawapan anda`] }
           },
           {
             block_type: "MYTH_BUSTER",
             title: `Mitos & Fakta ${topicTitle}`,
-            content: { myth: misconceptionText, fact: `Dengan bimbingan berstruktur SP ${spCode}, semua murid boleh mencapai ${pbdTarget}!` }
+            content: { myth: misconceptionText, fact: `Dengan latihan berstruktur, semua murid boleh menguasai ${topicTitle} dengan yakin!` }
           }
         ]
       },
@@ -181,11 +216,11 @@ export function build9StepKSSRMissionPackage({
         step_type: "LESSON",
         title: "Pecahan Konsep Utama",
         payload: {
-          concept_summary: `Konsep asas ${topicTitle} berpandukan SK ${skCode} dan SP ${spCode} untuk murid ${grade}. Kaedah Visual: ${visualMethod}.`,
+          concept_summary: `Konsep asas ${topicTitle} untuk murid ${grade}. Kaedah Visual: ${visualMethod}.`,
           key_points: [
             `Memahami takrifan asas bagi ${topicTitle}`,
-            `Mengaplikasikan kemahiran SP ${spCode} dalam latihan harian`,
-            `Mencapai penguasaan PBD sasaran ${pbdTarget}`
+            `Mengaplikasikan kemahiran ${topicTitle} dalam situasi harian`,
+            `Mengukuhkan pemahaman secara berperingkat`
           ]
         }
       },
@@ -203,8 +238,8 @@ export function build9StepKSSRMissionPackage({
         step_type: "FLASHCARDS",
         title: "Kad Imbasan Terma Utama",
         cards: [
-          { term: topicTitle, definition: `Istilah utama kurikulum KSSR ${grade} bagi SP ${spCode}.` },
-          { term: `Standard Kandungan ${skCode}`, definition: `Rangka kemahiran asas yang menyokong pembelajaran ${topicTitle}.` }
+          { term: topicTitle, definition: `Istilah asas untuk difahami dalam tajuk ${topicTitle}.` },
+          { term: "Konsep Utama", definition: `Rangka kemahiran asas yang menyokong pemahaman tajuk ${topicTitle}.` }
         ]
       },
       {
@@ -222,10 +257,10 @@ export function build9StepKSSRMissionPackage({
         title: "Penilaian PBD",
         questions: [
           {
-            question: `Apakah konsep utama bagi tajuk ${topicTitle} mengikut SP ${spCode}?`,
-            options: [`Pilihan A (Konsep Tepat SP ${spCode})`, `Pilihan B (Kurang Tepat)`, `Pilihan C (Salah)`],
+            question: `Apakah jawapan yang tepat bagi soalan ${topicTitle} di bawah?`,
+            options: [`Pilihan A (Jawapan Tepat)`, `Pilihan B (Kurang Tepat)`, `Pilihan C (Salah)`],
             correct_index: 0,
-            explanation: `Pilihan A berpandukan piawaian SK ${skCode} KSSR ${grade}.`,
+            explanation: `Pilihan A ialah jawapan yang tepat kerana mengikut konsep asas tajuk ini.`,
             tp_level: pbdTarget
           }
         ]
@@ -237,7 +272,7 @@ export function build9StepKSSRMissionPackage({
         payload: {
           xp_earned: 100,
           coins_earned: 25,
-          mastery_summary: `Tahniah! Anda telah menguasai ${topicTitle} (SP ${spCode}) pada Tahap ${pbdTarget}!`
+          mastery_summary: `Tahniah! Anda telah menguasai kemahiran ${topicTitle} dengan cemerlang! 🎉`
         }
       },
       {
@@ -245,7 +280,7 @@ export function build9StepKSSRMissionPackage({
         step_type: "REWARD",
         title: "Ganjaran Lencana Misi",
         payload: {
-          badge: `Wira KSSR ${subject}`,
+          badge: `Wira ${subject}`,
           item_drop: `Pingat Gemilang ${topicTitle} 🏅`,
           item_icon: "🏅"
         }
