@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2, CheckCircle2, ShieldCheck, Layers, BookOpen } from "lucide-react";
-import { AdventurePreview } from "@/components/admin/AdventurePreview";
+import UniversalLessonPreview from "@/components/admin/UniversalLessonPreview";
 import { generateKSSRMissionPackage } from "@/services/aiContentEngine";
 
 export default function AIGenerationPanel({
@@ -123,20 +123,20 @@ export default function AIGenerationPanel({
         )}
       </div>
 
-      {/* Live Preview Container */}
+      {/* Universal Student Preview Container */}
       {generatedPackage && (
         <div className="space-y-3">
           <div className="flex items-center justify-between px-1">
             <h4 className="text-sm font-black text-stone-200 flex items-center gap-2">
-              <Layers className="w-4 h-4 text-amber-400" /> Pratinjau Misi KSSR (AdventurePreview)
+              <Layers className="w-4 h-4 text-amber-400" /> Pratinjau Simulator Pelajar (Universal Student View)
             </h4>
             <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" /> Berjaya Dijana
             </span>
           </div>
 
-          <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 shadow-2xl">
-            <AdventurePreview adventurePackage={generatedPackage} />
+          <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-4 sm:p-6 shadow-2xl">
+            <UniversalLessonPreview lessonPackage={generatedPackage} previewMode={true} />
           </div>
         </div>
       )}

@@ -18,6 +18,7 @@ import AIGenerationPanel from "@/components/admin/AIGenerationPanel";
 import LessonVideoField from "@/components/admin/LessonVideoField";
 import ManualContentPanel from "@/components/admin/ManualContentPanel";
 import ContentQualityPanel from "@/components/admin/ContentQualityPanel";
+import UniversalLessonPreview from "@/components/admin/UniversalLessonPreview";
 import BlockRenderer from "@/components/lesson/BlockRenderer";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -1451,67 +1452,23 @@ export default function AdminContentStudio() {
 
       {/* FULL MISSION PREVIEW MODAL */}
       {previewMission && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-2 sm:p-8">
-          <div className="bg-stone-950 border border-stone-800 rounded-3xl w-full max-w-4xl h-full flex flex-col shadow-2xl relative">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-2 sm:p-8 overflow-y-auto">
+          <div className="bg-stone-950 border border-stone-800 rounded-3xl w-full max-w-4xl max-h-[95vh] flex flex-col shadow-2xl relative">
             <div className="flex items-center justify-between p-4 border-b border-stone-800 bg-stone-900/80 rounded-t-3xl shrink-0">
-              <div className="flex items-center gap-3">
-                <h2 className="text-sm font-black text-white flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-indigo-400" /> Misi Pratonton ({previewStep + 1}/{blocks.length})
-                </h2>
-                <div className="flex gap-1">
-                  {blocks.map((_, idx) => (
-                    <div key={idx} className={`w-2 h-2 rounded-full ${idx === previewStep ? "bg-indigo-500" : idx < previewStep ? "bg-emerald-500" : "bg-stone-700"}`} />
-                  ))}
-                </div>
-              </div>
+              <h2 className="text-sm font-black text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-400" /> Simulator Pelajar KSSR (Universal Student View)
+              </h2>
               <button onClick={() => setPreviewMission(false)} className="p-2 bg-rose-950 hover:bg-rose-900 text-rose-300 rounded-xl border border-rose-900/50">
                 <span className="sr-only">Tutup</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 sm:p-8">
-              {blocks.length > 0 ? (
-                <ErrorBoundary>
-                  <BlockRenderer 
-                    block={blocks[previewStep]} 
-                    studentName="Pelajar Cemerlang" 
-                    onComplete={() => {
-                      if (previewStep < blocks.length - 1) {
-                        setPreviewStep(prev => prev + 1);
-                      } else {
-                        toast({ title: "Misi Selesai!", description: "Pratonton keseluruhan misi tamat." });
-                      }
-                    }}
-                  />
-                </ErrorBoundary>
-              ) : (
-                <div className="text-center text-stone-500 font-bold p-10">Tiada blok untuk dipratonton.</div>
-              )}
-            </div>
-
-            <div className="p-4 border-t border-stone-800 bg-stone-900/50 flex justify-between items-center rounded-b-3xl shrink-0">
-              <button 
-                onClick={() => setPreviewStep(p => Math.max(0, p - 1))}
-                disabled={previewStep === 0}
-                className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 disabled:opacity-50 text-xs font-bold rounded-xl transition-all"
-              >
-                Kembali
-              </button>
-              
-              <button 
-                onClick={() => {
-                  if (previewStep < blocks.length - 1) {
-                    setPreviewStep(p => p + 1);
-                  } else {
-                    setPreviewMission(false);
-                    toast({ title: "Misi Selesai!", description: "Pratonton keseluruhan misi tamat." });
-                  }
-                }}
-                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-indigo-900/20"
-              >
-                {previewStep < blocks.length - 1 ? "Seterusnya" : "Tamat Misi"}
-              </button>
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-stone-950">
+              <UniversalLessonPreview 
+                lessonPackage={activePackage || { steps: blocks, subject, grade: yearLevel, topic }} 
+                previewMode={true} 
+              />
             </div>
           </div>
         </div>
