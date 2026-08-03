@@ -35,9 +35,10 @@ export default function AIGenerationPanel({
       });
 
       if (res.success) {
-        setGeneratedPackage(res.adventurePackage);
+        const pkg = res.missionPackage || res.adventurePackage;
+        setGeneratedPackage(pkg);
         setValidationResult({ valid: true, errors: [] });
-        if (onPackageGenerated) onPackageGenerated(res.adventurePackage);
+        if (onPackageGenerated) onPackageGenerated(pkg);
       } else {
         setValidationResult({ valid: false, errors: res.validation_errors || ["Gagal mengesahkan skema."] });
       }
