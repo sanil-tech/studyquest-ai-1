@@ -1,26 +1,42 @@
 {
   "framework": "KSSR_SEMAKAN",
-  "description": "Kurikulum Standard Sekolah Rendah (Semakan 2017)",
+  "description": "Kurikulum Standard Sekolah Rendah (Semakan 2017) dengan Mod Dual-Engine (JUNIOR: Prasekolah-T3, SENIOR: T4-T6)",
+  "modes": {
+    "JUNIOR": {
+      "grades": ["Prasekolah", "Tahun 1", "Tahun 2", "Tahun 3"],
+      "pedagogy_focus": "Konkrit-Pictorial-Abstrak (CPA), Gamifikasi Interaktif, Naratif Suku Penyu & Otan"
+    },
+    "SENIOR": {
+      "grades": ["Tahun 4", "Tahun 5", "Tahun 6"],
+      "pedagogy_focus": "Abstrak, Penyelesaian Masalah KBAT, Modul Pentaksiran Formatik & PBD TP1-TP6"
+    }
+  },
   "subjects": {
     "Matematik": {
       "Tahun 1": [
         {
+          "sk_code": "1.1",
           "sp_code": "1.1.1",
           "title": "Menyatakan kuantiti secara intuitif",
+          "mode": "JUNIOR",
           "bloom_level": "UNDERSTAND",
           "prerequisites": [],
           "default_widget_type": "number_scale"
         },
         {
+          "sk_code": "1.4",
           "sp_code": "1.4.1",
           "title": "Menyatakan nilai tempat dan nilai digit",
+          "mode": "JUNIOR",
           "bloom_level": "APPLY",
           "prerequisites": ["1.1.1"],
           "default_widget_type": "base_ten_blocks"
         },
         {
+          "sk_code": "1.5",
           "sp_code": "1.5.1",
           "title": "Membandingkan nilai dua nombor",
+          "mode": "JUNIOR",
           "bloom_level": "ANALYZE",
           "prerequisites": ["1.4.1"],
           "default_widget_type": "number_scale"
@@ -28,23 +44,37 @@
       ],
       "Tahun 2": [
         {
+          "sk_code": "1.1",
           "sp_code": "1.1.1",
           "title": "Mengenal pasti dan menyebut pecahan wajar",
+          "mode": "JUNIOR",
           "bloom_level": "UNDERSTAND",
           "prerequisites": [],
           "default_widget_type": "fraction_slicer"
         }
       ],
       "Tahun 3": [],
-      "Tahun 4": [],
+      "Tahun 4": [
+        {
+          "sk_code": "1.6",
+          "sp_code": "1.6.1",
+          "title": "Operasi asas melibatkan nombor hingga 100 000",
+          "mode": "SENIOR",
+          "bloom_level": "APPLY",
+          "prerequisites": [],
+          "default_widget_type": "advanced_calculator"
+        }
+      ],
       "Tahun 5": [],
       "Tahun 6": []
     },
     "Bahasa Melayu": {
       "Tahun 1": [
         {
+          "sk_code": "2.1",
           "sp_code": "2.1.1",
           "title": "Membina ayat tunggal",
+          "mode": "JUNIOR",
           "bloom_level": "CREATE",
           "prerequisites": [],
           "default_widget_type": "sentence_builder"

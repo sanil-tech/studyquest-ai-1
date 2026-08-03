@@ -1,83 +1,112 @@
-import { getSPDetails, getWidgetMapping } from './taxonomyService';
+import { build9StepKSSRMissionPackage, validateMissionPackage, getKSSRModeByGrade } from './generateKSSRContent.js';
+import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
 
 /**
- * AI Content Engine
+ * AI Content Engine - Generates KSSR 9-Step Adventure Package
  * 
- * Procedurally generates Gamified Lesson structures based on the DSKP Taxonomy.
- * This guarantees that ANY valid SP code can be immediately rendered into a lesson
- * even if a human teacher hasn't handcrafted one yet.
+ * Constructs LLM prompt constraints and fallback generators for KSSR SK/SP Standards
+ * in Dual-Engine Mode (JUNIOR: Prasekolah-T3 vs SENIOR: T4-T6).
  */
 
-export const generateLessonForSP = async (spCode, studentName = 'Pengembara') => {
-  const details = getSPDetails(spCode);
-  if (!details) {
-    throw new Error(`SP Code ${spCode} not found in taxonomy.`);
+/**
+ * Formulates prompt instructions for LLM generation matching adventurePackageSchema.json
+ */
+export function buildLLMPromptForKSSR({ spCode, spDescription, skCode, grade, subject, topic, pbdTarget = "TP3" }) {
+  const mode = getKSSRModeByGrade(grade);
+  const mascot = mode === "JUNIOR" ? "Suku Penyu 🐢 (Bahasa santai kanak-kanak)" : "Ejen Suku 🦊 (Penyelesaian masalah KBAT & Pemikiran Kritis)";
+
+  const systemPrompt = `You are StudyQuest AI, an expert Malaysian KSSR Semakan Instructional Designer.
+You must generate a 9-Step Macro Journey JSON payload strictly conforming to adventurePackageSchema.json for ${grade} (${subject}).
+
+DUAL-ENGINE MODE: ${mode}
+MASCOT COMPANION: ${mascot}
+CURRICULUM TARGET: SK ${skCode}, SP ${spCode} - ${spDescription || topic}
+PBD TARGET: ${pbdTarget}
+
+STRICT STEP ARCHITECTURE:
+Step 1: BRIEFING (Story hook & mascot dialogue)
+Step 2: ENGAGEMENT (4 CPA blocks: VISUAL_STORY, COMPARISON_SPLIT, STEP_BY_STEP, MYTH_BUSTER)
+Step 3: LESSON (Core concept breakdown)
+Step 4: PRACTICE (Interactive exercises using widget)
+Step 5: FLASHCARDS (Key terms & definitions)
+Step 6: MINI_GAME (Payload for SortingGame, MatchingGame, or SequenceGame)
+Step 7: QUIZ (PBD evaluation questions)
+Step 8: COMPLETE (XP calculation & mastery summary)
+Step 9: REWARD (Badge & Item drop)
+
+Output must be valid JSON only.`;
+
+  return { systemPrompt, mode };
+}
+
+/**
+ * Primary function to generate and validate KSSR Mission Package
+ */
+export async function generateKSSRMissionPackage({
+  spCode = "1.1.1",
+  spDescription = "",
+  skCode = "1.1",
+  grade = "Tahun 1",
+  subject = "Matematik",
+  topic = "Nombor hingga 100",
+  pbdTarget = "TP3"
+}) {
+  const mode = getKSSRModeByGrade(grade);
+  const { systemPrompt } = buildLLMPromptForKSSR({ spCode, spDescription, skCode, grade, subject, topic, pbdTarget });
+
+  // Generate structured 9-Step Package conforming to adventurePackageSchema.json
+  const missionPackage = build9StepKSSRMissionPackage({
+    spCode,
+    skCode,
+    grade,
+    pbdTarget,
+    subject,
+    topicTitle: spDescription || topic
+  });
+
+  // Adjust mascot dialogue for SENIOR vs JUNIOR mode
+  if (mode === "SENIOR") {
+    missionPackage.otan_companion.greeting = "Salam Pengembara! Ejen Suku 🦊 sedia membantu anda menganalisis masalah KBAT ini!";
+    missionPackage.steps[0].payload.mascot_dialogue = `Hai! Saya Ejen Suku 🦊. Mari kita rungkai cabaran KBAT bagi SP ${spCode}.`;
+  } else {
+    missionPackage.otan_companion.greeting = "Hai Pengembara! Suku Penyu 🐢 sedia meneroka bersama kamu!";
+    missionPackage.steps[0].payload.mascot_dialogue = `Hai! Saya Suku Penyu 🐢. Hari ini kita akan belajar ${spDescription || topic}!`;
   }
 
-  // Determine which widget to use based on the taxonomy metadata
-  const widgetMapping = getWidgetMapping(spCode) || 'base_ten_blocks'; // generic fallback
-
-  const blocks = [];
-
-  // Phase 1: INDUCTION (AI generated story/context)
-  blocks.push({
-    order_number: 1,
-    block_type: "TEXT_MARKDOWN",
-    pedagogical_phase: "INDUCTION",
-    title: `Misi: ${details.title}`,
-    payload: {
-      markdown: `### Hai ${studentName}! Suku perlukan bantuan anda! 🦊\n\nHari ini, kita ada cabaran khas untuk topik **${details.title}**.\n\nMari kita bekerjasama untuk selesaikan misi ini menggunakan kemahiran baru kita.`
-    }
-  });
-
-  // Phase 2: CONCEPT & INTERACTIVE (Widget)
-  blocks.push({
-    order_number: 2,
-    block_type: "INTERACTIVE",
-    pedagogical_phase: "CONCEPT",
-    title: `Latihan Interaktif`,
-    payload: {
-      widget_type: widgetMapping,
-      targetNumber: Math.floor(Math.random() * 50) + 10, // Randomized for generic fallback
-      targetFraction: "1/2", 
-      targetSentence: "Suku suka makan durian",
-      leftVal: 50,
-      rightVal: 20,
-      correctRelation: "GREATER_THAN"
-    }
-  });
-
-  // Phase 3: REFLECTION
-  blocks.push({
-    order_number: 3,
-    block_type: "TEXT_MARKDOWN",
-    pedagogical_phase: "REFLECTION",
-    title: "Rumusan Kejayaan",
-    payload: {
-      markdown: `### Kerja yang Hebat!\n\nAnda berjaya menguasai **${details.title}**.\n\nTerus berlatih untuk menjadi lebih bijak!`
-    }
-  });
+  // Validate JSON against 9-Step schema constraints
+  const validation = validateMissionPackage(missionPackage);
 
   return {
-    success: true,
+    success: validation.valid,
+    validation_errors: validation.errors,
+    prompt_used: systemPrompt,
+    missionPackage,
+    adventurePackage: missionPackage // for compatibility with AdventurePreview
+  };
+}
+
+/**
+ * Legacy compatibility helper
+ */
+export const generateLessonForSP = async (spCode, studentName = 'Pengembara') => {
+  const result = await generateKSSRMissionPackage({ spCode });
+  return {
+    success: result.success,
     lesson: {
       id: `ai_gen_${spCode}_${Date.now()}`,
-      title: details.title,
-      description: `Pelajaran interaktif dijana AI untuk SP ${spCode}`,
+      title: `SP ${spCode}`,
+      description: `Pelajaran 9-Langkah KSSR`
     },
     published_version: {
       id: `ai_ver_${Date.now()}`,
       version_number: 1,
       curriculum_type: "KSSR_SEMAKAN",
-      year_level: "Auto-mapped", 
-      subject_name: "Auto-mapped",
+      year_level: "Tahun 1",
+      subject_name: "Matematik",
       sk_code: spCode.substring(0, spCode.lastIndexOf('.')),
-      sp_code: spCode,
+      sp_code: spCode
     },
-    content_blocks: blocks.map((block, index) => ({
-      id: `block-${index + 1}`,
-      ...block
-    })),
-    assessments: []
+    adventurePackage: result.adventurePackage,
+    content_blocks: result.missionPackage.steps
   };
 };

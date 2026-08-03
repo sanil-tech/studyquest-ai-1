@@ -1,208 +1,293 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "StudyQuest AdventurePackage Contract",
-  "description": "AI Output Specification for transforming curriculum topics into complete StudyQuest Learning Adventures.",
+  "title": "StudyQuest KSSR Mission & Adventure Package Contract",
+  "description": "AI Output Specification for transforming KSSR SK/SP curriculum standards into a 9-Step Macro Journey with Dual-Engine mode support.",
   "type": "object",
   "required": [
-    "world",
-    "adventure_story",
-    "otan_companion",
-    "mission_journey",
-    "assessment",
-    "completion_report"
+    "spCode",
+    "skCode",
+    "grade",
+    "mode",
+    "pbdTarget",
+    "steps"
   ],
   "properties": {
+    "spCode": {
+      "type": "string",
+      "description": "Kod Standard Pembelajaran KSSR",
+      "example": "1.1.1"
+    },
+    "skCode": {
+      "type": "string",
+      "description": "Kod Standard Kandungan KSSR",
+      "example": "1.1"
+    },
+    "grade": {
+      "type": "string",
+      "description": "Tahun persekolahan KSSR",
+      "enum": ["Prasekolah", "Tahun 1", "Tahun 2", "Tahun 3", "Tahun 4", "Tahun 5", "Tahun 6"],
+      "example": "Tahun 1"
+    },
+    "mode": {
+      "type": "string",
+      "description": "Mod enjin pembelajaran (JUNIOR: Prasekolah-T3, SENIOR: T4-T6)",
+      "enum": ["JUNIOR", "SENIOR"],
+      "example": "JUNIOR"
+    },
+    "pbdTarget": {
+      "type": "string",
+      "description": "Sasaran Tahap Penguasaan PBD KPM",
+      "enum": ["TP1", "TP2", "TP3", "TP4", "TP5", "TP6"],
+      "example": "TP3"
+    },
     "world": {
       "type": "object",
-      "required": ["world_name", "world_icon", "theme", "description"],
       "properties": {
-        "world_name": {
-          "type": "string",
-          "description": "Nama Dunia Pembelajaran KSSR (contoh: Dunia Matematik, Alam Sains)",
-          "example": "Dunia Matematik"
-        },
-        "world_icon": {
-          "type": "string",
-          "description": "Emoji ikon perwakilan dunia",
-          "example": "🌎"
-        },
-        "theme": {
-          "type": "string",
-          "description": "Tema visual & suasana kembara (contoh: Pengembaraan Hutan Angka)",
-          "example": "Pengembaraan Hutan Angka"
-        },
-        "description": {
-          "type": "string",
-          "description": "Penerangan ringkas persekitaran dunia pembelajaran",
-          "example": "Terokai rahsia tempat nilai puluh dan sa di rimba bersama Otan 🦧"
-        }
+        "world_name": { "type": "string" },
+        "world_icon": { "type": "string" },
+        "theme": { "type": "string" },
+        "description": { "type": "string" }
       }
     },
     "adventure_story": {
       "type": "object",
-      "required": ["title", "introduction", "problem", "mission_goal"],
       "properties": {
-        "title": {
-          "type": "string",
-          "description": "Tajuk utama pengembaraan",
-          "example": "Misteri Rumah Puluh & Sa"
-        },
-        "introduction": {
-          "type": "string",
-          "description": "Penceritaan pengenalan mesra kanak-kanak Tahun 1-6",
-          "example": "Di Hutan Angka, nombor 10 hingga 99 memerlukan rumah khas untuk menetap!"
-        },
-        "problem": {
-          "type": "string",
-          "description": "Masalah utama yang perlu diselesaikan oleh Pengembara",
-          "example": "Kunci Rumah Puluh hilang dan angka bercampur aduk!"
-        },
-        "mission_goal": {
-          "type": "string",
-          "description": "Matlamat akhir kembara",
-          "example": "Bantu Otan mengumpul kunci tempat nilai untuk membuka Rumah Puluh."
-        }
+        "title": { "type": "string" },
+        "introduction": { "type": "string" },
+        "problem": { "type": "string" },
+        "mission_goal": { "type": "string" }
       }
     },
     "otan_companion": {
       "type": "object",
-      "required": ["greeting", "encouragement", "hint_messages", "celebration_messages"],
       "properties": {
-        "greeting": {
-          "type": "string",
-          "description": "Ucapan aluan mesra Otan sewaktu memulakan misi",
-          "example": "Hai Pengembara! Otan sedia membantu kamu meneroka hari ini!"
-        },
-        "encouragement": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Koleksi dialog galakan Otan apabila murid mengalami kesukaran"
-        },
-        "hint_messages": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Petunjuk pintar Otan mengikut peringkat pembelajaran"
-        },
-        "celebration_messages": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Pujian dan kejayaan yang diucapkan Otan selepas menyelesaikan misi"
-        }
+        "greeting": { "type": "string" },
+        "encouragement": { "type": "array", "items": { "type": "string" } },
+        "hint_messages": { "type": "array", "items": { "type": "string" } },
+        "celebration_messages": { "type": "array", "items": { "type": "string" } }
       }
     },
-    "mission_journey": {
+    "steps": {
       "type": "array",
-      "minItems": 4,
-      "description": "Laluan misi berperingkat (DISCOVER, INTERACT, PRACTICE, CHALLENGE)",
-      "items": {
-        "type": "object",
-        "required": [
-          "mission_id",
-          "title",
-          "stage",
-          "objective",
-          "content_blocks",
-          "activity_type",
-          "reward"
-        ],
-        "properties": {
-          "mission_id": {
-            "type": "string",
-            "example": "misi-1-discover"
-          },
-          "title": {
-            "type": "string",
-            "example": "Penemuan Kumpulan 10"
-          },
-          "stage": {
-            "type": "string",
-            "enum": ["DISCOVER", "INTERACT", "PRACTICE", "CHALLENGE"],
-            "description": "Peringkat misi mengikut taksonomi pembelajaran StudyQuest"
-          },
-          "objective": {
-            "type": "string",
-            "example": "Mengenal pasti kumpulan 10 item sebagai 1 puluh."
-          },
-          "content_blocks": {
-            "type": "array",
-            "description": "Blok kandungan pembelajaran serasi BlockRenderer.jsx",
-            "items": {
-              "type": "object"
-            }
-          },
-          "activity_type": {
-            "type": "string",
-            "example": "interactive_visual"
-          },
-          "reward": {
-            "type": "object",
-            "required": ["xp", "coins"],
-            "properties": {
-              "xp": { "type": "number", "example": 50 },
-              "coins": { "type": "number", "example": 15 },
-              "badge": { "type": "string", "example": "Pembantu Otan" }
-            }
-          }
-        }
-      }
-    },
-    "assessment": {
-      "type": "object",
-      "required": ["quiz", "ai_explanation", "mastery_condition"],
-      "properties": {
-        "quiz": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["question", "options", "correct_index", "explanation"],
-            "properties": {
-              "question": { "type": "string" },
-              "options": {
-                "type": "array",
-                "items": { "type": "string" }
-              },
-              "correct_index": { "type": "integer" },
-              "explanation": { "type": "string" }
-            }
-          }
-        },
-        "ai_explanation": {
-          "type": "string",
-          "description": "Rumusan pedagogi dan pencerahan fakta utama oleh AI"
-        },
-        "mastery_condition": {
+      "description": "9-Step Macro Journey pipeline",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": [
+        {
           "type": "object",
-          "required": ["min_accuracy", "pass_score"],
+          "title": "Step 1: BRIEFING",
+          "required": ["step_number", "step_type", "title", "payload"],
           "properties": {
-            "min_accuracy": { "type": "number", "example": 0.75 },
-            "pass_score": { "type": "number", "example": 80 }
+            "step_number": { "type": "integer", "const": 1 },
+            "step_type": { "type": "string", "const": "BRIEFING" },
+            "title": { "type": "string", "example": "Pengenalan Misi" },
+            "payload": {
+              "type": "object",
+              "required": ["story_hook", "mascot_dialogue"],
+              "properties": {
+                "story_hook": { "type": "string" },
+                "mascot_dialogue": { "type": "string" }
+              }
+            }
           }
-        }
-      }
-    },
-    "completion_report": {
-      "type": "object",
-      "required": ["skills_mastered", "improvement_area", "next_recommended_adventure"],
-      "properties": {
-        "skills_mastered": {
-          "type": "array",
-          "items": { "type": "string" },
-          "example": ["Nilai Tempat (Puluh & Sa)", "Cerakinan Nombor"]
         },
-        "improvement_area": {
-          "type": "string",
-          "example": "Latihan tambahan penambahan tanpa mengumpul semula"
-        },
-        "next_recommended_adventure": {
+        {
           "type": "object",
-          "required": ["world_name", "adventure_title", "topic_slug"],
+          "title": "Step 2: ENGAGEMENT",
+          "required": ["step_number", "step_type", "title", "cpa_blocks"],
           "properties": {
-            "world_name": { "type": "string" },
-            "adventure_title": { "type": "string" },
-            "topic_slug": { "type": "string" }
+            "step_number": { "type": "integer", "const": 2 },
+            "step_type": { "type": "string", "const": "ENGAGEMENT" },
+            "title": { "type": "string", "example": "Penerokaan CPA" },
+            "cpa_blocks": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": [
+                {
+                  "type": "object",
+                  "required": ["block_type", "title", "content"],
+                  "properties": {
+                    "block_type": { "type": "string", "const": "VISUAL_STORY" },
+                    "title": { "type": "string" },
+                    "content": { "type": "object" }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": ["block_type", "title", "content"],
+                  "properties": {
+                    "block_type": { "type": "string", "const": "COMPARISON_SPLIT" },
+                    "title": { "type": "string" },
+                    "content": { "type": "object" }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": ["block_type", "title", "content"],
+                  "properties": {
+                    "block_type": { "type": "string", "const": "STEP_BY_STEP" },
+                    "title": { "type": "string" },
+                    "content": { "type": "object" }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": ["block_type", "title", "content"],
+                  "properties": {
+                    "block_type": { "type": "string", "const": "MYTH_BUSTER" },
+                    "title": { "type": "string" },
+                    "content": { "type": "object" }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Step 3: LESSON",
+          "required": ["step_number", "step_type", "title", "payload"],
+          "properties": {
+            "step_number": { "type": "integer", "const": 3 },
+            "step_type": { "type": "string", "const": "LESSON" },
+            "title": { "type": "string", "example": "Konsep Utama" },
+            "payload": {
+              "type": "object",
+              "required": ["concept_summary", "key_points"],
+              "properties": {
+                "concept_summary": { "type": "string" },
+                "key_points": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Step 4: PRACTICE",
+          "required": ["step_number", "step_type", "title", "payload"],
+          "properties": {
+            "step_number": { "type": "integer", "const": 4 },
+            "step_type": { "type": "string", "const": "PRACTICE" },
+            "title": { "type": "string", "example": "Latihan Interaktif" },
+            "payload": {
+              "type": "object",
+              "required": ["widget_type", "interactive_data"],
+              "properties": {
+                "widget_type": { "type": "string" },
+                "interactive_data": { "type": "object" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Step 5: FLASHCARDS",
+          "required": ["step_number", "step_type", "title", "cards"],
+          "properties": {
+            "step_number": { "type": "integer", "const": 5 },
+            "step_type": { "type": "string", "const": "FLASHCARDS" },
+            "title": { "type": "string", "example": "Kad Imbasan Terma" },
+            "cards": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": ["term", "definition"],
+                "properties": {
+                  "term": { "type": "string" },
+                  "definition": { "type": "string" },
+                  "example": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Step 6: MINI_GAME",
+          "required": ["step_number", "step_type", "title", "payload"],
+          "properties": {
+            "step_number": { "type": "integer", "const": 6 },
+            "step_type": { "type": "string", "const": "MINI_GAME" },
+            "title": { "type": "string", "example": "Permainan Mini" },
+            "payload": {
+              "type": "object",
+              "required": ["game_type", "game_config"],
+              "properties": {
+                "game_type": {
+                  "type": "string",
+                  "enum": ["SortingGame", "MatchingGame", "SequenceGame", "QuizShooter"]
+                },
+                "game_config": { "type": "object" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Step 7: QUIZ",
+          "required": ["step_number", "step_type", "title", "questions"],
+          "properties": {
+            "step_number": { "type": "integer", "const": 7 },
+            "step_type": { "type": "string", "const": "QUIZ" },
+            "title": { "type": "string", "example": "Penilaian PBD" },
+            "questions": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": ["question", "options", "correct_index", "explanation"],
+                "properties": {
+                  "question": { "type": "string" },
+                  "options": { "type": "array", "items": { "type": "string" } },
+                  "correct_index": { "type": "integer" },
+                  "explanation": { "type": "string" },
+                  "tp_level": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Step 8: COMPLETE",
+          "required": ["step_number", "step_type", "title", "payload"],
+          "properties": {
+            "step_number": { "type": "integer", "const": 8 },
+            "step_type": { "type": "string", "const": "COMPLETE" },
+            "title": { "type": "string", "example": "Rumusan Misi" },
+            "payload": {
+              "type": "object",
+              "required": ["xp_earned", "mastery_summary"],
+              "properties": {
+                "xp_earned": { "type": "integer" },
+                "coins_earned": { "type": "integer" },
+                "mastery_summary": { "type": "string" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Step 9: REWARD",
+          "required": ["step_number", "step_type", "title", "payload"],
+          "properties": {
+            "step_number": { "type": "integer", "const": 9 },
+            "step_type": { "type": "string", "const": "REWARD" },
+            "title": { "type": "string", "example": "Ganjaran Kembara" },
+            "payload": {
+              "type": "object",
+              "required": ["badge", "item_drop"],
+              "properties": {
+                "badge": { "type": "string" },
+                "item_drop": { "type": "string" },
+                "item_icon": { "type": "string" }
+              }
+            }
           }
         }
-      }
+      ]
     }
   }
 }

@@ -61,6 +61,9 @@ const DSKP_MAPPING = {
   }
 };
 
+import kssrTaxonomy from "@/data/kssrTaxonomy.json";
+import { getKSSRModeByGrade } from "@/services/generateKSSRContent";
+
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -632,6 +635,28 @@ export default function AdminContentStudio() {
                       </select>
                     </div>
                   </div>
+
+                  {/* KSSR SP Metadata Badge & Mode Auto-Detection */}
+                  <div className="p-4 bg-stone-950/80 border border-stone-800 rounded-2xl space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-amber-400">Penerangan SP ({spCode || "KSSR"})</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                          TP3 / APPLY
+                        </span>
+                      </div>
+                      <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider ${
+                        getKSSRModeByGrade(yearLevel) === "JUNIOR"
+                          ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
+                          : "bg-purple-500/20 text-purple-300 border border-purple-500/40"
+                      }`}>
+                        MOD ENJIN: {getKSSRModeByGrade(yearLevel)} ({yearLevel})
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-300 font-medium">
+                      {spCode ? `Standard Pembelajaran KSSR ${spCode} bagi tajuk ${topic} (${yearLevel}).` : "Pilih kod SP untuk melihat butiran taksonomi."}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex justify-between pt-2">
@@ -654,91 +679,34 @@ export default function AdminContentStudio() {
 
           {/* STEP 3: GENERATE AI PACKAGE */}
           {activeStep === 3 && (
-            <Card className="bg-gradient-to-br from-indigo-950/40 via-stone-900 to-amber-950/40 border-2 border-indigo-500/30 shadow-xl">
-              <CardHeader>
-                <CardTitle className="text-sm font-black text-indigo-300 uppercase tracking-wider flex items-center gap-2">
-                  ✨ LANGKAH 3: PENJANAAN PAKEJ PELAJARAN AI (15 MIKRO-BLOK)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <p className="text-xs text-stone-300 font-medium leading-relaxed">
-                  Sistem sedang menjana 15 blok modul DSKP berstruktur merangkumi 5 Fasa Utama (Engagement, Concept, Practice, Application, dan Pentaksiran PBD).
-                </p>
+            <Card className="bg-stone-900/90 border-stone-800 shadow-xl p-2">
+              <CardContent className="p-4 space-y-6">
+                <AIGenerationPanel
+                  spCode={spCode}
+                  spDescription={spCode ? `Pelajaran SP ${spCode} bagi ${topic}` : topic}
+                  skCode={skCode}
+                  grade={yearLevel}
+                  subject={subject}
+                  topic={topic}
+                  mode={getKSSRModeByGrade(yearLevel)}
+                  pbdTarget="TP3"
+                  onPackageGenerated={(pkg) => {
+                    toast({ title: "Misi Dijana!", description: "Pakej Misi 9-Langkah KSSR berjaya dijana." });
+                  }}
+                />
 
-                {generatingPackage && (
-                  <div className="space-y-4 py-4">
-                    <div className="flex flex-col space-y-1">
-                      <div className="flex items-center justify-between text-xs font-black">
-                        <span className="text-indigo-300 animate-pulse">{currentStageText || "Memulakan Penjanaan..."}</span>
-                        <span className="font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-500/30">
-                          {generationProgress}%
-                        </span>
-                      </div>
-                      <div className="w-full h-4 bg-stone-950 rounded-full overflow-hidden border border-stone-800 p-0.5 shadow-inner">
-                        <div
-                          className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-emerald-400 rounded-full transition-all duration-500 ease-out shadow-[0_0_15px_rgba(59,130,246,0.5)]"
-                          style={{ width: `${generationProgress}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* 5-Phase Stepper Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 pt-2">
-                      {[
-                        { id: 1, label: "Fasa 1: Engagement", range: [0, 20] },
-                        { id: 2, label: "Fasa 2: Concept", range: [21, 40] },
-                        { id: 3, label: "Fasa 3: Practice", range: [41, 60] },
-                        { id: 4, label: "Fasa 4: Application", range: [61, 80] },
-                        { id: 5, label: "Fasa 5: Assessment", range: [81, 100] }
-                      ].map(phase => {
-                        const isCompleted = generationProgress > phase.range[1] || generationProgress === 100;
-                        const isActive = generationProgress >= phase.range[0] && generationProgress <= phase.range[1] && generationProgress < 100;
-                        
-                        let cardClass = "bg-stone-950/50 border-stone-800 text-stone-500 opacity-50"; // Pending
-                        let icon = <span className="w-4 h-4 rounded-full bg-stone-800 text-[9px] flex items-center justify-center font-bold text-stone-500">{phase.id}</span>;
-
-                        if (isCompleted) {
-                          cardClass = "bg-emerald-950/30 border-emerald-500/50 text-emerald-300";
-                          icon = <CheckCircle2 className="w-4 h-4 text-emerald-400" />;
-                        } else if (isActive) {
-                          cardClass = "bg-indigo-950/30 border-indigo-400 text-indigo-200 shadow-[0_0_10px_rgba(99,102,241,0.3)] animate-pulse";
-                          icon = <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />;
-                        }
-
-                        return (
-                          <div key={phase.id} className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all ${cardClass}`}>
-                            <div className="flex items-center gap-1.5 mb-1">
-                              {icon}
-                            </div>
-                            <span className="text-[9px] font-bold text-center leading-tight uppercase tracking-wider">{phase.label}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-between pt-2">
+                <div className="flex justify-between border-t border-stone-800 pt-4">
                   <button
                     onClick={() => setActiveStep(2)}
                     className="h-10 px-4 bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs rounded-xl"
                   >
-                    Kembali
+                    Kembali ke Langkah 2
                   </button>
-
                   <button
-                    onClick={handleGeneratePackage}
-                    disabled={generatingPackage}
-                    className="h-11 px-8 bg-indigo-500 hover:bg-indigo-400 text-stone-950 font-black text-xs rounded-xl border-b-4 border-indigo-700 active:translate-y-0.5 transition-all flex items-center gap-2"
+                    onClick={() => setActiveStep(4)}
+                    className="h-10 px-6 bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs rounded-xl border-b-2 border-amber-600 flex items-center gap-1.5"
                   >
-                    {generatingPackage ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4" />
-                        <span>Jana Modul Pelajaran DSKP 15-Bahagian Lengkap</span>
-                      </>
-                    )}
+                    <span>Seterusnya: Semak Blok</span> <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </CardContent>
