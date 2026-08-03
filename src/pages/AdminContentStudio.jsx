@@ -6,17 +6,49 @@ const DSKP_MAPPING = {
   "Matematik": {
     "Tahun 1": {
       "Nombor hingga 100": {
-        "SK 1.4 Nilai Tempat": [
-          "SP 1.4.1 Menyatakan nilai tempat dan nilai digit bagi sebarang nombor hingga 100."
-        ],
-        "SK 1.5 Membandingkan Nombor": [
-          "SP 1.5.1 Membandingkan nilai dua nombor menggunakan lebih besar atau lebih kecil."
-        ]
+        "SK 1.1 Kuantiti secara intuitif": ["SP 1.1.1 Menyatakan kuantiti secara membandingkan banyak atau sedikit, sama banyak atau tidak sama banyak."],
+        "SK 1.2 Nilai Nombor": ["SP 1.2.1 Membilang objek dan menyebut nombor.", "SP 1.2.2 Membandingkan nilai dua kumpulan objek."],
+        "SK 1.3 Menulis Nombor": ["SP 1.3.1 Menulis nombor dalam angka dan perkataan."],
+        "SK 1.4 Kombinasi Nombor": ["SP 1.4.1 Menyatakan kombinasi nombor satu digit."],
+        "SK 1.5 Rangkaian Nombor": ["SP 1.5.1 Menyusun nombor secara tertib menaik dan menurun."],
+        "SK 1.6 Nilai Tempat": ["SP 1.6.1 Menyatakan nilai tempat (puluh dan sa) dan nilai digit bagi sebarang nombor."],
+        "SK 1.7 Menganggar": ["SP 1.7.1 Memberi anggaran kuantiti yang munasabah."],
+        "SK 1.8 Membundarkan Nombor": ["SP 1.8.1 Membundarkan nombor bulat kepada puluh terdekat."],
+        "SK 1.9 Pola Nombor": ["SP 1.9.1 Mengenal pasti pola nombor."]
+      },
+      "Tambah dan Tolak": {
+        "SK 2.1 Konsep Tambah dan Tolak": ["SP 2.1.1 Menggunakan perbendaharaan kata dan simbol + dan =.", "SP 2.1.2 Mengenal baki, beza, simbol - dan fakta asas tolak.", "SP 2.1.3 Menggunakan simbol tambah, tolak dan sama dengan."],
+        "SK 2.2 Tambah dalam lingkungan 100": ["SP 2.2.1 Menambah dua nombor tanpa dan dengan kumpul semula dalam bentuk lazim."],
+        "SK 2.3 Tolak dalam lingkungan 100": ["SP 2.3.1 Menolak dua nombor tanpa dan dengan kumpul semula."],
+        "SK 2.4 Selesaikan Masalah": ["SP 2.4.1 Rekabentuk cerita dan menyelesaikan masalah harian.", "SP 2.4.2 Menyelesaikan masalah harian yang melibatkan tambah dan tolak."],
+        "SK 2.5 Tambah Berulang": ["SP 2.5.1 Membilang dan menulis ayat matematik tambah berulang."],
+        "SK 2.6 Tolak Berturut-turut": ["SP 2.6.1 Membahagi kumpulan objek secara tolak berturut-turut."]
       },
       "Pecahan": {
-        "SK 1.1 Pecahan": [
-          "SP 1.1.1 Mengenal pasti pecahan satu perdua, satu perempat, dua perempat dan tiga perempat."
+        "SK 3.1 Konsep satu perdua dan satu perempat": ["SP 3.1.1 Mengenal pasti setengah, suku, satu perdua, dan satu perempat daripada satu objek utuh."]
+      },
+      "Wang": {
+        "SK 4.1 Wang kertas dan duit syiling": ["SP 4.1.1 Mengenal pasti duit syiling (5c, 10c, 20c, 50c) dan wang kertas (RM1, RM5, RM10).", "SP 4.1.2 Mewakilkan nilai wang dan menukar wang yang sama nilai."],
+        "SK 4.3 Pengurusan Kewangan": ["SP 4.3.1 Merekodkan sumber wang saku, simpanan, dan perbelanjaan harian."]
+      },
+      "Masa dan Waktu": {
+        "SK 5.1 Hari dan Bulan": ["SP 5.1.1 Menyatakan waktu dalam sehari.", "SP 5.1.2 Menyatakan urutan 7 hari seminggu dan 12 bulan setahun."],
+        "SK 5.2 Muka Jam": ["SP 5.2.1 Mengenal pasti jarum jam, jarum minit, serta menyebut waktu tepat, suku jam, dan setengah jam."]
+      },
+      "Panjang, Jisim dan Isi Padu Cecair": {
+        "SK 6.1 Unit bukan piawai": [
+          "SP 6.1.1 Membandingkan dan mengukur panjang, jisim dan isi padu cecair menggunakan unit bukan piawai.",
+          "SP 6.1.2 Membandingkan dan mengukur panjang menggunakan jengkal, depa, langkah, atau klip kertas.",
+          "SP 6.1.3 Menyatakan paras penuh, setengah, suku, dan menyukat isi padu cecair guna cawan/kole."
         ]
+      },
+      "Bentuk": {
+        "SK 7.1 Bentuk 3D": ["SP 7.1.1 Mengenal pasti kubus, kuboid, piramid, kon, silinder, sfera serta ciri-ciri permukaannya."],
+        "SK 7.2 Bentuk 2D": ["SP 7.2.1 Mengenal pasti segi empat sama, segi empat tepat, segi tiga, bulatan serta ciri sisinya."]
+      },
+      "Data": {
+        "SK 8.1 Mengumpul data": ["SP 8.1.1 Mengumpul data berdasarkan situasi harian menggunakan kaedah gundal."],
+        "SK 8.2 Piktograf": ["SP 8.2.1 Membaca dan memperoleh maklumat daripada piktograf bersimbol."]
       }
     },
     "Tahun 4": {
@@ -110,10 +142,11 @@ export default function AdminContentStudio() {
   const [subject, setSubject] = useState("Matematik");
   const [curriculumType, setCurriculumType] = useState("KSSR_SEMAKAN");
   const [educationLevel, setEducationLevel] = useState("PRIMARY");
-  const [yearLevel, setYearLevel] = useState("Tahun 4");
-  const [topic, setTopic] = useState("Pecahan, Perpuluhan dan Peratus");
+  const [yearLevel, setYearLevel] = useState("Tahun 1");
+  const [topic, setTopic] = useState("Nombor hingga 100");
   const [skCode, setSkCode] = useState("");
   const [spCode, setSpCode] = useState("");
+  const [availableTopics, setAvailableTopics] = useState([]);
   const [availableSKs, setAvailableSKs] = useState([]);
   const [availableSPs, setAvailableSPs] = useState([]);
 
@@ -140,41 +173,43 @@ export default function AdminContentStudio() {
   }, []);
 
   useEffect(() => {
-    const topicData = DSKP_MAPPING[subject]?.[yearLevel]?.[topic];
-    if (topicData) {
-      const sks = Object.keys(topicData);
-      setAvailableSKs(sks);
-      
-      let currentSk = skCode;
-      if (!sks.includes(skCode)) {
-        currentSk = sks[0];
-        setSkCode(currentSk);
+    const topicsObj = DSKP_MAPPING[subject]?.[yearLevel];
+    if (topicsObj) {
+      const tKeys = Object.keys(topicsObj);
+      setAvailableTopics(tKeys);
+
+      let currentTopic = topic;
+      if (!tKeys.includes(topic)) {
+        currentTopic = tKeys[0];
+        setTopic(currentTopic);
       }
-      
-      const sps = topicData[currentSk] || [];
-      setAvailableSPs(sps);
-      
-      if (!sps.includes(spCode)) {
-        setSpCode(sps[0] || "");
+
+      const topicData = topicsObj[currentTopic];
+      if (topicData) {
+        const sks = Object.keys(topicData);
+        setAvailableSKs(sks);
+        
+        let currentSk = skCode;
+        if (!sks.includes(skCode)) {
+          currentSk = sks[0];
+          setSkCode(currentSk);
+        }
+
+        const sps = topicData[currentSk] || [];
+        setAvailableSPs(sps);
+        if (!sps.includes(spCode)) {
+          setSpCode(sps[0] || "");
+        }
+      } else {
+        setAvailableSKs([]);
+        setAvailableSPs([]);
       }
     } else {
-      setAvailableSKs(["SK Default"]);
-      setAvailableSPs(["SP Default"]);
-      setSkCode("SK Default");
-      setSpCode("SP Default");
+      setAvailableTopics([]);
+      setAvailableSKs([]);
+      setAvailableSPs([]);
     }
-  }, [subject, yearLevel, topic]);
-
-  useEffect(() => {
-    const topicData = DSKP_MAPPING[subject]?.[yearLevel]?.[topic];
-    if (topicData) {
-      const sps = topicData[skCode] || [];
-      setAvailableSPs(sps);
-      if (!sps.includes(spCode)) {
-        setSpCode(sps[0] || "");
-      }
-    }
-  }, [skCode, subject, yearLevel, topic, spCode]);
+  }, [subject, yearLevel, topic, skCode]);
 
   const fetchCompletenessAndBlocks = useCallback(async () => {
     if (!selectedVersion) {
@@ -481,12 +516,15 @@ export default function AdminContentStudio() {
                 <div className="space-y-3">
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-stone-300">Tajuk Modul</label>
-                    <input
-                      type="text"
+                    <select
                       value={topic}
                       onChange={(e) => setTopic(e.target.value)}
                       className="w-full bg-stone-950 border border-stone-800 text-white text-xs rounded-xl p-3 font-bold"
-                    />
+                    >
+                      {availableTopics.map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
