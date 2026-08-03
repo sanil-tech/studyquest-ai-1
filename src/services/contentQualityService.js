@@ -58,9 +58,12 @@ export const validateLessonQuality = async (lesson, curriculumContext) => {
   let hasAssessment = false;
   
   (lesson.content_blocks || []).forEach(block => {
-    if (block.block_type === 'concept' || block.block_type === 'story') hasConcept = true;
-    if (block.block_type === 'interactive' || block.block_type === 'practice') hasPractice = true;
-    if (block.block_type === 'assessment' || block.block_type === 'quiz') hasAssessment = true;
+    const type = (block.block_type || "").toLowerCase();
+    const phase = (block.pedagogical_phase || "").toLowerCase();
+
+    if (phase === 'concept' || type === 'concept' || type === 'story' || type === 'text_markdown') hasConcept = true;
+    if (phase === 'practice' || phase === 'application' || type === 'interactive' || type === 'practice' || type === 'flashcard_deck') hasPractice = true;
+    if (phase === 'pbd_assessment' || type === 'assessment' || type === 'quiz' || type === 'interactive_game') hasAssessment = true;
   });
 
   if (!hasConcept) {

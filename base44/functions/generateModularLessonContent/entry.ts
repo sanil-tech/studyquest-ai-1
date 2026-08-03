@@ -16,113 +16,27 @@ interface ModularGenInput {
   taxonomy?: string;
 }
 
-const SEVEN_PART_LESSON_SCHEMA = {
+const FIVE_PHASE_LESSON_SCHEMA = {
   type: "object",
   properties: {
-    // 1. LESSON IDENTITY
-    identity: {
-      type: "object",
-      properties: {
-        subject: { type: "string" },
-        year_level: { type: "string" },
-        topic: { type: "string" },
-        sk_code: { type: "string" },
-        sp_code: { type: "string" },
-        learning_objectives: { type: "array", items: { type: "string" } },
-        success_criteria: { type: "array", items: { type: "string" } },
-      },
-      required: ["subject", "year_level", "topic", "sk_code", "sp_code", "learning_objectives", "success_criteria"],
-    },
-
-    // 2. STUDENT ENGAGEMENT HOOK (Suku Mascot Mystery)
-    engagement_hook: {
-      type: "object",
-      properties: {
-        mascot: { type: "string", default: "Suku Penyu 🐢" },
-        mystery_title: { type: "string" },
-        story_problem: { type: "string" },
-        curiosity_question: { type: "string" },
-      },
-      required: ["mystery_title", "story_problem", "curiosity_question"],
-    },
-
-    // 3. CONCEPT EXPLANATION
-    concept_explanation: {
-      type: "object",
-      properties: {
-        notes_markdown: { type: "string" },
-        dbp_terminology: { type: "array", items: { type: "string" } },
-        visual_suggestions: { type: "array", items: { type: "string" } },
-      },
-      required: ["notes_markdown"],
-    },
-
-    // 4. GUIDED EXAMPLES
-    guided_examples: {
+    lesson_title: { type: "string" },
+    sp_code: { type: "string" },
+    blocks: {
       type: "array",
       items: {
         type: "object",
         properties: {
-          problem: { type: "string" },
-          step_by_step_solution: { type: "array", items: { type: "string" } },
-          common_student_mistake: { type: "string" },
-          correct_reasoning: { type: "string" },
+          id: { type: "string" },
+          phase: { type: "string", enum: ["ENGAGEMENT", "CONCEPT", "PRACTICE", "APPLICATION", "PBD_ASSESSMENT"] },
+          type: { type: "string" },
+          title: { type: "string" },
+          content: { type: "object" }
         },
-        required: ["problem", "step_by_step_solution", "common_student_mistake", "correct_reasoning"],
+        required: ["id", "phase", "type", "title", "content"]
       },
+      minItems: 5,
+      maxItems: 5
     },
-
-    // 5. LEARNING ACTIVITIES (MINIMUM 3)
-    learning_activities: {
-      type: "object",
-      properties: {
-        matching_game: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            instructions: { type: "string" },
-            pairs: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: { left: { type: "string" }, right: { type: "string" } },
-                required: ["left", "right"],
-              },
-            },
-          },
-          required: ["title", "instructions", "pairs"],
-        },
-        sorting_activity: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            category_a: { type: "string" },
-            category_b: { type: "string" },
-            items: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: { text: { type: "string" }, category: { type: "string" } },
-                required: ["text", "category"],
-              },
-            },
-          },
-          required: ["title", "category_a", "category_b", "items"],
-        },
-        real_life_challenge: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            scenario: { type: "string" },
-            task: { type: "string" },
-          },
-          required: ["title", "scenario", "task"],
-        },
-      },
-      required: ["matching_game", "sorting_activity", "real_life_challenge"],
-    },
-
-    // 6. BALANCED ASSESSMENT (30% Remember, 40% Understand/Apply, 30% HOTS/KBAT)
     assessment: {
       type: "array",
       items: {
@@ -171,17 +85,7 @@ const SEVEN_PART_LESSON_SCHEMA = {
       },
     },
   },
-  required: [
-    "identity",
-    "engagement_hook",
-    "concept_explanation",
-    "guided_examples",
-    "learning_activities",
-    "assessment",
-    "gamification",
-    "mindmap_branches",
-    "flashcards"
-  ],
+  required: ["lesson_title", "sp_code", "blocks", "assessment", "gamification"]
 };
 
 export default async function(req: Request): Promise<Response> {
@@ -214,7 +118,7 @@ export default async function(req: Request): Promise<Response> {
     const taxonomy = body.taxonomy || "Bloom";
 
     const systemPrompt = `Anda ialah Pakar Penggubal Kurikulum Kementerian Pendidikan Malaysia (KPM) berikutan standard ${curriculumType} (DSKP).
-Tugas anda ialah membina SATU PAKEJ PELAJARAN LENGKAP 7-BAHAGIAN DSKP bagi:
+Tugas anda ialah membina SATU PAKEJ PELAJARAN LENGKAP 5-FASA DSKP bagi:
 - Subjek: ${subject}
 - Tingkat/Tahun: ${yearLevel}
 - Topik: ${topic}
@@ -223,21 +127,32 @@ Tugas anda ialah membina SATU PAKEJ PELAJARAN LENGKAP 7-BAHAGIAN DSKP bagi:
 - Bahasa: ${language}
 - Taksonomi: ${taxonomy}
 
-SYARAT 7 BAHAGIAN WAJIB:
-1. Lesson Identity: SK/SP, Objektif & Kriteria Kejayaan.
-2. Student Engagement Hook: Set induksi berunsur misteri/cabaran bersama Maskot Suku Penyu 🐢 mengikut konteks kehidupan harian murid Malaysia.
-3. Concept Explanation: Bahasa Melayu istilah DBP, penjelasan mesra murid tanpa menyalin buku teks.
-4. Guided Examples: Contoh terbimbing langkah demi langkah TERMASUK kesilapan lazim murid & penaakulan betul.
-5. Learning Activities: Minima 3 aktiviti (Suai padan, Isih Kategori, Cabaran Kehidupan Sebenar).
-6. Balanced Assessment: Agihan Bloom (30% Remember, 40% Understand/Apply, 30% HOTS/KBAT).
-7. Gamification Layer: Tetapkan XP Reward (50 XP), Syiling (10 Coins), Pesanan Kejayaan Misi & Kata Semangat Suku 🐢.`;
+SYARAT WAJIB OUTPUT JSON ANDA:
+Anda mesti menjana struktur JSON yang mengandungi 'lesson_title' (tajuk pembelajaran berdasarkan SP), 'sp_code' yang sepadan, dan tepat 5 blok pembelajaran berikutan 5 fasa pedagogi di bawah:
 
-    const userPrompt = `Jana pakej pelajaran modul DSKP 7-bahagian lengkap bagi ${skCode} - ${spCode}.`;
+1. Block 1 (phase: "ENGAGEMENT"): Hook / Set Induksi. (type: "TEXT_MARKDOWN")
+2. Block 2 (phase: "CONCEPT"): Pengajaran Konsep secara visual atau nota. (type: "MIND_MAP" atau "TEXT_MARKDOWN")
+3. Block 3 (phase: "PRACTICE"): Latihan Interaktif atau Kad Imbasan. (type: "FLASHCARD_DECK" atau "INTERACTIVE_GAME")
+4. Block 4 (phase: "APPLICATION"): Aplikasi Kemahiran / Ujian Praktikal. (type: "TEXT_MARKDOWN")
+5. Block 5 (phase: "PBD_ASSESSMENT"): Pentaksiran Akhir (type: "INTERACTIVE_GAME")
+
+Contoh struktur untuk blocks:
+[
+  { "id": "b1", "phase": "ENGAGEMENT", "type": "TEXT_MARKDOWN", "title": "Misteri Suku Penyu", "content": {...} },
+  { "id": "b2", "phase": "CONCEPT", "type": "MIND_MAP", "title": "Peta Konsep", "content": {...} },
+  { "id": "b3", "phase": "PRACTICE", "type": "FLASHCARD_DECK", "title": "Kad Imbasan", "content": {...} },
+  { "id": "b4", "phase": "APPLICATION", "type": "TEXT_MARKDOWN", "title": "Aplikasi Konsep", "content": {...} },
+  { "id": "b5", "phase": "PBD_ASSESSMENT", "type": "INTERACTIVE_GAME", "title": "Ujian Akhir PBD", "content": {...} }
+]
+
+Sertakan juga objektif 'gamification' (xp_reward, coin_reward) dan 'assessment' array dengan soalan pelbagai aras Bloom (30% Remember, 40% Understand/Apply, 30% HOTS/KBAT).`;
+
+    const userPrompt = `Jana pakej pelajaran modul DSKP 5-Fasa bagi ${skCode} - ${spCode}. Pastikan ia mematuhi skema JSON yang ditetapkan.`;
 
     const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: systemPrompt + "\n\n" + userPrompt,
       model: "gemini_3_flash",
-      response_json_schema: SEVEN_PART_LESSON_SCHEMA,
+      response_json_schema: FIVE_PHASE_LESSON_SCHEMA,
     });
 
     let generated: any;
@@ -253,71 +168,32 @@ SYARAT 7 BAHAGIAN WAJIB:
       sp_code: spCode,
       curriculum_type: curriculumType,
       year_level: yearLevel,
-      notes_content: generated.concept_explanation.notes_markdown,
-      mindmap_data: JSON.stringify(generated.mindmap_branches),
       content_completion_percentage: 95,
     }).catch(() => {});
 
-    // Save Modular LessonBlocks
-    await base44.asServiceRole.entities.LessonBlock.create({
-      lesson_version_id: version.id,
-      sp_code: spCode,
-      pedagogical_phase: "INDUCTION",
-      cognitive_level: "remember",
-      block_type: "TEXT_MARKDOWN",
-      title: generated.engagement_hook.mystery_title || "Set Induksi Bersama Suku 🐢",
-      order_number: 1,
-      payload: { markdown: `### 🐢 Misteri Suku\n${generated.engagement_hook.story_problem}\n\n**❓ Cabaran:** ${generated.engagement_hook.curiosity_question}` },
-      status: "draft",
-    }).catch(() => {});
-
-    await base44.asServiceRole.entities.LessonBlock.create({
-      lesson_version_id: version.id,
-      sp_code: spCode,
-      pedagogical_phase: "CONCEPT",
-      cognitive_level: "understand",
-      block_type: "TEXT_MARKDOWN",
-      title: "Penerangan Konsep DSKP",
-      order_number: 2,
-      payload: { markdown: generated.concept_explanation.notes_markdown, objectives: generated.identity.learning_objectives },
-      status: "draft",
-    }).catch(() => {});
-
-    await base44.asServiceRole.entities.LessonBlock.create({
-      lesson_version_id: version.id,
-      sp_code: spCode,
-      pedagogical_phase: "CONCEPT",
-      cognitive_level: "remember",
-      block_type: "MIND_MAP",
-      title: "Peta Minda Visual",
-      order_number: 3,
-      payload: { branches: generated.mindmap_branches },
-      status: "draft",
-    }).catch(() => {});
-
-    await base44.asServiceRole.entities.LessonBlock.create({
-      lesson_version_id: version.id,
-      sp_code: spCode,
-      pedagogical_phase: "WORKED_EXAMPLE",
-      cognitive_level: "apply",
-      block_type: "FLASHCARD_DECK",
-      title: "Kad Imbasan DBP",
-      order_number: 4,
-      payload: { cards: generated.flashcards },
-      status: "draft",
-    }).catch(() => {});
-
-    await base44.asServiceRole.entities.LessonBlock.create({
-      lesson_version_id: version.id,
-      sp_code: spCode,
-      pedagogical_phase: "PBD_ASSESSMENT",
-      cognitive_level: "apply",
-      block_type: "INTERACTIVE_GAME",
-      title: "Aktiviti PBD Suai Padan",
-      order_number: 5,
-      payload: generated.learning_activities.matching_game,
-      status: "draft",
-    }).catch(() => {});
+    // Save Modular LessonBlocks Dynamically
+    if (generated.blocks && Array.isArray(generated.blocks)) {
+      for (let i = 0; i < generated.blocks.length; i++) {
+        const block = generated.blocks[i];
+        
+        let cognitiveLevel = "understand";
+        if (block.phase === "ENGAGEMENT") cognitiveLevel = "remember";
+        if (block.phase === "APPLICATION") cognitiveLevel = "apply";
+        if (block.phase === "PBD_ASSESSMENT") cognitiveLevel = "evaluate";
+        
+        await base44.asServiceRole.entities.LessonBlock.create({
+          lesson_version_id: version.id,
+          sp_code: spCode,
+          pedagogical_phase: block.phase,
+          cognitive_level: cognitiveLevel,
+          block_type: block.type,
+          title: block.title,
+          order_number: i + 1,
+          payload: block.content,
+          status: "draft",
+        }).catch((e) => console.error(`LessonBlock ${i} creation failed`, e));
+      }
+    }
 
     // Save Assessment, QuestionBank and QuestionOptions
     if (generated.assessment && Array.isArray(generated.assessment)) {
