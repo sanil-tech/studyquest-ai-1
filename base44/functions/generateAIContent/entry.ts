@@ -497,10 +497,10 @@ export default async function(req: Request): Promise<Response> {
           ? buildQuestionsPrompt(topicName, subjectName, levelName, prompt_context)
           : buildPrompt(content_type, topicName, subjectName, levelName, prompt_context));
 
-      // 6. Call InvokeLLM — use gpt_5_mini for educational reasoning
+      // 6. Call InvokeLLM — use Google Gemini for educational reasoning
       const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: promptText,
-        model: "gpt_5_mini",
+        model: "gemini_3_flash",
         response_json_schema: CONTENT_SCHEMAS[content_type],
       });
 

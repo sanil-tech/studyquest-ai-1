@@ -59,9 +59,11 @@ import {
   Eye
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function AdminContentStudio() {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Active Wizard Step (1 to 6)
   const [activeStep, setActiveStep] = useState(1);
@@ -187,6 +189,9 @@ export default function AdminContentStudio() {
         subject: subject,
         year_level: yearLevel,
         curriculum_type: curriculumType,
+        topic: topic,
+        language: "Bahasa Melayu",
+        taxonomy: "Bloom",
       });
 
       setGenerationProgress(85);
@@ -195,9 +200,13 @@ export default function AdminContentStudio() {
         await fetchCompletenessAndBlocks();
         await handleEvaluateQuality();
         setActiveStep(4); // Move to Step 4: Block Review
+        toast({ title: "Berjaya!", description: "Pakej Pelajaran AI berjaya dijana." });
+      } else {
+        toast({ title: "Ralat Penjanaan", description: res.data?.error || "Gagal menjana pakej pelajaran.", variant: "destructive" });
       }
     } catch (err) {
       console.error("Generate package error:", err);
+      toast({ title: "Ralat Sistem", description: err.message || "Gagal menjana modul.", variant: "destructive" });
     } finally {
       setGeneratingPackage(false);
     }

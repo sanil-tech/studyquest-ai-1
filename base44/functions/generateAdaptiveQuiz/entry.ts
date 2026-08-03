@@ -88,7 +88,7 @@ Jana JSON mengikut format persis berikut:
     // 4. Invoke LLM via Core integration
     const aiRes = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: promptText,
-      model: "gpt_5_mini",
+      model: "gemini_3_flash",
       response_json_schema: {
         type: "object",
         properties: {

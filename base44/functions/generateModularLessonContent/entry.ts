@@ -11,6 +11,9 @@ interface ModularGenInput {
   subject?: string;
   year_level?: string;
   curriculum_type?: "KSSR_SEMAKAN" | "KSSM";
+  topic?: string;
+  language?: string;
+  taxonomy?: string;
 }
 
 const SEVEN_PART_LESSON_SCHEMA = {
@@ -206,13 +209,19 @@ export default async function(req: Request): Promise<Response> {
     const subject = body.subject || "Matematik";
     const yearLevel = body.year_level || version.year_level || "Tahun 4";
     const curriculumType = body.curriculum_type || version.curriculum_type || "KSSR_SEMAKAN";
+    const topic = body.topic || "Topik Pelajaran";
+    const language = body.language || "Bahasa Melayu";
+    const taxonomy = body.taxonomy || "Bloom";
 
     const systemPrompt = `Anda ialah Pakar Penggubal Kurikulum Kementerian Pendidikan Malaysia (KPM) berikutan standard ${curriculumType} (DSKP).
 Tugas anda ialah membina SATU PAKEJ PELAJARAN LENGKAP 7-BAHAGIAN DSKP bagi:
 - Subjek: ${subject}
 - Tingkat/Tahun: ${yearLevel}
+- Topik: ${topic}
 - Standard Kandungan (SK): ${skCode}
 - Standard Pembelajaran (SP): ${spCode}
+- Bahasa: ${language}
+- Taksonomi: ${taxonomy}
 
 SYARAT 7 BAHAGIAN WAJIB:
 1. Lesson Identity: SK/SP, Objektif & Kriteria Kejayaan.
@@ -225,14 +234,18 @@ SYARAT 7 BAHAGIAN WAJIB:
 
     const userPrompt = `Jana pakej pelajaran modul DSKP 7-bahagian lengkap bagi ${skCode} - ${spCode}.`;
 
-    const llmRes = await base44.asServiceRole.integrations.CoreLLM.invokeLLM({
-      systemPrompt,
-      prompt: userPrompt,
-      responseFormat: "json",
-      jsonSchema: SEVEN_PART_LESSON_SCHEMA,
+    const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: systemPrompt + "\n\n" + userPrompt,
+      model: "gemini_3_flash",
+      response_json_schema: SEVEN_PART_LESSON_SCHEMA,
     });
 
-    const generated = typeof llmRes === "string" ? JSON.parse(llmRes) : llmRes;
+    let generated: any;
+    try {
+      generated = typeof aiResponse === "string" ? JSON.parse(aiResponse.replace(/```json/g, '').replace(/```/g, '')) : aiResponse;
+    } catch (e) {
+      generated = aiResponse;
+    }
 
     // Update LessonVersion entity
     await base44.asServiceRole.entities.LessonVersion.update(version.id, {
@@ -305,6 +318,52 @@ SYARAT 7 BAHAGIAN WAJIB:
       payload: generated.learning_activities.matching_game,
       status: "draft",
     }).catch(() => {});
+
+    // Save Assessment, QuestionBank and QuestionOptions
+    if (generated.assessment && Array.isArray(generated.assessment)) {
+      const assessment = await base44.asServiceRole.entities.Assessment.create({
+        lesson_id: version.lesson_id,
+        title: "Pentaksiran PBD: " + topic,
+        assessment_type: "PRACTICE",
+        time_limit_minutes: 15,
+        passing_score: 80,
+        reward_xp: generated.gamification?.xp_reward || 50,
+        reward_coins: generated.gamification?.coin_reward || 10,
+        workflow_status: "PUBLISHED"
+      }).catch((e) => console.error("Assessment creation failed", e));
+
+      if (assessment) {
+        for (let i = 0; i < generated.assessment.length; i++) {
+          const q = generated.assessment[i];
+          const question = await base44.asServiceRole.entities.QuestionBank.create({
+            assessment_id: assessment.id,
+            lesson_version_id: version.id,
+            question_text: q.question,
+            question_type: "MCQ",
+            difficulty: q.difficulty || "medium",
+            cognitive_level: q.cognitive_level || "understand",
+            concept_tested: q.concept_tested || "",
+            explanation: q.explanation || "",
+            status: "draft"
+          }).catch((e) => console.error("Question creation failed", e));
+
+          if (question && q.options && Array.isArray(q.options)) {
+            for (let j = 0; j < q.options.length; j++) {
+              const optText = q.options[j];
+              const isCorrect = optText === q.correct_answer;
+              const label = String.fromCharCode(65 + j); // A, B, C, D
+              await base44.asServiceRole.entities.QuestionOption.create({
+                question_id: question.id,
+                label: label,
+                text: optText,
+                is_correct: isCorrect,
+                sort_order: j
+              }).catch((e) => console.error("QuestionOption creation failed", e));
+            }
+          }
+        }
+      }
+    }
 
     return Response.json({
       success: true,
