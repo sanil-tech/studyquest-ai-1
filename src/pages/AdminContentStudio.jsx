@@ -284,6 +284,24 @@ export default function AdminContentStudio() {
     }
   }, [subject, yearLevel, topic, skCode]);
 
+  const activeTaxonomyItems = useMemo(() => {
+    return kssrTaxonomy.subjects?.[subject]?.[yearLevel] || [];
+  }, [subject, yearLevel]);
+
+  const selectedSPItem = useMemo(() => {
+    return activeTaxonomyItems.find(item => item.sp_code === spCode) || null;
+  }, [activeTaxonomyItems, spCode]);
+
+  const getSKTitle = useCallback((sk) => {
+    const match = activeTaxonomyItems.find(item => item.sk_code === sk);
+    return match?.title || match?.sk_title || `Standard Kandungan ${sk}`;
+  }, [activeTaxonomyItems]);
+
+  const getSPTitle = useCallback((sp) => {
+    const match = activeTaxonomyItems.find(item => item.sp_code === sp);
+    return match?.title || match?.sp_title || `Standard Pembelajaran ${sp}`;
+  }, [activeTaxonomyItems]);
+
   const fetchCompletenessAndBlocks = useCallback(async () => {
     if (!selectedVersion) {
       setCompleteness(null);
@@ -616,40 +634,55 @@ export default function AdminContentStudio() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-stone-300">Standard Kandungan (SK Code)</label>
+                      <label className="text-xs font-bold text-stone-300">Standard Kandungan (SK Code & Tajuk)</label>
                       <select
                         value={skCode}
                         onChange={(e) => setSkCode(e.target.value)}
-                        className="w-full bg-stone-950 border border-stone-800 text-white text-xs rounded-xl p-3 font-bold"
+                        className="w-full bg-stone-950 border border-stone-800 text-white text-xs rounded-xl p-3 font-bold truncate max-w-full"
                       >
-                        {availableSKs.map(sk => (
-                          <option key={sk} value={sk}>{sk}</option>
-                        ))}
+                        {availableSKs.map(sk => {
+                          const title = getSKTitle(sk);
+                          return (
+                            <option key={sk} value={sk}>
+                              {sk} - {title}
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-stone-300">Standard Pembelajaran (SP Code)</label>
+                      <label className="text-xs font-bold text-stone-300">Standard Pembelajaran (SP Code & Deskripsi)</label>
                       <select
                         value={spCode}
                         onChange={(e) => setSpCode(e.target.value)}
-                        className="w-full bg-stone-950 border border-stone-800 text-white text-xs rounded-xl p-3 font-bold"
+                        className="w-full bg-stone-950 border border-stone-800 text-white text-xs rounded-xl p-3 font-bold truncate max-w-full"
                       >
-                        {availableSPs.map(sp => (
-                          <option key={sp} value={sp}>{sp}</option>
-                        ))}
+                        {availableSPs.map(sp => {
+                          const title = getSPTitle(sp);
+                          return (
+                            <option key={sp} value={sp}>
+                              {sp} - {title}
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
                   </div>
 
-                  {/* KSSR SP Metadata Badge & Mode Auto-Detection */}
+                  {/* KSSR SP Metadata Badge & Dynamic Description */}
                   <div className="p-4 bg-stone-950/80 border border-stone-800 rounded-2xl space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-800 pb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-amber-400">Penerangan SP ({spCode || "KSSR"})</span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
-                          TP3 / APPLY
+                        <span className="text-xs font-black text-amber-400">Penerangan DSKP ({spCode || "KSSR"})</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30 uppercase">
+                          {selectedSPItem?.bloom_level || "TP3 / APPLY"}
                         </span>
+                        {selectedSPItem?.default_widget_type && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-500/30">
+                            Widget: {selectedSPItem.default_widget_type}
+                          </span>
+                        )}
                       </div>
                       <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider ${
                         getKSSRModeByGrade(yearLevel) === "JUNIOR"
@@ -659,8 +692,10 @@ export default function AdminContentStudio() {
                         MOD ENJIN: {getKSSRModeByGrade(yearLevel)} ({yearLevel})
                       </span>
                     </div>
-                    <p className="text-xs text-stone-300 font-medium">
-                      {spCode ? `Standard Pembelajaran KSSR ${spCode} bagi tajuk ${topic} (${yearLevel}).` : "Pilih kod SP untuk melihat butiran taksonomi."}
+                    <p className="text-xs text-stone-200 font-semibold leading-relaxed">
+                      {selectedSPItem?.title
+                        ? `SP ${spCode} - ${selectedSPItem.title}`
+                        : (spCode ? `Standard Pembelajaran KSSR ${spCode} bagi tajuk ${topic} (${yearLevel}).` : "Pilih kod SP untuk melihat butiran taksonomi.")}
                     </p>
                   </div>
                 </div>

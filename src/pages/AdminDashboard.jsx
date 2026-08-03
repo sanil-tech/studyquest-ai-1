@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import kssrTaxonomy from "@/data/kssrTaxonomy.json";
+import MissionDetailsModal from "@/components/admin/MissionDetailsModal";
 import {
   BookOpen, Edit3, FileText, Crown, Loader2, LogOut, Brain, ClipboardList, TrendingUp, Plus, ArrowRight, Sparkles,
-  Layers, CheckCircle2, ShieldCheck, Zap, ChevronRight, Target, Grid, Award
+  Layers, CheckCircle2, ShieldCheck, Zap, ChevronRight, Target, Grid, Award, Eye
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -64,6 +65,12 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ users: 0, topics: 0, lessons: 0, quizAttempts: 0 });
   const [recentLessons, setRecentLessons] = useState([]);
 
+  // Drill-down Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalSubtitle, setModalSubtitle] = useState("");
+  const [modalMissions, setModalMissions] = useState([]);
+
   // Calculate total KSSR SPs available in taxonomy
   const totalTaxonomySPs = useMemo(() => {
     try {
@@ -78,6 +85,20 @@ export default function AdminDashboard() {
       return 12;
     }
   }, []);
+
+  // Demo generated missions data for drill-down view
+  const sampleMissions = useMemo(() => [
+    { id: "m-101", sp_code: "1.1.1", title: "Menyatakan Kuantiti Secara Membandingkan", subject_name: "Matematik", year_level: "Tahun 1", mode: "JUNIOR", cpa_type: "VISUAL_STORY" },
+    { id: "m-102", sp_code: "1.4.1", title: "Menyatakan Nilai Tempat dan Nilai Digit", subject_name: "Matematik", year_level: "Tahun 1", mode: "JUNIOR", cpa_type: "COMPARISON_SPLIT" },
+    { id: "m-103", sp_code: "1.5.1", title: "Membandingkan Nilai Dua Nombor", subject_name: "Matematik", year_level: "Tahun 1", mode: "JUNIOR", cpa_type: "STEP_BY_STEP" },
+    { id: "m-104", sp_code: "2.1.1", title: "Menggunakan Simbol Simbol Matematik Asas", subject_name: "Matematik", year_level: "Tahun 1", mode: "JUNIOR", cpa_type: "MYTH_BUSTER" },
+    { id: "m-105", sp_code: "3.1.1", title: "Mengenal Pasti Satu Perdua dan Satu Perempat", subject_name: "Matematik", year_level: "Tahun 1", mode: "JUNIOR", cpa_type: "VISUAL_STORY" },
+    { id: "m-106", sp_code: "4.1.1", title: "Mengenal Pasti Duit Syiling dan Wang Kertas", subject_name: "Matematik", year_level: "Tahun 1", mode: "JUNIOR", cpa_type: "COMPARISON_SPLIT" },
+    { id: "m-107", sp_code: "5.1.1", title: "Menyatakan Waktu dalam Sehari dan Hari Seminggu", subject_name: "Matematik", year_level: "Tahun 1", mode: "JUNIOR", cpa_type: "STEP_BY_STEP" },
+    { id: "m-108", sp_code: "1.1.1", title: "Penyelesaian Masalah Pecahan Wajar", subject_name: "Matematik", year_level: "Tahun 4", mode: "SENIOR", cpa_type: "VISUAL_STORY" },
+    { id: "m-109", sp_code: "2.1.2", title: "Operasi Darab dan Bahagi Lingkungan 10,000", subject_name: "Matematik", year_level: "Tahun 5", mode: "SENIOR", cpa_type: "STEP_BY_STEP" },
+    { id: "m-110", sp_code: "3.2.1", title: "Nisbah Kuantiti & Peratusan Kemajuan", subject_name: "Matematik", year_level: "Tahun 6", mode: "SENIOR", cpa_type: "MYTH_BUSTER" }
+  ], []);
 
   useEffect(() => {
     const init = async () => {
@@ -128,7 +149,8 @@ export default function AdminDashboard() {
         setRecentLessons(sortedLessons);
       } catch (err) {
         console.warn("Admin init non-blocking error:", err);
-      } finally {
+      } font: "font-sans"
+      finally {
         setLoading(false);
       }
     };
@@ -137,6 +159,34 @@ export default function AdminDashboard() {
 
   const handleLogout = async () => {
     await base44.auth.logout("/login");
+  };
+
+  const handleOpenDrillDownModal = (type, label) => {
+    if (type === "JUNIOR") {
+      setModalTitle("Senarai Misi: Mod Enjin JUNIOR (Prasekolah - T3)");
+      setModalSubtitle("Modul KSSR berperingkat CPA bersama maskot Suku Penyu 🐢");
+      setModalMissions(sampleMissions.filter(m => m.mode === "JUNIOR"));
+    } else if (type === "SENIOR") {
+      setModalTitle("Senarai Misi: Mod Enjin SENIOR (Tahun 4 - T6)");
+      setModalSubtitle("Modul KSSR berperingkat KBAT & PBD TP1-TP6 bersama Ejen Suku 🦊");
+      setModalMissions(sampleMissions.filter(m => m.mode === "SENIOR"));
+    } else if (type.startsWith("CPA_")) {
+      const cpaType = type.replace("CPA_", "");
+      setModalTitle(`Senarai Misi: Taburan Blok ${cpaType}`);
+      setModalSubtitle(`Semua misi KSSR yang mengandungi blok ${cpaType} pada Langkah 2 (ENGAGEMENT)`);
+      setModalMissions(sampleMissions.filter(m => m.cpa_type === cpaType || true));
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleEditMissionInStudio = (mission) => {
+    setIsModalOpen(false);
+    toast({ title: "Membuka Admin Studio", description: `Memuatkan SP ${mission.sp_code || "1.4.1"} (${mission.subject_name || "Matematik"})` });
+    navigate("/admin/content-studio");
+  };
+
+  const handlePreviewMission = (mission) => {
+    toast({ title: "Pratonton Misi", description: `Membuka modul ${mission.title || mission.sp_code}` });
   };
 
   if (loading) {
@@ -229,12 +279,14 @@ export default function AdminDashboard() {
           </div>
         </motion.div>
 
-        {/* 2. DUAL-ENGINE DISTRIBUTION CARD (JUNIOR vs SENIOR) */}
+        {/* 2. DUAL-ENGINE DISTRIBUTION CARD (JUNIOR vs SENIOR - CLICKABLE FOR DRILL-DOWN) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            className="p-5 bg-gradient-to-br from-cyan-950/40 via-stone-900 to-stone-900 border border-cyan-500/30 rounded-3xl space-y-3"
+            whileHover={{ y: -3 }}
+            onClick={() => handleOpenDrillDownModal("JUNIOR")}
+            className="p-5 bg-gradient-to-br from-cyan-950/40 via-stone-900 to-stone-900 border border-cyan-500/30 hover:border-cyan-400/80 rounded-3xl space-y-3 cursor-pointer transition-all shadow-lg group"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -253,14 +305,18 @@ export default function AdminDashboard() {
             </p>
             <div className="flex items-center justify-between text-xs pt-2 border-t border-stone-800">
               <span className="text-stone-400 font-bold">Modul Aktif:</span>
-              <span className="text-cyan-300 font-black">16 Misi Dijana</span>
+              <span className="text-cyan-300 font-black flex items-center gap-1 group-hover:underline">
+                16 Misi Dijana <Eye className="w-3.5 h-3.5 ml-1" />
+              </span>
             </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
-            className="p-5 bg-gradient-to-br from-purple-950/40 via-stone-900 to-stone-900 border border-purple-500/30 rounded-3xl space-y-3"
+            whileHover={{ y: -3 }}
+            onClick={() => handleOpenDrillDownModal("SENIOR")}
+            className="p-5 bg-gradient-to-br from-purple-950/40 via-stone-900 to-stone-900 border border-purple-500/30 hover:border-purple-400/80 rounded-3xl space-y-3 cursor-pointer transition-all shadow-lg group"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -279,12 +335,14 @@ export default function AdminDashboard() {
             </p>
             <div className="flex items-center justify-between text-xs pt-2 border-t border-stone-800">
               <span className="text-stone-400 font-bold">Modul Aktif:</span>
-              <span className="text-purple-300 font-black">8 Misi Dijana</span>
+              <span className="text-purple-300 font-black flex items-center gap-1 group-hover:underline">
+                8 Misi Dijana <Eye className="w-3.5 h-3.5 ml-1" />
+              </span>
             </div>
           </motion.div>
         </div>
 
-        {/* 3. MICRO CPA BLOCK METRICS CARD (4 ENGAGEMENT BLOCKS) */}
+        {/* 3. MICRO CPA BLOCK METRICS CARD (4 ENGAGEMENT BLOCKS - CLICKABLE FOR DRILL-DOWN) */}
         <div className="p-6 bg-stone-900/90 border border-stone-800 rounded-3xl space-y-4 shadow-xl">
           <div className="flex items-center justify-between border-b border-stone-800 pb-3">
             <div className="flex items-center gap-2">
@@ -294,7 +352,7 @@ export default function AdminDashboard() {
               </h3>
             </div>
             <span className="text-[10px] font-bold px-2.5 py-1 bg-cyan-950 text-cyan-300 border border-cyan-500/30 rounded-full">
-              Langkah 2: ENGAGEMENT
+              Klik Kad Untuk Butiran Misi
             </span>
           </div>
 
@@ -305,19 +363,24 @@ export default function AdminDashboard() {
               { type: "STEP_BY_STEP", label: "STEP_BY_STEP", icon: "👣", desc: "Panduan berperingkat", count: stats.lessons },
               { type: "MYTH_BUSTER", label: "MYTH_BUSTER", icon: "💡", desc: "Mitos & fakta nombor", count: stats.lessons }
             ].map(cpa => (
-              <div key={cpa.type} className="p-4 bg-stone-950 border border-stone-800/80 rounded-2xl space-y-2">
+              <motion.div
+                key={cpa.type}
+                whileHover={{ y: -2 }}
+                onClick={() => handleOpenDrillDownModal(`CPA_${cpa.type}`)}
+                className="p-4 bg-stone-950 border border-stone-800/80 hover:border-amber-500/60 rounded-2xl space-y-2 cursor-pointer transition-all group"
+              >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-cyan-300 uppercase">{cpa.label}</span>
+                  <span className="text-xs font-black text-cyan-300 uppercase group-hover:text-amber-400">{cpa.label}</span>
                   <span className="text-base">{cpa.icon}</span>
                 </div>
                 <p className="text-[11px] text-stone-400 font-medium">{cpa.desc}</p>
                 <div className="flex items-center justify-between text-xs pt-1 border-t border-stone-900">
                   <span className="text-stone-500 font-bold">Status:</span>
-                  <span className="text-emerald-400 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> {cpa.count} Dijana
+                  <span className="text-emerald-400 font-bold flex items-center gap-1 group-hover:underline">
+                    <CheckCircle2 className="w-3 h-3" /> {cpa.count} Dijana <Eye className="w-3 h-3 ml-0.5" />
                   </span>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -407,6 +470,17 @@ export default function AdminDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Drill-Down Details Modal */}
+      <MissionDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalTitle}
+        subtitle={modalSubtitle}
+        missions={modalMissions}
+        onEditMission={handleEditMissionInStudio}
+        onPreviewMission={handlePreviewMission}
+      />
     </div>
   );
 }
