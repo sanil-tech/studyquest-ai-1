@@ -11,7 +11,7 @@ import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
 /**
  * Formulates prompt instructions for LLM generation matching adventurePackageSchema.json
  */
-export function buildLLMPromptForKSSR({ spCode, spDescription, skCode, grade, subject, topic, pbdTarget = "TP3" }) {
+export function buildLLMPromptForKSSR({ spCode, spDescription, skCode, grade, subject, bidang = "Nombor dan Operasi", topic = "Nombor hingga 100", learningOutcome = "", pbdTarget = "TP3" }) {
   const mode = getKSSRModeByGrade(grade);
   const mascot = mode === "JUNIOR" ? "Suku Penyu 🐢 (Bahasa santai kanak-kanak)" : "Ejen Suku 🦊 (Penyelesaian masalah KBAT & Pemikiran Kritis)";
 
@@ -20,8 +20,17 @@ You must generate a 9-Step Macro Journey JSON payload strictly conforming to adv
 
 DUAL-ENGINE MODE: ${mode}
 MASCOT COMPANION: ${mascot}
-CURRICULUM TARGET: SK ${skCode}, SP ${spCode} - ${spDescription || topic}
-PBD TARGET: ${pbdTarget}
+CURRICULUM CONTEXT:
+  - Framework: KSSR Semakan
+  - Grade: ${grade}
+  - Subject: ${subject}
+  - Bidang / Theme: ${bidang}
+  - Topic: ${topic}
+  - SK Code: ${skCode}
+  - SP Code: ${spCode}
+  - SP Description: ${spDescription || topic}
+  - Learning Outcome: ${learningOutcome || spDescription || topic}
+  - PBD Target: ${pbdTarget}
 
 STRICT STEP ARCHITECTURE:
 Step 1: BRIEFING (Story hook & mascot dialogue)
@@ -48,11 +57,13 @@ export async function generateKSSRMissionPackage({
   skCode = "1.1",
   grade = "Tahun 1",
   subject = "Matematik",
+  bidang = "Nombor dan Operasi",
   topic = "Nombor hingga 100",
+  learningOutcome = "",
   pbdTarget = "TP3"
 }) {
   const mode = getKSSRModeByGrade(grade);
-  const { systemPrompt } = buildLLMPromptForKSSR({ spCode, spDescription, skCode, grade, subject, topic, pbdTarget });
+  const { systemPrompt } = buildLLMPromptForKSSR({ spCode, spDescription, skCode, grade, subject, bidang, topic, learningOutcome, pbdTarget });
 
   // Generate structured 9-Step Package conforming to adventurePackageSchema.json
   const missionPackage = build9StepKSSRMissionPackage({

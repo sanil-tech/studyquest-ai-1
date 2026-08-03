@@ -59,12 +59,12 @@ const DSKP_MAPPING = {
       }
     }
   }
-};
-
 import kssrTaxonomy from "@/data/kssrTaxonomy.json";
 import { getKSSRModeByGrade } from "@/services/generateKSSRContent";
+import { validateCurriculumCoverage } from "@/services/curriculumValidator";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ContentHierarchy from "@/components/admin/ContentHierarchy";
@@ -200,10 +200,12 @@ export default function AdminContentStudio() {
   const [curriculumType, setCurriculumType] = useState("KSSR_SEMAKAN");
   const [educationLevel, setEducationLevel] = useState("PRIMARY");
   const [yearLevel, setYearLevel] = useState("Tahun 1");
+  const [bidang, setBidang] = useState("Nombor dan Operasi");
   const [topic, setTopic] = useState("Nombor hingga 100");
   const [skCode, setSkCode] = useState("");
   const [spCode, setSpCode] = useState("");
   const [activePackage, setActivePackage] = useState(null);
+  const [availableBidangs, setAvailableBidangs] = useState([]);
   const [availableTopics, setAvailableTopics] = useState([]);
   const [availableSKs, setAvailableSKs] = useState([]);
   const [availableSPs, setAvailableSPs] = useState([]);
@@ -233,20 +235,54 @@ export default function AdminContentStudio() {
 
   useEffect(() => {
     const taxonomySubject = kssrTaxonomy.subjects?.[subject];
-    const taxonomyItems = taxonomySubject?.[yearLevel];
+    const taxonomyItems = taxonomySubject?.[yearLevel] || [];
 
     if (Array.isArray(taxonomyItems) && taxonomyItems.length > 0) {
-      const sks = Array.from(new Set(taxonomyItems.map(item => item.sk_code)));
-      const sps = Array.from(new Set(taxonomyItems.map(item => item.sp_code)));
-      setAvailableTopics([topic || `${subject} ${yearLevel}`]);
-      setAvailableSKs(sks);
-      setAvailableSPs(sps);
+      // Priority 1: kssrTaxonomy.json normalized taxonomy
+      const bidangs = Array.from(new Set(taxonomyItems.map(item => item.bidang || "Nombor dan Operasi")));
+      setAvailableBidangs(bidangs);
 
-      if (!sks.includes(skCode) && sks.length > 0) setSkCode(sks[0]);
-      if (!sps.includes(spCode) && sps.length > 0) setSpCode(sps[0]);
+      let currentBidang = bidang;
+      if (!bidangs.includes(bidang)) {
+        currentBidang = bidangs[0];
+        setBidang(currentBidang);
+      }
+
+      const bidangItems = taxonomyItems.filter(item => (item.bidang || "Nombor dan Operasi") === currentBidang);
+      const topics = Array.from(new Set(bidangItems.map(item => item.topic || "Nombor hingga 100")));
+      setAvailableTopics(topics);
+
+      let currentTopic = topic;
+      if (!topics.includes(topic)) {
+        currentTopic = topics[0] || "";
+        setTopic(currentTopic);
+      }
+
+      const topicItems = bidangItems.filter(item => (item.topic || "Nombor hingga 100") === currentTopic);
+      const sks = Array.from(new Set((topicItems.length > 0 ? topicItems : bidangItems).map(item => item.sk_code)));
+      setAvailableSKs(sks);
+
+      let currentSk = skCode;
+      if (!sks.includes(skCode) && sks.length > 0) {
+        currentSk = sks[0];
+        setSkCode(currentSk);
+      }
+
+      const matchingTopicItems = topicItems.length > 0 ? topicItems : bidangItems;
+      const sps = matchingTopicItems.filter(item => item.sk_code === currentSk).map(item => item.sp_code);
+      const finalSPs = sps.length > 0 ? sps : matchingTopicItems.map(item => item.sp_code);
+      setAvailableSPs(finalSPs);
+
+      if (!finalSPs.includes(spCode) && finalSPs.length > 0) {
+        setSpCode(finalSPs[0]);
+      }
     } else {
+      // Priority 2 / Fallback: DSKP_MAPPING dictionary
       const topicsObj = DSKP_MAPPING[subject]?.[yearLevel];
       if (topicsObj) {
+        setAvailableBidangs(["Nombor dan Operasi"]);
+        setBidang("Nombor dan Operasi");
+
         const tKeys = Object.keys(topicsObj);
         setAvailableTopics(tKeys);
 
@@ -260,7 +296,7 @@ export default function AdminContentStudio() {
         if (topicData) {
           const sks = Object.keys(topicData);
           setAvailableSKs(sks);
-          
+
           let currentSk = skCode;
           if (!sks.includes(skCode)) {
             currentSk = sks[0];
@@ -277,12 +313,18 @@ export default function AdminContentStudio() {
           setAvailableSPs([]);
         }
       } else {
+        setAvailableBidangs(["KSSR Semakan"]);
+        setBidang("KSSR Semakan");
         setAvailableTopics([topic || "KSSR Semakan"]);
         setAvailableSKs(["1.1", "1.4", "2.1"]);
         setAvailableSPs(["1.1.1", "1.4.1", "2.1.1"]);
       }
     }
-  }, [subject, yearLevel, topic, skCode]);
+  }, [subject, yearLevel, bidang, topic, skCode]);
+
+  const coverageReport = useMemo(() => {
+    return validateCurriculumCoverage(subject, yearLevel);
+  }, [subject, yearLevel]);
 
   const activeTaxonomyItems = useMemo(() => {
     return kssrTaxonomy.subjects?.[subject]?.[yearLevel] || [];
@@ -618,18 +660,49 @@ export default function AdminContentStudio() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Curriculum Coverage Validation Banner */}
+                <div className={`p-4 border rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-bold ${coverageReport.badgeColor}`}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">📌</span>
+                    <div>
+                      <p className="font-black text-sm">{coverageReport.message}</p>
+                      <p className="text-[11px] opacity-80 mt-0.5">
+                        {coverageReport.subject} ({coverageReport.yearLevel}) — {coverageReport.topicsCount} Topik, {coverageReport.skCount} SK, {coverageReport.spCount} SP Ditampilkan
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black px-3 py-1 bg-black/40 rounded-full border border-white/20 uppercase tracking-wider shrink-0">
+                    STATUS: {coverageReport.status}
+                  </span>
+                </div>
+
                 <div className="space-y-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-stone-300">Tajuk Modul</label>
-                    <select
-                      value={topic}
-                      onChange={(e) => setTopic(e.target.value)}
-                      className="w-full bg-stone-950 border border-stone-800 text-white text-xs rounded-xl p-3 font-bold"
-                    >
-                      {availableTopics.map(t => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-stone-300">Bidang Pembelajaran (Theme / Learning Area)</label>
+                      <select
+                        value={bidang}
+                        onChange={(e) => setBidang(e.target.value)}
+                        className="w-full bg-stone-950 border border-stone-800 text-white text-xs rounded-xl p-3 font-bold"
+                      >
+                        {availableBidangs.map(b => (
+                          <option key={b} value={b}>{b}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-stone-300">Tajuk Modul (Topic)</label>
+                      <select
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
+                        className="w-full bg-stone-950 border border-stone-800 text-white text-xs rounded-xl p-3 font-bold"
+                      >
+                        {availableTopics.map(t => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
