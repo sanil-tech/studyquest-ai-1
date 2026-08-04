@@ -1,4 +1,4 @@
-import rules from '../data/recommendationRules.json';
+import { recommendationRules as rules } from '../data/domainRules.js';
 import { getMastery, getWeakSPs, getStrongSPs } from './masteryEngine';
 import { getResourceBySP, getPrerequisites, getLessons, getWidgets, getQuizzes } from './resourceLibraryService';
 import { getSPCatalogByGrade } from './taxonomyService';

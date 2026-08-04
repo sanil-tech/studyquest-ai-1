@@ -1,4 +1,4 @@
-import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
+import { getSPEntries } from './dskpRegistry.js';
 
 /**
  * Calculates curriculum coverage by subject and grade.
@@ -8,7 +8,7 @@ import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
  * @returns {object}
  */
 export function getCurriculumCoverageStats(subject = "Matematik", grade = "Tahun 1", publishedLessons = []) {
-  const spItems = kssrTaxonomy.subjects?.[subject]?.[grade] || [];
+  const spItems = getSPEntries(subject, grade);
   const totalSP = spItems.length;
 
   if (totalSP === 0) {

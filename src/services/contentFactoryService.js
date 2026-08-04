@@ -1,4 +1,4 @@
-import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
+import { getSPEntries } from './dskpRegistry.js';
 import { generateKSSRMissionPackage } from './aiContentEngine.js';
 import { validateLessonQuality, validateAIContentAuthenticity } from './contentQualityService.js';
 import { analyzeDuplicateContent } from './duplicateIntelligenceService.js';
@@ -90,8 +90,7 @@ export async function generateBatchLessons({
   autoValidate = true,
   onProgress = null
 }) {
-  const taxonomySubject = kssrTaxonomy.subjects?.[subject];
-  const spItems = taxonomySubject?.[grade] || [];
+  const spItems = getSPEntries(subject, grade);
 
   if (!Array.isArray(spItems) || spItems.length === 0) {
     return {

@@ -1,4 +1,4 @@
-import qualityRules from '../data/contentQualityRules.json' with { type: "json" };
+import { contentQualityRules as qualityRules } from '../data/domainRules.js';
 
 /**
  * Validates a generated lesson package against curriculum and pedagogical rules.

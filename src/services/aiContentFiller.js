@@ -321,11 +321,114 @@ async function callLLMForContent(metadata) {
 }
 
 /**
+ * Generates deterministic fallback content when the AI LLM service is unavailable or offline.
+ * Ensures the lesson shell is always fully usable in preview and local dev environments.
+ *
+ * @param {object} metadata - shell.metadata
+ * @returns {object} Fallback aiContent object matching the 8-block contract
+ */
+function buildFallbackContent(metadata) {
+  const { subject, topic, sp_code, sp_description, mascot, mode, widget_type } = metadata;
+  const displayTopic = topic || sp_description || "Pelajaran KSSR";
+
+  return {
+    story_hook: {
+      story_text: `Hai {student_name}! Hari ini ${mascot} ingin mengajak anda mengembara menerokai tajuk ${displayTopic}. Mari kita selesaikan cabaran ini bersama-sama!`,
+      mascot_dialogue: `Hai {student_name}! Bersedia untuk belajar ${displayTopic} hari ini? Jom kita mulakan!`,
+      tts_script: `Hai Kawan! Bersedia untuk belajar ${displayTopic} hari ini? Jom kita mulakan!`
+    },
+    learning_objective: {
+      i_can_statement: `Saya boleh memahami dan menguasai konsep asas bagi ${displayTopic}.`
+    },
+    concept_cpa: {
+      concrete: {
+        title: "Peringkat Konkrit (Objek Sebenar)",
+        explanation: `Mari kita gunakan objek sebenar dalam kehidupan harian untuk memahami tajuk ${displayTopic} secara tersusun.`,
+        visual_prompt: `Kids illustration showing real counting objects for ${displayTopic}, colorful education concept`
+      },
+      pictorial: {
+        title: "Peringkat Bergambar (Visual)",
+        explanation: `Perhatikan rajah dan gambar rajah visual berikut untuk melihat bagaimana nombor dan kuantiti diwakilkan.`,
+        visual_prompt: `Visual diagram illustration explaining ${displayTopic} step by step`
+      },
+      abstract: {
+        title: "Peringkat Abstrak (Simbol & Petua)",
+        explanation: `Gunakan simbol dan nombor untuk menulis jawapan anda dengan betul dan kemas.`,
+        key_term: displayTopic,
+        key_definition: `Konsep asas KSSR bagi tajuk ${displayTopic}.`
+      }
+    },
+    worked_example: {
+      problem_statement: `Selesaikan soalan contoh berikut bagi tajuk ${displayTopic}: Nyatakan jawapan yang tepat berdasarkan rajah.`,
+      solution_steps: [
+        "Langkah 1: Baca soalan dan kenal pasti maklumat utama.",
+        "Langkah 2: Bilang atau hitung kuantiti objek secara bersistem.",
+        "Langkah 3: Tuliskan jawapan akhir dengan menggunakan simbol yang betul."
+      ],
+      common_mistake: "Tersalah mengira kuantiti atau keliru nilai tempat digit.",
+      correct_reasoning: "Semak jawapan secara terbalik untuk memastikan tiada keciciran."
+    },
+    practice: {
+      instruction: `Lengkapkan aktiviti interaktif ${widget_type} berikut berkaitan ${displayTopic}.`,
+      seed_data: {
+        instruction_context: `Aktiviti interaktif bagi ${displayTopic}`,
+        target_val: 10,
+        items: [
+          { id: "1", label: "Objek A", category: "Kumpulan 1" },
+          { id: "2", label: "Objek B", category: "Kumpulan 2" }
+        ]
+      }
+    },
+    quiz: {
+      questions: [
+        {
+          stem: `Apakah jawapan yang betul bagi latihan asas ${displayTopic}?`,
+          options: ["Jawapan Tepat", "Pilihan Pengganggu A", "Pilihan Pengganggu B"],
+          correct_index: 0,
+          explanation: "Jawapan ini tepat kerana mengikut konsep asas yang telah dipelajari.",
+          misconception_tag: "Kesilapan asas pengiraan"
+        },
+        {
+          stem: `Pilih penyataan yang BENAR mengenai tajuk ${displayTopic}.`,
+          options: ["Penyataan Benar", "Penyataan Salah A", "Penyataan Salah B"],
+          correct_index: 0,
+          explanation: "Penyataan ini betul berdasarkan petunjuk dan panduan visual.",
+          misconception_tag: "Pengecaman konsep"
+        },
+        {
+          stem: `Antara berikut, yang manakah mewakili penyelesaian terbaik bagi soalan ${displayTopic}?`,
+          options: ["Langkah Betul", "Langkah Salah A", "Langkah Salah B"],
+          correct_index: 0,
+          explanation: "Langkah ini mematuhi urutan penyelesaian masalah KSSR.",
+          misconception_tag: "Aplikasi penyelesaian masalah"
+        }
+      ]
+    },
+    key_takeaway: {
+      summary_points: [
+        `Memahami konsep asas tajuk ${displayTopic} dengan jelas.`,
+        "Menggunakan kaedah pengiraan yang tersusun dan menyemak jawapan.",
+        "Mengaplikasikan kemahiran ini dalam kehidupan harian."
+      ],
+      memory_tip: `Petua Penyu: Bilang dengan cermat, semak dengan teliti! 🐢`,
+      flashcards: [
+        { term: displayTopic, definition: `Asas penguasaan tajuk ${displayTopic} mengikut DSKP.` },
+        { term: "Petua Semakan", definition: "Sentiasa semak semula pengiraan anda." }
+      ]
+    },
+    celebration: {
+      celebration_message: `Tahniah {student_name}! Anda telah berjaya menyelesaikan keseluruhan modul ${displayTopic}!`,
+      badge_name: `Wira ${displayTopic}`
+    }
+  };
+}
+
+/**
  * Main entry point: Generates a complete, validated lesson.
  *
  * Pipeline:
  *   Phase 1: buildLessonShell() → deterministic structure
- *   Phase 2: callLLMForContent() → AI content fill
+ *   Phase 2: callLLMForContent() → AI content fill (with deterministic fallback)
  *   Phase 3: validateLessonShell() → quality gate
  *
  * @param {object} params
@@ -359,17 +462,14 @@ export async function generateLesson({
   });
 
   // PHASE 2: AI Content Fill
-  const aiContent = await callLLMForContent(shell.metadata);
+  let aiContent = await callLLMForContent(shell.metadata);
 
-  let filledShell;
-  if (aiContent) {
-    filledShell = mergeContentIntoShell(shell, aiContent);
-  } else {
-    // AI failed — return shell with empty content
-    // The UI should show a "content generation pending" state
-    console.warn("[aiContentFiller] AI content generation failed. Returning empty shell.");
-    filledShell = shell;
+  if (!aiContent) {
+    console.warn("[aiContentFiller] AI content generation offline. Generating fallback content.");
+    aiContent = buildFallbackContent(shell.metadata);
   }
+
+  const filledShell = mergeContentIntoShell(shell, aiContent);
 
   // PHASE 3: Validation
   const validation = validateLessonShell(filledShell);

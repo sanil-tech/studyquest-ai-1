@@ -1,10 +1,9 @@
-import insightRules from '../data/parentInsightRules.json';
 import { getStudent } from './database/studentRepository';
 import { getStudentMastery, getWeakAreas } from './database/masteryRepository';
 import { getLearningHistory, calculateOverallProgress } from './database/progressRepository';
 import { getMistakeHistory } from './database/assessmentRepository';
 import { getTutorInteractions } from './database/tutorRepository';
-import assessmentRules from '../data/assessmentRules.json';
+import { parentInsightRules as insightRules, assessmentRules } from '../data/domainRules.js';
 import { generateRecommendations } from './recommendationEngine';
 import { getSPDetails } from './taxonomyService';
 

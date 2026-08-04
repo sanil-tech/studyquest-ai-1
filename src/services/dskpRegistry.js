@@ -1,8 +1,6 @@
 // src/services/dskpRegistry.js
 // Centralized KSSR Semakan Curriculum & DSKP Taxonomy Registry Service
 
-import kssrTaxonomy from "@/data/kssrTaxonomy.json";
-
 /**
  * Extended Master DSKP Topic & SK/SP Registry
  * Guarantees rich DSKP mappings for Matematik, Sains, Bahasa Melayu, and English across Tahun 1-6.
@@ -128,12 +126,7 @@ export function getTaxonomyYears(subject = "Matematik") {
  */
 export function getSPEntries(subject = "Matematik", year = "Tahun 1") {
   const subObj = EXTENDED_DSKP_TAXONOMY[subject] || {};
-  const entries = subObj[year] || [];
-  if (entries.length > 0) return entries;
-
-  // Fallback check in kssrTaxonomy.json
-  const rawList = kssrTaxonomy.subjects?.[subject]?.[year];
-  return Array.isArray(rawList) ? rawList : [];
+  return subObj[year] || [];
 }
 
 /**

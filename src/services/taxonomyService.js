@@ -1,31 +1,24 @@
-import kssrTaxonomy from '../data/kssrTaxonomy.json';
-import kssmTaxonomy from '../data/kssmTaxonomy.json';
-
-const getCombinedTaxonomy = () => {
-  return [kssrTaxonomy, kssmTaxonomy];
-};
+import { getTaxonomySubjects, getTaxonomyYears, getSPEntries } from './dskpRegistry.js';
 
 /**
- * Helper to find an SP code detail object across all frameworks and subjects.
+ * Helper to find an SP code detail object across all subjects and grades in DSKP Registry.
  * @param {string} spCode 
  * @returns {Object|null}
  */
 export const getSPDetails = (spCode) => {
-  const taxonomies = getCombinedTaxonomy();
-  for (const taxonomy of taxonomies) {
-    for (const subjectKey of Object.keys(taxonomy.subjects)) {
-      const subjectLevels = taxonomy.subjects[subjectKey];
-      for (const levelKey of Object.keys(subjectLevels)) {
-        const standardList = subjectLevels[levelKey];
-        const found = standardList.find(sp => sp.sp_code === spCode);
-        if (found) {
-          return {
-            ...found,
-            framework: taxonomy.framework,
-            subject: subjectKey,
-            grade: levelKey
-          };
-        }
+  const subjects = getTaxonomySubjects();
+  for (const subjectKey of subjects) {
+    const years = getTaxonomyYears(subjectKey);
+    for (const levelKey of years) {
+      const standardList = getSPEntries(subjectKey, levelKey);
+      const found = standardList.find(sp => sp.sp_code === spCode);
+      if (found) {
+        return {
+          ...found,
+          framework: "KSSR_SEMAKAN",
+          subject: subjectKey,
+          grade: levelKey
+        };
       }
     }
   }
@@ -60,12 +53,5 @@ export const getWidgetMapping = (spCode) => {
  * @returns {Object[]}
  */
 export const getSPCatalogByGrade = (framework, grade, subjectId) => {
-  const taxonomies = getCombinedTaxonomy();
-  const targetFramework = taxonomies.find(t => t.framework === framework);
-  
-  if (!targetFramework) return [];
-  if (!targetFramework.subjects[subjectId]) return [];
-  if (!targetFramework.subjects[subjectId][grade]) return [];
-  
-  return targetFramework.subjects[subjectId][grade];
+  return getSPEntries(subjectId, grade);
 };

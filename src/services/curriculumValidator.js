@@ -1,4 +1,4 @@
-import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
+import { getSPEntries } from './dskpRegistry.js';
 
 /**
  * Curriculum Coverage Validator Service
@@ -6,8 +6,7 @@ import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
  */
 export function validateCurriculumCoverage(subject = "Matematik", yearLevel = "Tahun 1") {
   try {
-    const taxonomySubject = kssrTaxonomy.subjects?.[subject];
-    const items = taxonomySubject?.[yearLevel] || [];
+    const items = getSPEntries(subject, yearLevel);
 
     if (!Array.isArray(items) || items.length === 0) {
       return {

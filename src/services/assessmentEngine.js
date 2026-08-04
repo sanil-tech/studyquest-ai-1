@@ -1,5 +1,5 @@
 import templates from '../data/questionTemplates.json';
-import rules from '../data/assessmentRules.json';
+import { assessmentRules as rules } from '../data/domainRules.js';
 import { recordAttempt } from './masteryEngine';
 import { logAssessmentAttempt } from './database/assessmentRepository';
 

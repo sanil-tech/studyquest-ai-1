@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import rules from '../../data/pilotReadinessRules.json';
+import { pilotReadinessRules as rules } from '../../data/domainRules.js';
 import { Eye, CheckSquare, Square, ThumbsUp } from 'lucide-react';
 
 const LessonPreviewTester = () => {

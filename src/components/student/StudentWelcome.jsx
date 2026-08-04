@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Rocket, Sparkles, CheckCircle2, Loader2 } from 'lucide-react';
-import onboardingRules from '../../data/onboardingRules.json';
+import { onboardingRules } from '../../data/domainRules.js';
 import { completeChildOnboarding } from '../../services/familyService';
 
 const StudentWelcome = ({ childProfile, onComplete }) => {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { submitParentFeedback } from '../../services/feedbackService';
-import feedbackRules from '../../data/feedbackRules.json';
+import { feedbackRules } from '../../data/domainRules.js';
 import { Send, CheckCircle2 } from 'lucide-react';
 
 const FeedbackForm = ({ parentId }) => {

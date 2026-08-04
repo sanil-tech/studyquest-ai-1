@@ -1,4 +1,4 @@
-import retentionRules from '../data/retentionRules.json';
+import { retentionRules } from '../data/domainRules.js';
 
 /**
  * Gets the daily goal status for a student.

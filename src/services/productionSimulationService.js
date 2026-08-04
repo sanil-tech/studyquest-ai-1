@@ -1,5 +1,4 @@
 import { generateBatchLessons } from './contentFactoryService.js';
-import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
 
 /**
  * AI Curriculum Semantic Validator

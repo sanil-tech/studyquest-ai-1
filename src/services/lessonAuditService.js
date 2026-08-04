@@ -1,7 +1,7 @@
 /**
  * Service to audit the lesson library for completeness, DSKP alignment, and quality.
  */
-import auditRules from '../data/lessonAuditRules.json';
+import { lessonAuditRules as auditRules } from '../data/domainRules.js';
 import kssrTahun1 from '../data/kssr_matematik_tahun_1.json';
 
 // Simulated Lesson Library Data

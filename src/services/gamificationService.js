@@ -1,4 +1,4 @@
-import gamificationRules from '../data/gamificationRules.json';
+import { gamificationRules } from '../data/domainRules.js';
 import worldMap from '../data/worldMap.json';
 import { generateRecommendations } from './recommendationEngine';
 

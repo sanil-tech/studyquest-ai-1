@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import rules from '../../data/systemHealthRules.json';
+import { systemHealthRules as rules } from '../../data/domainRules.js';
 import { CheckSquare, Square, Rocket } from 'lucide-react';
 
 const PilotReadinessChecklist = () => {

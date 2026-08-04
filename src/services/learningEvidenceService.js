@@ -2,7 +2,7 @@
  * Service to generate human-readable evidence of learning for parents.
  */
 import demoStudents from '../data/demoStudents.json';
-import feedbackRules from '../data/feedbackRules.json';
+import { feedbackRules } from '../data/domainRules.js';
 
 /**
  * Generates a chronological learning timeline for a given student.

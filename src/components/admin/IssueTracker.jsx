@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getPilotIssues, createPilotIssue, updatePilotIssueStatus } from '../../services/pilotOperationsService';
-import rules from '../../data/pilotOperationsRules.json';
+import { pilotOperationsRules as rules } from '../../data/domainRules.js';
 import { ShieldAlert, Plus, CheckCircle2, Clock } from 'lucide-react';
 
 const IssueTracker = () => {

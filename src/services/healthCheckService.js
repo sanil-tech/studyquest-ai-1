@@ -3,7 +3,7 @@
  * Monitors system health, data integrity, and provides a final demo orchestrator.
  */
 import demoStudents from '../data/demoStudents.json';
-import rules from '../data/systemHealthRules.json';
+import { systemHealthRules as rules } from '../data/domainRules.js';
 
 // Simulated Error Log
 const MOCK_ERRORS = [

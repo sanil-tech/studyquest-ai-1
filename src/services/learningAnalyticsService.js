@@ -1,5 +1,5 @@
 import pilotTestStudents from '../data/pilotTestStudents.json';
-import analyticsRules from '../data/analyticsRules.json';
+import { analyticsRules } from '../data/domainRules.js';
 
 /**
  * Calculates pilot analytics across the 5 pillars.

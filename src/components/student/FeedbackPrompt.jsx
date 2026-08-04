@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { submitStudentFeedback } from '../../services/feedbackService';
-import feedbackRules from '../../data/feedbackRules.json';
+import { feedbackRules } from '../../data/domainRules.js';
 
 const FeedbackPrompt = ({ childId, onComplete }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);

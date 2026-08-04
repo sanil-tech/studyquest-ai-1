@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, BookOpen, GraduationCap, ChevronRight } from 'lucide-react';
-import onboardingRules from '../../data/onboardingRules.json';
+import { onboardingRules } from '../../data/domainRules.js';
 
 const CreateChildProfile = ({ onCreateProfile }) => {
   const [name, setName] = useState('');

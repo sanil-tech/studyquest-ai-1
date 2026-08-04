@@ -1,6 +1,6 @@
 import React from 'react';
 import { Activity, AlertCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
-import rules from '../../data/pilotOperationsRules.json';
+import { pilotOperationsRules as rules } from '../../data/domainRules.js';
 
 const StudentHealthCard = ({ student }) => {
   const config = rules.health_status[student.healthStatus];

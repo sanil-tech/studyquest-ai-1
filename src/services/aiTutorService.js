@@ -1,4 +1,4 @@
-import tutorRules from '../data/aiTutorRules.json';
+import { aiTutorRules as tutorRules } from '../data/domainRules.js';
 import { getStudent } from './database/studentRepository';
 import { getSPDetails } from './taxonomyService';
 

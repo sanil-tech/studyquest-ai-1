@@ -1,5 +1,4 @@
 import { build9StepKSSRMissionPackage, validateMissionPackage, getKSSRModeByGrade } from './generateKSSRContent.js';
-import kssrTaxonomy from '../data/kssrTaxonomy.json' with { type: "json" };
 import pedagogyMapping from '../data/pedagogyMapping.json' with { type: "json" };
 import widgetRegistry from '../data/widgetRegistry.json' with { type: "json" };
 import assessmentFramework from '../data/assessmentFramework.json' with { type: "json" };

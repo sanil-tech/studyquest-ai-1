@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
-import kssrTaxonomy from "@/data/kssrTaxonomy.json";
+import { getTaxonomySubjects, getTaxonomyYears, getSPEntries } from "@/services/dskpRegistry";
 import MissionDetailsModal from "@/components/admin/MissionDetailsModal";
 import {
   BookOpen, Edit3, FileText, Crown, Loader2, LogOut, Brain, ClipboardList, TrendingUp, Plus, ArrowRight, Sparkles,
@@ -80,13 +80,12 @@ export default function AdminDashboard() {
   const [modalSubtitle, setModalSubtitle] = useState("");
   const [modalMissions, setModalMissions] = useState([]);
 
-  // Calculate total taxonomy SPs dynamically
   const totalTaxonomySPs = useMemo(() => {
     try {
       let count = 0;
-      Object.values(kssrTaxonomy.subjects || {}).forEach(gradeObj => {
-        Object.values(gradeObj || {}).forEach(spList => {
-          if (Array.isArray(spList)) count += spList.length;
+      getTaxonomySubjects().forEach(subj => {
+        getTaxonomyYears(subj).forEach(yr => {
+          count += getSPEntries(subj, yr).length;
         });
       });
       return count || 17;
