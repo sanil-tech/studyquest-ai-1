@@ -3,6 +3,9 @@ import BaseTenBlocksWidget from "@/components/widgets/BaseTenBlocksWidget";
 import SentenceBuilderWidget from "@/components/widgets/SentenceBuilderWidget";
 import FractionSlicerWidget from "@/components/widgets/FractionSlicerWidget";
 import NumberScaleWidget from "@/components/widgets/NumberScaleWidget";
+import DragAndDropWidget from "@/components/widgets/DragAndDropWidget";
+import MatchingCardsWidget from "@/components/widgets/MatchingCardsWidget";
+import QuizWheelWidget from "@/components/widgets/QuizWheelWidget";
 import InteractiveActivity from "@/components/lesson/InteractiveActivity";
 
 /**
@@ -44,6 +47,9 @@ export const widgetRegistry = {
   sentence_builder: SentenceBuilderWidget,
   fraction_slicer: FractionSlicerWidget,
   number_scale: NumberScaleWidget,
+  drag_and_drop: DragAndDropWidget,
+  matching_cards: MatchingCardsWidget,
+  quiz_wheel: QuizWheelWidget,
   money_counter: InteractiveActivity,
   clock_face: InteractiveActivity,
   shape_sorter: InteractiveActivity,

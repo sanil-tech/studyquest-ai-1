@@ -26,11 +26,13 @@ import { Button } from "@/components/ui/button";
 import Flashcards from "@/components/lesson/Flashcards";
 import MindMap from "@/components/lesson/MindMap";
 import InfographicBlock from "@/components/lesson/InfographicBlock";
-import InteractiveActivity from "@/components/lesson/InteractiveActivity";
 import BaseTenBlocksWidget from "@/components/widgets/BaseTenBlocksWidget";
 import SentenceBuilderWidget from "@/components/widgets/SentenceBuilderWidget";
 import FractionSlicerWidget from "@/components/widgets/FractionSlicerWidget";
 import NumberScaleWidget from "@/components/widgets/NumberScaleWidget";
+import DragAndDropWidget from "@/components/widgets/DragAndDropWidget";
+import MatchingCardsWidget from "@/components/widgets/MatchingCardsWidget";
+import QuizWheelWidget from "@/components/widgets/QuizWheelWidget";
 
 // ==========================================
 // TEXT FORMATTING UTILITIES & STUDENT CONTENT SANITIZER
@@ -526,6 +528,82 @@ function MatchingGameBlock({ payload, studentName, onCompleted, isCompleted }) {
 }
 
 // ==========================================
+// INFOGRAPHIC & PICTORIAL CPA CARD BLOCK
+// ==========================================
+function InfographicCardBlock({ payload, studentName, onCompleted, isCompleted, blockTitle }) {
+  const infoData = payload.infographic || payload;
+  const title = infoData.title || blockTitle || "Infografik Pembelajaran Visual";
+  const imgUrl = payload.image_url || payload.svg_url || infoData.image_url;
+  const labels = infoData.visual_labels || [
+    { icon: "💡", label: "Konsep Utama", text: payload.concept_summary || "Pemahaman asas secara visual" },
+    { icon: "⚡", label: "Aplikasi Harian", text: "Penggunaan dalam kehidupan harian" }
+  ];
+  const takeaway = infoData.key_takeaway || payload.concept_summary || "Ingat langkah asas bagi tajuk ini!";
+
+  return (
+    <div className="p-5 bg-gradient-to-br from-amber-950/40 via-stone-900 to-indigo-950/40 border-2 border-amber-500/30 rounded-3xl space-y-4 text-left shadow-xl">
+      {/* Header Badge */}
+      <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
+        <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
+          <Sparkles className="w-4 h-4 text-amber-400" /> Infografik Visual & Carta Bergambar
+        </span>
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/30">
+          CPA Bergambar
+        </span>
+      </div>
+
+      <h4 className="text-sm font-black text-amber-200">{personalize(title, studentName)}</h4>
+
+      {/* Main Image or Graphic Diagram */}
+      {imgUrl ? (
+        <div className="p-3 bg-black/50 border border-stone-800 rounded-2xl text-center overflow-hidden">
+          <img src={imgUrl} alt={title} className="max-h-[300px] w-full object-cover rounded-xl border border-stone-700" />
+        </div>
+      ) : (
+        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-center space-y-1">
+          <span className="text-2xl block">🖼️</span>
+          <p className="text-xs font-bold text-amber-300">Diagram Bergambar & Perwakilan Visual</p>
+        </div>
+      )}
+
+      {/* Visual Labels Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+        {labels.map((lb, idx) => (
+          <div key={idx} className="p-3 bg-stone-950 rounded-xl border border-stone-800 space-y-1">
+            <span className="text-xs font-black text-cyan-300 flex items-center gap-1">
+              <span>{lb.icon || "📌"}</span> {personalize(lb.label || `Langkah ${idx + 1}`, studentName)}
+            </span>
+            <p className="text-xs text-stone-300 leading-relaxed font-medium">
+              {personalize(lb.text || lb.description || "", studentName)}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Key Takeaway Callout */}
+      <div className="p-3.5 bg-amber-950/60 border border-amber-500/40 rounded-2xl flex items-start gap-3">
+        <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-base shrink-0 border border-amber-500/40">
+          🐢
+        </div>
+        <div className="space-y-0.5">
+          <span className="text-[10px] font-black text-amber-400 uppercase block">Pesanan Suku Penyu:</span>
+          <p className="text-xs font-bold text-amber-100 leading-relaxed">
+            "{personalize(takeaway, studentName)}"
+          </p>
+        </div>
+      </div>
+
+      <Button
+        onClick={onCompleted}
+        className="w-full mt-2 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black h-12 rounded-xl border-b-4 border-amber-700 active:translate-y-1 transition-all flex items-center justify-center gap-1.5"
+      >
+        {isCompleted ? "Infografik Selesai ✓" : <>Teruskan ke Aktiviti ➡️</>}
+      </Button>
+    </div>
+  );
+}
+
+// ==========================================
 // NEW: GUIDED PRACTICE (Fasa 4)
 // ==========================================
 function GuidedPracticeBlock({ payload, studentName, onCompleted, isCompleted }) {
@@ -585,13 +663,13 @@ export default function BlockRenderer({
 }) {
   if (!block) return null;
 
-  const blockType = (block.block_type || "").toUpperCase();
+  const blockType = (block.block_type || block.step_type || block.type || "").toUpperCase();
   const pedagogicalPhase = (block.pedagogical_phase || "").toUpperCase();
   const badgeInfo = getPedagogicalBadge(pedagogicalPhase, blockType);
 
   const payload = typeof block.payload === "string"
     ? (() => { try { return JSON.parse(block.payload); } catch { return { markdown: block.payload }; } })()
-    : (block.payload || {});
+    : (block.payload || block || {});
 
   if (!payload || Object.keys(payload).length === 0) {
     return (
@@ -1132,6 +1210,42 @@ export default function BlockRenderer({
               onMistake={onMistake}
             />
           </div>
+        );
+      }
+
+      if (payload.widget_type === "drag_and_drop") {
+        return (
+          <DragAndDropWidget
+            payload={payload}
+            instruction={payload.instruction}
+            onComplete={onComplete}
+            isCompleted={isCompleted}
+            onMistake={onMistake}
+          />
+        );
+      }
+
+      if (payload.widget_type === "matching_cards") {
+        return (
+          <MatchingCardsWidget
+            payload={payload}
+            instruction={payload.instruction}
+            onComplete={onComplete}
+            isCompleted={isCompleted}
+            onMistake={onMistake}
+          />
+        );
+      }
+
+      if (payload.widget_type === "quiz_wheel") {
+        return (
+          <QuizWheelWidget
+            payload={payload}
+            instruction={payload.instruction}
+            onComplete={onComplete}
+            isCompleted={isCompleted}
+            onMistake={onMistake}
+          />
         );
       }
 

@@ -27,13 +27,22 @@ import { sanitizeStudentText } from "@/lib/sanitizeStudentText";
 /**
  * StoryScene Component (Step 1: Briefing)
  */
-function StoryScene({ data, mascotName = "Suku Penyu 🐢", devView = false }) {
+function StoryScene({ data, mascotName = "Suku Penyu 🐢", studentName = "Kawan", devView = false }) {
   const payload = data?.payload || {};
-  const rawHook = payload.story_hook || data.description || "Mari mulakan pengembaraan pembelajaran hari ini!";
+  const rawHook = (payload.story_hook || data.description || "Mari mulakan pengembaraan pembelajaran hari ini!").replace(/\{student_name\}/g, studentName);
   const cleanHook = devView ? rawHook : sanitizeStudentText(rawHook);
 
-  const rawDialogue = payload.mascot_dialogue || "Hai Pengembara! Jom kita kembara bersama-sama!";
+  const rawDialogue = (payload.mascot_dialogue || payload.dialogue_template || "Hai {student_name}! Jom kita kembara bersama-sama!").replace(/\{student_name\}/g, studentName);
   const cleanDialogue = devView ? rawDialogue : sanitizeStudentText(rawDialogue);
+
+  const speakDialogue = (text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = "ms-MY";
+    utt.rate = 0.9;
+    window.speechSynthesis.speak(utt);
+  };
 
   return (
     <div className="space-y-4 text-left font-sans">
@@ -53,8 +62,16 @@ function StoryScene({ data, mascotName = "Suku Penyu 🐢", devView = false }) {
         <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl shrink-0">
           🐢
         </div>
-        <div className="space-y-1">
-          <h4 className="text-xs font-black text-amber-400">{mascotName}</h4>
+        <div className="space-y-2 flex-1">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-black text-amber-400">{mascotName}</h4>
+            <button
+              onClick={() => speakDialogue(cleanDialogue)}
+              className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-stone-950 rounded-xl text-[10px] font-black flex items-center gap-1 transition-all"
+            >
+              🔊 Dengar Suku
+            </button>
+          </div>
           <p className="text-xs text-stone-200 font-bold leading-relaxed">
             "{cleanDialogue}"
           </p>
@@ -266,8 +283,11 @@ function QuizScene({ data, devView = false }) {
 /**
  * RewardScene Component (Step 9: Rewards)
  */
-function RewardScene({ data, devView = false }) {
+function RewardScene({ data, lessonPackage, onReviewSubtopic, devView = false }) {
   const payload = data?.payload || {};
+  const metadata = lessonPackage?.admin_metadata || {};
+  const spCode = metadata.sp_code || "SP Utama";
+  const topicTitle = metadata.topic || lessonPackage?.subject || "Tajuk Pembelajaran";
 
   return (
     <div className="p-6 bg-gradient-to-b from-amber-950/60 to-stone-950 border-2 border-amber-500/40 rounded-3xl text-center space-y-4 shadow-2xl">
@@ -284,6 +304,37 @@ function RewardScene({ data, devView = false }) {
         <p className="text-xs text-stone-300 mt-1">
           Item Drop: {devView ? payload.item_drop : sanitizeStudentText(payload.item_drop || "Pingat Kembara Kecemerlangan")}
         </p>
+      </div>
+
+      {/* PETA KEPUTUSAN PENGEMBARAAN & SUKU REMEDIATION SHIELD */}
+      <div className="p-4 bg-stone-900/90 rounded-2xl border border-amber-500/30 text-left space-y-3">
+        <div className="flex items-center justify-between border-b border-stone-800 pb-2">
+          <span className="text-xs font-black text-amber-300 uppercase tracking-wider">
+            🗺️ Peta Keputusan Pengembaraan
+          </span>
+          <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/40">
+            🌟 Dikuasai / Mastered (100%)
+          </span>
+        </div>
+
+        <div className="p-3 bg-stone-950 rounded-xl border border-stone-800 space-y-1 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-stone-200">Subtopik SP {spCode}: {topicTitle}</span>
+            <span className="font-black text-emerald-400">LULUS ✓</span>
+          </div>
+          <p className="text-[11px] text-stone-400">
+            Kemahiran bagi {topicTitle} telah dikuasai dengan cemerlang mengikut piawaian PBD.
+          </p>
+        </div>
+
+        {onReviewSubtopic && (
+          <button
+            onClick={onReviewSubtopic}
+            className="w-full py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold text-xs rounded-xl border border-stone-700 transition-all flex items-center justify-center gap-1.5"
+          >
+            🔁 Ulangkaji Subtopik (Semak Infografik)
+          </button>
+        )}
       </div>
 
       <div className="flex justify-center gap-4 bg-stone-900 p-3 rounded-2xl border border-stone-800 text-xs font-black">
@@ -459,7 +510,14 @@ export default function UniversalLessonPreview({ lessonPackage, previewMode = tr
               <Flashcards cards={currentScene.cards || [{ term: "Terma Pembelajaran", definition: "Definisi asas" }]} />
             )}
             {stepType === "QUIZ" && <QuizScene data={currentScene} devView={devView} />}
-            {stepType === "REWARD" && <RewardScene data={currentScene} devView={devView} />}
+            {stepType === "REWARD" && (
+              <RewardScene
+                data={currentScene}
+                lessonPackage={lessonPackage}
+                onReviewSubtopic={() => setSceneIndex(1)}
+                devView={devView}
+              />
+            )}
 
             {/* Fallback for other step types */}
             {!["BRIEFING", "ENGAGEMENT", "LESSON", "PRACTICE", "FLASHCARDS", "QUIZ", "REWARD"].includes(stepType) && (

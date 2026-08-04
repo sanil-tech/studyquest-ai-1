@@ -13,11 +13,14 @@ import ClassMasteryOverview from "@/components/teacher/ClassMasteryOverview";
 import StudentSupportList from "@/components/teacher/StudentSupportList";
 import TeacherMissionLauncher from "@/components/teacher/TeacherMissionLauncher";
 
+import ClassAnalyticsDashboard from "@/components/ClassAnalyticsDashboard";
+
 export default function TeacherDashboard() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [classInsights, setClassInsights] = useState(null);
   const [activeClassId, setActiveClassId] = useState("class_4_cemerlang");
+  const [activeTab, setActiveTab] = useState("ANALYTICS"); // "ANALYTICS" | "OVERVIEW"
 
   const loadTeacherInsights = useCallback(async (classId) => {
     try {
@@ -71,41 +74,70 @@ export default function TeacherDashboard() {
           </p>
         </div>
 
-        <button
-          onClick={() => loadTeacherInsights(activeClassId)}
-          className="h-9 px-4 border border-stone-800 bg-stone-900 hover:bg-stone-800 text-stone-300 font-bold text-xs rounded-xl flex items-center gap-1.5 shrink-0 transition-all"
-        >
-          <RefreshCw className="w-3.5 h-3.5" /> Muat Semula Data
-        </button>
+        <div className="flex items-center gap-2">
+          {/* TAB SWITCHER */}
+          <div className="flex bg-stone-900 border border-stone-800 p-1 rounded-xl">
+            <button
+              onClick={() => setActiveTab("ANALYTICS")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                activeTab === "ANALYTICS" ? "bg-amber-500 text-stone-950 shadow-md" : "text-stone-400 hover:text-white"
+              }`}
+            >
+              📊 Diagnostik & Analitis
+            </button>
+            <button
+              onClick={() => setActiveTab("OVERVIEW")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                activeTab === "OVERVIEW" ? "bg-indigo-600 text-white shadow-md" : "text-stone-400 hover:text-white"
+              }`}
+            >
+              👩‍🏫 Gambaran Keseluruhan
+            </button>
+          </div>
+
+          <button
+            onClick={() => loadTeacherInsights(activeClassId)}
+            className="h-9 px-3 border border-stone-800 bg-stone-900 hover:bg-stone-800 text-stone-300 font-bold text-xs rounded-xl flex items-center gap-1.5 shrink-0 transition-all"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
-      {/* ═══ 1. SUKU AI TEACHER COACH ═══ */}
-      <AITeacherCoach aiTeacherGuidance={classInsights?.ai_teacher_guidance} />
+      {/* VIEW RENDERER */}
+      {activeTab === "ANALYTICS" ? (
+        <ClassAnalyticsDashboard classId={activeClassId} />
+      ) : (
+        <div className="space-y-6">
+          {/* ═══ 1. SUKU AI TEACHER COACH ═══ */}
+          <AITeacherCoach aiTeacherGuidance={classInsights?.ai_teacher_guidance} />
 
-      {/* ═══ 2. CLASS MASTERY OVERVIEW ═══ */}
-      <ClassMasteryOverview
-        classSummary={classInsights?.class_summary}
-        tpDistribution={classInsights?.tp_distribution}
-      />
+          {/* ═══ 2. CLASS MASTERY OVERVIEW ═══ */}
+          <ClassMasteryOverview
+            classSummary={classInsights?.class_summary}
+            tpDistribution={classInsights?.tp_distribution}
+          />
 
-      {/* ═══ 3. TEACHER MISSION LAUNCHER ═══ */}
-      <TeacherMissionLauncher
-        classId={classInsights?.class_summary?.class_id}
-        className={classInsights?.class_summary?.class_name}
-        misconceptions={classInsights?.common_misconceptions}
-        onMissionAssigned={() => loadTeacherInsights(activeClassId)}
-      />
+          {/* ═══ 3. TEACHER MISSION LAUNCHER ═══ */}
+          <TeacherMissionLauncher
+            classId={classInsights?.class_summary?.class_id}
+            className={classInsights?.class_summary?.class_name}
+            misconceptions={classInsights?.common_misconceptions}
+            onMissionAssigned={() => loadTeacherInsights(activeClassId)}
+          />
 
-      {/* ═══ 4. STUDENT SUPPORT LIST ═══ */}
-      <StudentSupportList
-        students={classInsights?.students_needing_support || []}
-        onSelectStudent={(student) => {
-          toast({
-            title: `Bimbingan Ditugaskan: ${student.nickname}`,
-            description: `Misi pemulihan peribadi disediakan bagi ${student.nickname}.`,
-          });
-        }}
-      />
+          {/* ═══ 4. STUDENT SUPPORT LIST ═══ */}
+          <StudentSupportList
+            students={classInsights?.students_needing_support || []}
+            onSelectStudent={(student) => {
+              toast({
+                title: `Bimbingan Ditugaskan: ${student.nickname}`,
+                description: `Misi pemulihan peribadi disediakan bagi ${student.nickname}.`,
+              });
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

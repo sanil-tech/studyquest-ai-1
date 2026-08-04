@@ -5,6 +5,7 @@ import widgetRegistry from '../data/widgetRegistry.json' with { type: "json" };
 import assessmentFramework from '../data/assessmentFramework.json' with { type: "json" };
 import curriculumSchema from '../data/curriculumSchema.json' with { type: "json" };
 import { base44 } from '../api/base44Client.js';
+import { generateSceneImage } from './aiImageEngine.js';
 
 /**
  * Retrieves or generates the pedagogical strategy context object for any subject, grade, and topic.
@@ -116,32 +117,33 @@ PEDAGOGY INTELLIGENCE CONTEXT:
   - Preferred Interactive Widget: ${pedagogyCtx.default_widget_type}`;
   }
 
-  const systemPrompt = `You are StudyQuest AI, an expert Malaysian KSSR Semakan Student Lesson Content Designer.
-Your task is to generate rich, engaging, student-facing 9-Step Lesson Scenes strictly conforming to adventurePackageSchema.json for ${grade} (${subject}).
+  const systemPrompt = `YOU ARE AN EXPERT KSSR CURRICULUM AI TUTOR FOR PRIMARY STUDENTS (${grade}).
 
-IMPORTANT INSTRUCTIONS:
-- DO NOT generate meta-summaries or teacher guidelines (e.g., "Konsep asas...", "Memahami takrifan...").
-- Generate RICH STUDENT LESSON SCENES with Suku Penyu dialogue, interactive stories, math questions, and real visual descriptions.
-- NEVER include DSKP code tags (SP X.X.X, SK X.X, TP1-6, Micro CPA) in student-facing dialogue or stories.
+CRITICAL REQUIREMENT:
+You MUST generate lesson content strictly tailored to the following selection:
+- Subject: ${subject}
+- Year: ${grade}
+- Topic: ${topic}
+- SK Code: ${skCode}
+- SP Code: ${spCode} - ${spDescription || topic}
+
+STRICT CONTENT GUIDELINES:
+1. DO NOT default to beach/seashells themes UNLESS topic is explicitly about counting seashells.
+2. Adapt the story theme, visual objects, math problems, and quiz questions directly to the Topic "${topic}".
+   - Example: If Topic is "Wang", use coins/ringgit notes, buying items at a store.
+   - Example: If Topic is "Masa dan Waktu", use clock faces, daily routines, morning/night.
+   - Example: If Topic is "Bentuk", use 2D/3D shapes like boxes, spheres, pyramids.
+3. Mascot Suku Penyu 🐢 must participate in an adventure related specifically to "${topic}".
+4. Generate RICH STUDENT LESSON SCENES conforming to adventurePackageSchema.json.
+5. NEVER include DSKP code tags (SP X.X.X, SK X.X, TP1-6, Micro CPA) in student-facing dialogue or stories.
 
 DUAL-ENGINE MODE: ${mode}
-MASCOT COMPANION: ${mascot}
-CURRICULUM CONTEXT:
-  - Framework: KSSR Semakan
-  - Grade: ${grade}
-  - Subject: ${subject}
-  - Bidang / Theme: ${bidang}
-  - Topic: ${topic}
-  - SK Code: ${skCode}
-  - SP Code: ${spCode}
-  - SP Description: ${spDescription || topic}
-  - Learning Outcome: ${learningOutcome || spDescription || topic}
-  - PBD Target: ${pbdTarget}${pedagogySection}
+MASCOT COMPANION: ${mascot}${pedagogySection}
 
 STRICT STEP ARCHITECTURE:
 Step 1: BRIEFING (Rich story hook & mascot dialogue)
 Step 2: ENGAGEMENT (4 CPA blocks: VISUAL_STORY, COMPARISON_SPLIT, STEP_BY_STEP, MYTH_BUSTER)
-Step 3: LESSON (Core concept breakdown for student)
+Step 3: LESSON (Core concept breakdown with dedicated INFOGRAPHIC structure: title, visual_labels, key_takeaway)
 Step 4: PRACTICE (Interactive student exercise with widget)
 Step 5: FLASHCARDS (Key vocabulary & definitions)
 Step 6: MINI_GAME (SortingGame, MatchingGame, or SequenceGame)
@@ -149,7 +151,7 @@ Step 7: QUIZ (Student practice questions with feedback)
 Step 8: COMPLETE (XP calculation & celebratory summary)
 Step 9: REWARD (Badge & Item drop)
 
-Output must be valid JSON only matching the schema.`;
+Output must be valid JSON only.`;
 
   return { systemPrompt, mode, pedagogyCtx };
 }
@@ -217,6 +219,31 @@ export async function generateKSSRMissionPackage({
       widgetType,
       pedagogyContext: pedagogyCtx
     });
+  }
+
+  // Enrich visual scenes with dynamic topic-aligned AI image URLs
+  try {
+    const mainImageUrl = await generateSceneImage({
+      subject,
+      grade,
+      topic: spDescription || topic,
+      sceneType: "STORY",
+      visualDescription: missionPackage.steps?.[0]?.payload?.visual_description || ""
+    });
+
+    if (missionPackage.world) {
+      missionPackage.world.image_url = mainImageUrl;
+    }
+
+    if (Array.isArray(missionPackage.steps)) {
+      for (const step of missionPackage.steps) {
+        if (step.payload && !step.payload.image_url) {
+          step.payload.image_url = mainImageUrl;
+        }
+      }
+    }
+  } catch (imgErr) {
+    console.warn("Scene image enrichment warning:", imgErr);
   }
 
   // Validate JSON against 9-Step schema constraints
