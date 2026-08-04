@@ -270,9 +270,19 @@ async function callLLMForContent(metadata) {
       });
 
       if (res?.data?.content) {
-        return typeof res.data.content === "string"
-          ? JSON.parse(res.data.content)
-          : res.data.content;
+        if (typeof res.data.content === "string") {
+          let cleaned = res.data.content.trim();
+          if (cleaned.startsWith("```")) {
+            cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
+          }
+          try {
+            return JSON.parse(cleaned);
+          } catch (e) {
+            console.error("[aiContentFiller] Failed to parse res.data.content JSON:", e, cleaned.substring(0, 100));
+            throw e;
+          }
+        }
+        return res.data.content;
       }
 
       if (res?.data?.missionPackage) {
