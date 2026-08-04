@@ -259,40 +259,50 @@ async function callLLMForContent(metadata) {
 
   try {
     // Try Base44 function invoke
+    let apiSuccess = false;
     if (base44?.functions?.invoke) {
-      const res = await base44.functions.invoke("generateAIContent", {
-        prompt,
-        sp_code: metadata.sp_code,
-        subject: metadata.subject,
-        grade: metadata.grade,
-        topic: metadata.topic,
-        mode: "CONTENT_FILL_V2"
-      });
+      try {
+        const res = await base44.functions.invoke("generateAIContent", {
+          prompt,
+          sp_code: metadata.sp_code,
+          subject: metadata.subject,
+          grade: metadata.grade,
+          topic: metadata.topic,
+          mode: "CONTENT_FILL_V2"
+        });
 
-      if (res?.data?.content) {
-        if (typeof res.data.content === "string") {
-          let cleaned = res.data.content.trim();
-          if (cleaned.startsWith("```")) {
-            cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
+        if (res?.data?.content) {
+          if (typeof res.data.content === "string") {
+            let cleaned = res.data.content.trim();
+            if (cleaned.startsWith("```")) {
+              cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
+            }
+            try {
+              return JSON.parse(cleaned);
+            } catch (e) {
+              console.error("[aiContentFiller] Failed to parse res.data.content JSON:", e, cleaned.substring(0, 100));
+              throw e;
+            }
           }
-          try {
-            return JSON.parse(cleaned);
-          } catch (e) {
-            console.error("[aiContentFiller] Failed to parse res.data.content JSON:", e, cleaned.substring(0, 100));
-            throw e;
-          }
+          return res.data.content;
         }
-        return res.data.content;
-      }
 
-      if (res?.data?.missionPackage) {
-        // Legacy response — try to extract usable content
-        return null;
+        if (res?.data?.missionPackage) {
+          // Legacy response — try to extract usable content
+          return null;
+        }
+
+        if (res?.data?.success === false || res?.data?.error) {
+          throw new Error(res?.data?.error || "Backend returned success: false");
+        }
+        
+        apiSuccess = true;
+      } catch (invokeErr) {
+        console.warn("[aiContentFiller] Backend invoke failed, falling back to direct Core integration:", invokeErr.message);
       }
     }
 
-    // Try Base44 Core text generation
-    if (base44?.integrations?.Core?.generateText) {
+    if (!apiSuccess && base44?.integrations?.Core?.generateText) {
       const res = await base44.integrations.Core.generateText({ prompt });
       if (res?.text) {
         // Strip markdown code blocks if present
