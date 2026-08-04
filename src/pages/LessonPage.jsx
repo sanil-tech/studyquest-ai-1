@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import BlockRenderer, { bersihkanTeksUntukSuara } from "@/components/lesson/BlockRenderer";
+import LessonShellRenderer from "@/components/lesson/LessonShellRenderer";
 import { getSampleKSSRLesson } from "@/services/generateKSSRContent";
 import AITutorPanel from "@/components/tutor/AITutorPanel";
 import { initializeTutorContext } from "@/services/aiTutorService";
@@ -255,6 +256,54 @@ export default function LessonPage() {
   }
 
   const worldTheme = WORLD_THEMES.default;
+
+  // ===============================================
+  // V2.0 LESSON SHELL — New Deterministic Renderer
+  // If packageData has version "2.0", use the new pipeline.
+  // Otherwise, fall through to the legacy BlockRenderer below.
+  // ===============================================
+  const isV2Lesson = packageData?.version === "2.0" || packageData?.lesson?.version === "2.0";
+  const v2LessonData = packageData?.lesson || packageData;
+
+  if (isV2Lesson && v2LessonData?.blocks) {
+    return (
+      <div className={`min-h-screen ${worldTheme.bgGradient} font-sans text-stone-100`}>
+        {isPreviewMode && (
+          <div className="bg-amber-500 text-stone-950 px-4 py-3 font-black text-sm flex items-center justify-center shadow-lg w-full">
+            <span>👁 <strong>MOD PRATONTON ADMIN:</strong> Pelajaran v2.0 belum diterbitkan. Simpanan & XP dinyahaktifkan.</span>
+          </div>
+        )}
+        <LessonShellRenderer
+          lesson={v2LessonData}
+          studentName={studentName}
+          onLessonComplete={async (result) => {
+            if (!isPreviewMode) {
+              const studentId = await getActiveStudentId();
+              if (studentId) {
+                await processReward(studentId, {
+                  activityType: "lesson_complete",
+                  referenceId: `${topicId}_v2_${v2LessonData.lesson_id}`,
+                  referenceName: `Misi ${v2LessonData.metadata?.topic || "KSSR"}`,
+                  subjectName: v2LessonData.metadata?.subject || "DSKP",
+                  reason: "Misi Kembara v2.0 Selesai"
+                }).catch(() => {});
+              }
+            }
+            setShowCelebration(true);
+            confetti({ particleCount: 300, spread: 120, origin: { y: 0.5 } });
+          }}
+          onNavigateBack={() => navigate(`/study/${subjectId || ''}`)}
+          onMistake={handleMistake}
+        />
+        <AITutorPanel
+          context={tutorContext}
+          mistakeType={currentMistakeType}
+          isVisible={tutorVisible}
+          onClose={() => setTutorVisible(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen ${worldTheme.bgGradient} font-sans text-stone-100 pb-8 px-2 sm:px-4 flex flex-col`}>

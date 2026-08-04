@@ -1,0 +1,291 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StudyQuest Lesson Shell Contract v2.0",
+  "description": "The single source of truth for the 8-block deterministic lesson structure. System owns the shell. AI fills the content.",
+  "type": "object",
+  "required": ["version", "lesson_id", "metadata", "blocks"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "2.0",
+      "description": "Schema version"
+    },
+    "lesson_id": {
+      "type": "string",
+      "description": "UUID for this lesson instance"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["subject", "grade", "sk_code", "sp_code", "sp_description", "topic", "target_tp", "mode", "mascot", "widget_type"],
+      "properties": {
+        "subject": {
+          "type": "string",
+          "enum": ["Matematik", "Sains", "Bahasa Melayu", "English"]
+        },
+        "grade": {
+          "type": "string",
+          "enum": ["Tahun 1", "Tahun 2", "Tahun 3", "Tahun 4", "Tahun 5", "Tahun 6"]
+        },
+        "sk_code": { "type": "string" },
+        "sp_code": { "type": "string" },
+        "sp_description": { "type": "string" },
+        "topic": { "type": "string" },
+        "target_tp": {
+          "type": "string",
+          "enum": ["TP1", "TP2", "TP3", "TP4", "TP5", "TP6"]
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["JUNIOR", "SENIOR"]
+        },
+        "mascot": { "type": "string" },
+        "widget_type": { "type": "string" },
+        "estimated_duration_minutes": { "type": "integer", "default": 22 },
+        "pedagogy_context": {
+          "type": "object",
+          "properties": {
+            "teaching_strategy": { "type": "array", "items": { "type": "string" } },
+            "real_world_context": { "type": "array", "items": { "type": "string" } },
+            "visual_method": { "type": "array", "items": { "type": "string" } },
+            "common_misconception": { "type": "string" },
+            "suggested_activity": { "type": "string" }
+          }
+        }
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": [
+        {
+          "type": "object",
+          "title": "Block 1: STORY_HOOK",
+          "required": ["block_number", "block_type", "xp_reward", "coin_reward", "content"],
+          "properties": {
+            "block_number": { "type": "integer", "const": 1 },
+            "block_type": { "type": "string", "const": "STORY_HOOK" },
+            "xp_reward": { "type": "integer", "default": 10 },
+            "coin_reward": { "type": "integer", "default": 0 },
+            "content": {
+              "type": "object",
+              "required": ["story_text", "mascot_dialogue", "tts_script"],
+              "properties": {
+                "story_text": { "type": "string", "minLength": 30, "maxLength": 300 },
+                "mascot_dialogue": { "type": "string", "minLength": 10, "maxLength": 200 },
+                "tts_script": { "type": "string" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Block 2: LEARNING_OBJECTIVE",
+          "required": ["block_number", "block_type", "xp_reward", "coin_reward", "content"],
+          "properties": {
+            "block_number": { "type": "integer", "const": 2 },
+            "block_type": { "type": "string", "const": "LEARNING_OBJECTIVE" },
+            "xp_reward": { "type": "integer", "default": 0 },
+            "coin_reward": { "type": "integer", "default": 0 },
+            "content": {
+              "type": "object",
+              "required": ["i_can_statement"],
+              "properties": {
+                "i_can_statement": { "type": "string", "minLength": 10 },
+                "tp_badge": { "type": "string" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Block 3: CONCEPT_CPA",
+          "required": ["block_number", "block_type", "xp_reward", "coin_reward", "content"],
+          "properties": {
+            "block_number": { "type": "integer", "const": 3 },
+            "block_type": { "type": "string", "const": "CONCEPT_CPA" },
+            "xp_reward": { "type": "integer", "default": 15 },
+            "coin_reward": { "type": "integer", "default": 0 },
+            "content": {
+              "type": "object",
+              "required": ["concrete", "pictorial", "abstract"],
+              "properties": {
+                "concrete": {
+                  "type": "object",
+                  "required": ["title", "explanation"],
+                  "properties": {
+                    "title": { "type": "string" },
+                    "explanation": { "type": "string", "minLength": 20 },
+                    "visual_prompt": { "type": "string" }
+                  }
+                },
+                "pictorial": {
+                  "type": "object",
+                  "required": ["title", "explanation"],
+                  "properties": {
+                    "title": { "type": "string" },
+                    "explanation": { "type": "string", "minLength": 20 },
+                    "visual_prompt": { "type": "string" }
+                  }
+                },
+                "abstract": {
+                  "type": "object",
+                  "required": ["title", "explanation"],
+                  "properties": {
+                    "title": { "type": "string" },
+                    "explanation": { "type": "string", "minLength": 20 },
+                    "key_term": { "type": "string" },
+                    "key_definition": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Block 4: WORKED_EXAMPLE",
+          "required": ["block_number", "block_type", "xp_reward", "coin_reward", "content"],
+          "properties": {
+            "block_number": { "type": "integer", "const": 4 },
+            "block_type": { "type": "string", "const": "WORKED_EXAMPLE" },
+            "xp_reward": { "type": "integer", "default": 0 },
+            "coin_reward": { "type": "integer", "default": 0 },
+            "content": {
+              "type": "object",
+              "required": ["problem_statement", "solution_steps", "common_mistake", "correct_reasoning"],
+              "properties": {
+                "problem_statement": { "type": "string", "minLength": 10 },
+                "solution_steps": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 5,
+                  "items": { "type": "string" }
+                },
+                "common_mistake": { "type": "string" },
+                "correct_reasoning": { "type": "string" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Block 5: INTERACTIVE_PRACTICE",
+          "required": ["block_number", "block_type", "xp_reward", "coin_reward", "content"],
+          "properties": {
+            "block_number": { "type": "integer", "const": 5 },
+            "block_type": { "type": "string", "const": "INTERACTIVE_PRACTICE" },
+            "xp_reward": { "type": "integer", "default": 25 },
+            "coin_reward": { "type": "integer", "default": 10 },
+            "content": {
+              "type": "object",
+              "required": ["widget_type", "instruction", "seed_data"],
+              "properties": {
+                "widget_type": { "type": "string" },
+                "instruction": { "type": "string", "minLength": 10 },
+                "seed_data": { "type": "object" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Block 6: KNOWLEDGE_CHECK",
+          "required": ["block_number", "block_type", "xp_reward", "coin_reward", "content"],
+          "properties": {
+            "block_number": { "type": "integer", "const": 6 },
+            "block_type": { "type": "string", "const": "KNOWLEDGE_CHECK" },
+            "xp_reward": { "type": "integer", "default": 50 },
+            "coin_reward": { "type": "integer", "default": 15 },
+            "content": {
+              "type": "object",
+              "required": ["questions"],
+              "properties": {
+                "questions": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 5,
+                  "items": {
+                    "type": "object",
+                    "required": ["stem", "options", "correct_index", "explanation"],
+                    "properties": {
+                      "stem": { "type": "string", "minLength": 10 },
+                      "options": {
+                        "type": "array",
+                        "minItems": 3,
+                        "maxItems": 4,
+                        "items": { "type": "string" }
+                      },
+                      "correct_index": { "type": "integer", "minimum": 0 },
+                      "explanation": { "type": "string" },
+                      "tp_level": { "type": "string" },
+                      "misconception_tag": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Block 7: KEY_TAKEAWAY",
+          "required": ["block_number", "block_type", "xp_reward", "coin_reward", "content"],
+          "properties": {
+            "block_number": { "type": "integer", "const": 7 },
+            "block_type": { "type": "string", "const": "KEY_TAKEAWAY" },
+            "xp_reward": { "type": "integer", "default": 0 },
+            "coin_reward": { "type": "integer", "default": 0 },
+            "content": {
+              "type": "object",
+              "required": ["summary_points", "memory_tip", "flashcards"],
+              "properties": {
+                "summary_points": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": { "type": "string" }
+                },
+                "memory_tip": { "type": "string" },
+                "flashcards": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 4,
+                  "items": {
+                    "type": "object",
+                    "required": ["term", "definition"],
+                    "properties": {
+                      "term": { "type": "string" },
+                      "definition": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "Block 8: MISSION_COMPLETE",
+          "required": ["block_number", "block_type", "content"],
+          "properties": {
+            "block_number": { "type": "integer", "const": 8 },
+            "block_type": { "type": "string", "const": "MISSION_COMPLETE" },
+            "xp_reward": { "type": "integer", "default": 0 },
+            "coin_reward": { "type": "integer", "default": 0 },
+            "content": {
+              "type": "object",
+              "required": ["celebration_message", "badge_name"],
+              "properties": {
+                "celebration_message": { "type": "string" },
+                "badge_name": { "type": "string" },
+                "total_xp": { "type": "integer" },
+                "total_coins": { "type": "integer" }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

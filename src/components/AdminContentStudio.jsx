@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { generateKSSRMissionPackage, getPedagogyContext } from "@/services/aiContentEngine";
+import { generateLesson } from "@/services/aiContentFiller";
 import { getKSSRModeByGrade } from "@/services/generateKSSRContent";
 import UniversalLessonPreview from "@/components/admin/UniversalLessonPreview";
 import { useToast } from "@/components/ui/use-toast";
@@ -107,39 +108,76 @@ export default function AdminContentStudio() {
   }, [subject, yearLevel, topic]);
 
   // SECTION 3: AI GENERATION HANDLER
-  const handleGeneratePackage = async () => {
+  const handleGeneratePackage = async (version = "v1") => {
     setGenerating(true);
     setPublishStatus("DRAFT");
 
     try {
-      const res = await generateKSSRMissionPackage({
-        spCode,
-        spDescription: currentSPData.title || `Pelajaran SP ${spCode} bagi ${topic}`,
-        skCode,
-        grade: yearLevel,
-        subject,
-        topic,
-        pbdTarget: targetTP
-      });
+      if (version === "v2") {
+        const res = await generateLesson({
+          subject,
+          grade: yearLevel,
+          sk_code: skCode,
+          sp_code: spCode,
+          sp_description: currentSPData.title || `Pelajaran SP ${spCode} bagi ${topic}`,
+          topic,
+          target_tp: targetTP
+        });
 
-      if (res.success) {
-        const pkg = res.missionPackage || res.adventurePackage;
-        if (pkg?.admin_metadata) {
-          pkg.admin_metadata.target_tp = targetTP;
-          pkg.admin_metadata.misconception_shield = misconceptionShield;
-          pkg.admin_metadata.widget_focus = selectedWidget;
+        if (res.success) {
+          // Wrap the new shell in a package structure that matches the expected activePackage format
+          setActivePackage({
+            version: "2.0",
+            lesson: res.lesson,
+            admin_metadata: {
+              target_tp: targetTP,
+              misconception_shield: misconceptionShield,
+              widget_focus: selectedWidget
+            }
+          });
+          toast({
+            title: "✨ Shell Pelajaran v2 Dijana!",
+            description: `Berjaya menjana modul ${subject} (${yearLevel}) menggunakan saluran baru.`
+          });
+        } else {
+          console.error("Validation failed:", res.validation.errors);
+          toast({
+            variant: "destructive",
+            title: "Gagal Menjana Shell",
+            description: res.validation.errors?.[0] || "Ralat pengesahan struktur AI."
+          });
         }
-        setActivePackage(pkg);
-        toast({
-          title: "✨ Pakej Pelajaran KSSR Dijana!",
-          description: `Berjaya menjana modul ${subject} (${yearLevel}) bagi SP ${spCode}.`
-        });
       } else {
-        toast({
-          variant: "destructive",
-          title: "Gagal Menjana Pakej",
-          description: res.validation_errors?.[0] || "Ralat pengesahan skema AI."
+        // Legasi v1.0 Generation
+        const res = await generateKSSRMissionPackage({
+          spCode,
+          spDescription: currentSPData.title || `Pelajaran SP ${spCode} bagi ${topic}`,
+          skCode,
+          grade: yearLevel,
+          subject,
+          topic,
+          pbdTarget: targetTP
         });
+
+        if (res.success) {
+          const pkg = res.missionPackage || res.adventurePackage;
+          if (pkg?.admin_metadata) {
+            pkg.admin_metadata.target_tp = targetTP;
+            pkg.admin_metadata.misconception_shield = misconceptionShield;
+            pkg.admin_metadata.widget_focus = selectedWidget;
+          }
+          setActivePackage(pkg);
+          toast({
+            title: "✨ Pakej Legasi Dijana!",
+            description: `Berjaya menjana modul lama ${subject} (${yearLevel}).`
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Gagal Menjana Pakej",
+            description: res.validation_errors?.[0] || "Ralat pengesahan skema AI."
+          });
+        }
       }
     } catch (err) {
       console.error("Studio Generation Error:", err);
@@ -411,22 +449,30 @@ export default function AdminContentStudio() {
             </CardContent>
           </Card>
 
-          {/* AI GENERATION TRIGGER BUTTON */}
+          {/* AI GENERATION TRIGGER BUTTONS */}
           <div className="p-6 bg-gradient-to-r from-amber-950/40 via-stone-900 to-indigo-950/40 rounded-3xl border-2 border-amber-500/30 shadow-2xl space-y-4 text-center">
             <button
-              onClick={handleGeneratePackage}
+              onClick={() => handleGeneratePackage("v1")}
               disabled={generating}
-              className="w-full h-14 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 disabled:opacity-50 text-stone-950 font-black text-sm sm:text-base rounded-2xl shadow-xl border-b-4 border-amber-600 flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+              className="w-full h-12 bg-stone-800 hover:bg-stone-700 disabled:opacity-50 text-stone-300 font-bold text-sm sm:text-base rounded-xl border border-stone-700 flex items-center justify-center gap-2 transition-all"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Jana (Legasi v1.0)</span>
+            </button>
+            <button
+              onClick={() => handleGeneratePackage("v2")}
+              disabled={generating}
+              className="w-full h-14 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-teal-400 disabled:opacity-50 text-stone-950 font-black text-sm sm:text-base rounded-2xl shadow-xl border-b-4 border-emerald-700 flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
             >
               {generating ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin text-stone-950" />
-                  <span>Suku Penyu sedang merangka kandungan... 🐢</span>
+                  <span>Suku Penyu sedang merangka (v2.0)... 🐢</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-5 h-5 fill-stone-950" />
-                  <span>⚡ Jana Pelajaran AI (KSSR 5-Langkah)</span>
+                  <Zap className="w-5 h-5 fill-stone-950" />
+                  <span>⚡ Jana Pelajaran AI Baru (v2.0 Shell)</span>
                 </>
               )}
             </button>
@@ -504,8 +550,25 @@ export default function AdminContentStudio() {
                         🗣️ Dialogue Mascot Suku Penyu ({`{student_name}`} placeholder)
                       </label>
                       <textarea
-                        value={activePackage.student_ui?.mascot_dialogue || ""}
-                        onChange={(e) => handleDialogueOverride(e.target.value)}
+                        value={
+                          activePackage.version === "2.0"
+                            ? activePackage.lesson?.blocks?.[0]?.content?.mascot_dialogue || ""
+                            : activePackage.student_ui?.mascot_dialogue || ""
+                        }
+                        onChange={(e) => {
+                          const newDialogue = e.target.value;
+                          if (activePackage.version === "2.0") {
+                            setActivePackage(prev => {
+                              const newLesson = JSON.parse(JSON.stringify(prev.lesson));
+                              if (newLesson.blocks[0]?.content) {
+                                newLesson.blocks[0].content.mascot_dialogue = newDialogue;
+                              }
+                              return { ...prev, lesson: newLesson };
+                            });
+                          } else {
+                            handleDialogueOverride(newDialogue);
+                          }
+                        }}
                         rows={2}
                         className="w-full p-2.5 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 text-xs font-medium focus:border-amber-500 outline-none resize-none"
                       />
@@ -514,25 +577,39 @@ export default function AdminContentStudio() {
                     {/* Quiz Questions Override */}
                     <div className="p-3 bg-stone-950 rounded-xl border border-stone-800 space-y-3">
                       <span className="font-bold text-rose-400 block">❓ Soalan Pentaksiran Diagnostik (PBD):</span>
-                      {activePackage.steps?.find(st => st.step_type === "QUIZ")?.questions?.map((q, qI) => (
+                      {(
+                        activePackage.version === "2.0"
+                          ? activePackage.lesson?.blocks?.[5]?.content?.questions || []
+                          : activePackage.steps?.find(st => st.step_type === "QUIZ")?.questions || []
+                      ).map((q, qI) => (
                         <div key={qI} className="space-y-2 p-3 bg-stone-900 rounded-xl border border-stone-800">
                           <label className="text-[10px] font-bold text-stone-400 uppercase">Batang Soalan {qI + 1}:</label>
                           <input
                             type="text"
-                            value={q.question || ""}
+                            value={q.question || q.stem || ""}
                             onChange={(e) => {
                               const newQText = e.target.value;
-                              setActivePackage(prev => {
-                                const newSteps = prev.steps.map(st => {
-                                  if (st.step_type === "QUIZ") {
-                                    const newQs = [...st.questions];
-                                    newQs[qI] = { ...newQs[qI], question: newQText };
-                                    return { ...st, questions: newQs };
+                              if (activePackage.version === "2.0") {
+                                setActivePackage(prev => {
+                                  const newLesson = JSON.parse(JSON.stringify(prev.lesson));
+                                  if (newLesson.blocks[5]?.content?.questions?.[qI]) {
+                                    newLesson.blocks[5].content.questions[qI].stem = newQText;
                                   }
-                                  return st;
+                                  return { ...prev, lesson: newLesson };
                                 });
-                                return { ...prev, steps: newSteps };
-                              });
+                              } else {
+                                setActivePackage(prev => {
+                                  const newSteps = prev.steps.map(st => {
+                                    if (st.step_type === "QUIZ") {
+                                      const newQs = [...st.questions];
+                                      newQs[qI] = { ...newQs[qI], question: newQText };
+                                      return { ...st, questions: newQs };
+                                    }
+                                    return st;
+                                  });
+                                  return { ...prev, steps: newSteps };
+                                });
+                              }
                             }}
                             className="w-full h-9 px-3 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 font-bold focus:border-amber-500 outline-none"
                           />

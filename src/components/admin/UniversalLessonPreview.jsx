@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { getWidgetComponent, GenericWidgetFallback } from "@/lib/widgetRegistry";
 import BlockRenderer from "@/components/lesson/BlockRenderer";
+import LessonShellRenderer from "@/components/lesson/LessonShellRenderer";
 import Flashcards from "@/components/lesson/Flashcards";
 import confetti from "canvas-confetti";
 import { sanitizeStudentText } from "@/lib/sanitizeStudentText";
@@ -471,10 +472,23 @@ export default function UniversalLessonPreview({ lessonPackage, previewMode = tr
 
       {/* SIMULATED DEVICE FRAME CONTAINER */}
       <div className="flex justify-center">
-        <div className={`w-full transition-all duration-300 bg-stone-950 border-4 border-stone-800 rounded-[36px] shadow-2xl overflow-hidden flex flex-col ${
-          deviceFrame === "mobile" ? "max-w-[400px] min-h-[640px]" : "max-w-[720px] min-h-[580px]"
-        }`}>
-          {/* SIMULATED TOP BAR */}
+        {(lessonPackage.version === "2.0" || lessonPackage.lesson?.version === "2.0") ? (
+          <div className={`w-full transition-all duration-300 bg-stone-950 border-4 border-stone-800 rounded-[36px] shadow-2xl overflow-hidden overflow-y-auto relative ${
+            deviceFrame === "mobile" ? "max-w-[400px] h-[720px]" : "max-w-[720px] h-[640px]"
+          }`}>
+            <LessonShellRenderer 
+              lesson={lessonPackage.lesson || lessonPackage} 
+              studentName="Murid Contoh" 
+              onLessonComplete={() => {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+              }}
+            />
+          </div>
+        ) : (
+          <div className={`w-full transition-all duration-300 bg-stone-950 border-4 border-stone-800 rounded-[36px] shadow-2xl overflow-hidden flex flex-col ${
+            deviceFrame === "mobile" ? "max-w-[400px] min-h-[640px]" : "max-w-[720px] min-h-[580px]"
+          }`}>
+            {/* SIMULATED TOP BAR */}
           <div className="p-4 bg-stone-900/90 border-b border-stone-800 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-lg">🌎</span>
@@ -547,6 +561,7 @@ export default function UniversalLessonPreview({ lessonPackage, previewMode = tr
             </button>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
