@@ -1,7 +1,6 @@
 // src/components/lesson/LessonShellRenderer.jsx
-// The new deterministic lesson renderer for v2.0 Lesson Shell.
+// The deterministic lesson renderer for v2.0 Lesson Shell.
 // Maps 8 fixed block types to 8 focused components.
-// Replaces the 1,718-line BlockRenderer.jsx for v2.0 lessons.
 
 import React, { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,11 +28,48 @@ const BLOCK_COMPONENT_MAP = {
   INTERACTIVE_PRACTICE: InteractivePracticeBlock,
   KNOWLEDGE_CHECK: KnowledgeCheckBlock,
   KEY_TAKEAWAY: KeyTakeawayBlock,
-  MISSION_COMPLETE: MissionCompleteBlock
+  MISSION_COMPLETE: MissionCompleteBlock,
 };
 
 /**
- * Block progress labels for the step indicator
+ * Presentation‑layer stage mapping (5 pedagogical stages).
+ * Uses block_type identifiers to stay resilient to schema changes.
+ */
+const STAGE_MAP = [
+  {
+    id: "engagement",
+    name: "Engagement",
+    icon: "📖",
+    blocks: ["STORY_HOOK", "LEARNING_OBJECTIVE"],
+  },
+  {
+    id: "concept",
+    name: "Concept Learning",
+    icon: "📚",
+    blocks: ["CONCEPT_CPA", "WORKED_EXAMPLE"],
+  },
+  {
+    id: "practice",
+    name: "Practice Arena",
+    icon: "🎮",
+    blocks: ["INTERACTIVE_PRACTICE", "KNOWLEDGE_CHECK"],
+  },
+  {
+    id: "memory",
+    name: "Memory Anchor",
+    icon: "🧠",
+    blocks: ["KEY_TAKEAWAY"],
+  },
+  {
+    id: "completion",
+    name: "Checkpoint",
+    icon: "🏁",
+    blocks: ["MISSION_COMPLETE"],
+  },
+];
+
+/**
+ * Block progress labels for the step indicator (kept for backward compatibility).
  */
 const BLOCK_LABELS = [
   { short: "Cerita", emoji: "📖" },
@@ -43,19 +79,17 @@ const BLOCK_LABELS = [
   { short: "Latihan", emoji: "🎮" },
   { short: "Ujian", emoji: "📝" },
   { short: "Rumusan", emoji: "🧠" },
-  { short: "Tamat", emoji: "🏆" }
+  { short: "Tamat", emoji: "🏆" },
 ];
 
 /**
  * LessonShellRenderer
- *
- * Renders a v2.0 lesson shell as a sequential, step-by-step learning experience.
- * One block is active at a time. Student progresses linearly through all 8 blocks.
+ * Renders a v2.0 lesson shell as a sequential, step‑by‑step learning experience.
  *
  * @param {object} props
  * @param {object} props.lesson - The v2.0 lesson shell (with filled content)
  * @param {string} props.studentName - Current student name
- * @param {function} props.onLessonComplete - Called when all 8 blocks are completed
+ * @param {function} props.onLessonComplete - Called when all blocks are completed
  * @param {function} props.onNavigateBack - Called when student wants to go back
  * @param {function} props.onMistake - Called when student makes an error (for AI tutor)
  */
@@ -64,7 +98,7 @@ export default function LessonShellRenderer({
   studentName = "Pengembara",
   onLessonComplete,
   onNavigateBack,
-  onMistake
+  onMistake,
 }) {
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
   const [completedBlocks, setCompletedBlocks] = useState(new Set());
@@ -75,60 +109,84 @@ export default function LessonShellRenderer({
   const blocks = lesson?.blocks || [];
   const metadata = lesson?.metadata || {};
 
-  // Total possible rewards
+  // Mapping from block_type to its index for quick navigation via stage clicks
+  const blockIndexByType = useMemo(() => {
+    const map = {};
+    blocks.forEach((b, i) => {
+      if (b?.block_type) map[b.block_type] = i;
+    });
+    return map;
+  }, [blocks]);
+
+  // Total possible rewards (kept for reference)
   const totalPossibleXp = useMemo(() => blocks.reduce((s, b) => s + (b.xp_reward || 0), 0), [blocks]);
   const totalPossibleCoins = useMemo(() => blocks.reduce((s, b) => s + (b.coin_reward || 0), 0), [blocks]);
 
-  // Progress percentage
+  // Block‑level progress percentage for the thin progress bar
   const progressPercent = useMemo(() => {
     if (blocks.length === 0) return 0;
     return Math.round((completedBlocks.size / blocks.length) * 100);
   }, [completedBlocks, blocks.length]);
 
-  // Handle block completion
-  const handleBlockComplete = useCallback((blockIndex) => {
-    if (completedBlocks.has(blockIndex)) {
-      // Already completed — just advance
-      if (blockIndex < blocks.length - 1) {
-        setCurrentBlockIndex(blockIndex + 1);
+  // Current block object and its component
+  const currentBlock = blocks[currentBlockIndex];
+  const BlockComponent = BLOCK_COMPONENT_MAP[currentBlock?.block_type];
+  const isCurrentCompleted = completedBlocks.has(currentBlockIndex);
+
+  // Detect the current pedagogical stage using block_type (memo to avoid React warnings)
+  const currentStage = useMemo(() => {
+    return STAGE_MAP.find((stage) =>
+      stage.blocks.includes(currentBlock?.block_type)
+    );
+  }, [currentBlock]);
+
+  const stageNumber = currentStage ? STAGE_MAP.findIndex((s) => s.id === currentStage.id) + 1 : 0;
+
+  // Build an array describing each stage’s completion state for the top indicator
+  const stageProgress = STAGE_MAP.map((stage) => {
+    const isDone = stage.blocks.every((type) => completedBlocks.has(blockIndexByType[type]));
+    const isCurrent = stage.blocks.includes(currentBlock?.block_type);
+    return { stage, isDone, isCurrent };
+  });
+
+  // ---------------------------------------------------------------------
+  // Block completion handler – unchanged core logic, with optional stage hook
+  // ---------------------------------------------------------------------
+  const handleBlockComplete = useCallback(
+    (blockIndex) => {
+      if (completedBlocks.has(blockIndex)) {
+        if (blockIndex < blocks.length - 1) setCurrentBlockIndex(blockIndex + 1);
+        return;
       }
-      return;
-    }
 
-    const block = blocks[blockIndex];
-    const xpGain = block?.xp_reward || 0;
-    const coinGain = block?.coin_reward || 0;
+      const block = blocks[blockIndex];
+      const xpGain = block?.xp_reward || 0;
+      const coinGain = block?.coin_reward || 0;
 
-    // Mark as completed
-    setCompletedBlocks((prev) => new Set([...prev, blockIndex]));
+      setCompletedBlocks((prev) => new Set([...prev, blockIndex]));
 
-    // Award XP/coins
-    if (xpGain > 0 || coinGain > 0) {
-      setEarnedXp((prev) => prev + xpGain);
-      setEarnedCoins((prev) => prev + coinGain);
+      if (xpGain > 0 || coinGain > 0) {
+        setEarnedXp((prev) => prev + xpGain);
+        setEarnedCoins((prev) => prev + coinGain);
+        setShowXpFloat(true);
+        setTimeout(() => setShowXpFloat(false), 1500);
+      }
 
-      // Show floating XP indicator
-      setShowXpFloat(true);
-      setTimeout(() => setShowXpFloat(false), 1500);
-    }
-
-    // Advance to next block or complete lesson
-    if (blockIndex < blocks.length - 1) {
-      setTimeout(() => setCurrentBlockIndex(blockIndex + 1), 300);
-    } else {
-      // All 8 blocks completed
-      if (onLessonComplete) {
+      // Advance to next block or signal lesson completion
+      if (blockIndex < blocks.length - 1) {
+        setTimeout(() => setCurrentBlockIndex(blockIndex + 1), 300);
+      } else if (onLessonComplete) {
         onLessonComplete({
           totalXp: earnedXp + xpGain,
           totalCoins: earnedCoins + coinGain,
           completedBlocks: completedBlocks.size + 1,
-          metadata
+          metadata,
         });
       }
-    }
-  }, [blocks, completedBlocks, earnedXp, earnedCoins, metadata, onLessonComplete]);
+    },
+    [blocks, completedBlocks, earnedXp, earnedCoins, metadata, onLessonComplete]
+  );
 
-  // Handle navigation to previous block
   const handleGoBack = useCallback(() => {
     if (currentBlockIndex > 0) {
       setCurrentBlockIndex((prev) => prev - 1);
@@ -137,7 +195,7 @@ export default function LessonShellRenderer({
     }
   }, [currentBlockIndex, onNavigateBack]);
 
-  // Guard: no lesson data
+  // Guard: missing lesson data
   if (!lesson || blocks.length === 0) {
     return (
       <div className="p-8 text-center space-y-4">
@@ -147,13 +205,9 @@ export default function LessonShellRenderer({
     );
   }
 
-  const currentBlock = blocks[currentBlockIndex];
-  const BlockComponent = BLOCK_COMPONENT_MAP[currentBlock?.block_type];
-  const isCurrentCompleted = completedBlocks.has(currentBlockIndex);
-
   return (
     <div className="max-w-2xl mx-auto space-y-4 px-3 py-4">
-      {/* Top bar: Back button + Progress + XP */}
+      {/* Top bar – back button and XP/coin counters */}
       <div className="flex items-center justify-between">
         <button
           onClick={handleGoBack}
@@ -162,59 +216,57 @@ export default function LessonShellRenderer({
           <ArrowLeft className="w-4 h-4" />
           {currentBlockIndex === 0 ? "Keluar" : "Kembali"}
         </button>
-
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-black text-amber-400 flex items-center gap-1">
             <Sparkles className="w-3 h-3" /> {earnedXp} XP
           </span>
-          <span className="text-[10px] font-black text-yellow-400">
-            🪙 {earnedCoins}
-          </span>
+          <span className="text-[10px] font-black text-yellow-400">🪙 {earnedCoins}</span>
         </div>
       </div>
 
-      {/* Step progress indicator */}
-      <div className="flex gap-1">
-        {blocks.map((block, idx) => {
-          const isDone = completedBlocks.has(idx);
-          const isCurrent = idx === currentBlockIndex;
-          const label = BLOCK_LABELS[idx] || { short: `B${idx + 1}`, emoji: "📦" };
-
-          return (
-            <button
-              key={idx}
-              onClick={() => {
-                // Allow navigating back to completed blocks, or to current
-                if (isDone || idx <= currentBlockIndex) {
-                  setCurrentBlockIndex(idx);
-                }
-              }}
-              className={`flex-1 py-1.5 rounded-lg text-center transition-all ${
-                isDone
-                  ? "bg-emerald-500/20 border border-emerald-500/40"
-                  : isCurrent
-                    ? "bg-amber-500/20 border border-amber-500/40 scale-105"
-                    : "bg-stone-800/50 border border-stone-800"
-              }`}
-              title={label.short}
-            >
-              <span className="text-[10px] block">
-                {isDone ? <CheckCircle2 className="w-3 h-3 text-emerald-400 mx-auto" /> : label.emoji}
-              </span>
-            </button>
-          );
-        })}
+      {/* Stage progress indicator – 5 clickable stage buttons */}
+      <div className="flex gap-1 mb-2">
+        {stageProgress.map(({ stage, isDone, isCurrent }) => (
+          <button
+            key={stage.id}
+            onClick={() => {
+              if (isDone || isCurrent) {
+                const targetIdx = blockIndexByType[stage.blocks[0]];
+                if (targetIdx !== undefined) setCurrentBlockIndex(targetIdx);
+              }
+            }}
+            className={`flex-1 py-1.5 rounded-lg text-center transition-all ${
+              isDone
+                ? "bg-emerald-500/20 border border-emerald-500/40"
+                : isCurrent
+                  ? "bg-amber-500/20 border border-amber-500/40 scale-105"
+                  : "bg-stone-800/50 border border-stone-800"
+            }`}
+            title={stage.name}
+          >
+            <span className="text-[10px] block">{stage.icon}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Progress bar */}
-      <div className="w-full bg-stone-800 rounded-full h-1.5 overflow-hidden">
+      {/* Stage header – shows icon, name, and stage number */}
+      {currentStage && (
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-2xl">{currentStage.icon}</span>
+          <h2 className="text-xl font-bold">{currentStage.name}</h2>
+          <p className="text-sm text-stone-400">Stage {stageNumber} of {STAGE_MAP.length}</p>
+        </div>
+      )}
+
+      {/* Block‑level progress bar (thin) */}
+      <div className="w-full bg-stone-800 rounded-full h-1.5 overflow-hidden mb-2">
         <div
           className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full transition-all duration-500"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
 
-      {/* Floating XP indicator */}
+      {/* Floating XP animation */}
       <AnimatePresence>
         {showXpFloat && (
           <motion.div
@@ -247,7 +299,6 @@ export default function LessonShellRenderer({
               onMistake={onMistake}
             />
           ) : (
-            // Unknown block type fallback — should never happen with v2.0 shells
             <div className="p-6 bg-stone-900 border-2 border-stone-800 rounded-3xl text-center space-y-3">
               <p className="text-xs font-bold text-stone-400">
                 Blok tidak dikenali: {currentBlock?.block_type}
@@ -263,7 +314,7 @@ export default function LessonShellRenderer({
         </motion.div>
       </AnimatePresence>
 
-      {/* Footer: Lesson info */}
+      {/* Footer with lesson metadata and block counter */}
       <div className="pt-2 border-t border-stone-800/50 flex items-center justify-between text-[10px] text-stone-600">
         <span>{metadata.subject} • {metadata.grade} • {metadata.topic}</span>
         <span>Blok {currentBlockIndex + 1} / {blocks.length}</span>
