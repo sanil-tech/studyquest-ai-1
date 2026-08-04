@@ -33,6 +33,7 @@ import NumberScaleWidget from "@/components/widgets/NumberScaleWidget";
 import DragAndDropWidget from "@/components/widgets/DragAndDropWidget";
 import MatchingCardsWidget from "@/components/widgets/MatchingCardsWidget";
 import QuizWheelWidget from "@/components/widgets/QuizWheelWidget";
+import { getWidgetComponent } from "@/lib/widgetRegistry";
 
 // ==========================================
 // TEXT FORMATTING UTILITIES & STUDENT CONTENT SANITIZER
@@ -644,6 +645,282 @@ function GuidedPracticeBlock({ payload, studentName, onCompleted, isCompleted })
 
       <Button onClick={onCompleted} className="w-full mt-4 bg-cyan-500 hover:bg-cyan-400 text-stone-950 font-black h-11 rounded-xl">
         {isCompleted ? "Latihan Selesai ✓" : "Saya Dah Selesai Cuba ➡️"}
+      </Button>
+    </div>
+  );
+}
+
+// ==========================================
+// 1. INTRO BLOCK (Suku Penyu Dialogue + TTS)
+// ==========================================
+function IntroBlock({ payload, studentName, onCompleted, isCompleted }) {
+  const dialogue = (payload.suku_dialogue || payload.mascot_dialogue || payload.audio_tts_text || payload.dialogue_template || "Hai Kawan! Saya Suku Penyu 🐢. Jom kita kembara bersama-sama!").replace(/\{student_name\}/g, studentName);
+
+  const handleSpeak = () => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(dialogue);
+    utt.lang = "ms-MY";
+    utt.rate = 0.9;
+    window.speechSynthesis.speak(utt);
+  };
+
+  return (
+    <div className="p-5 bg-gradient-to-br from-amber-950/50 via-stone-900 to-indigo-950/50 border-2 border-amber-500/30 rounded-3xl space-y-4 text-left shadow-xl font-sans">
+      <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
+        <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
+          <Sparkles className="w-4 h-4 text-amber-400" /> Misi Kembara Suku
+        </span>
+        <button
+          onClick={handleSpeak}
+          className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-stone-950 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md"
+        >
+          <Volume2 className="w-3.5 h-3.5" /> Dengar Suku
+        </button>
+      </div>
+
+      <div className="p-4 bg-stone-950/80 rounded-2xl border border-stone-800 flex items-start gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl shrink-0">
+          🐢
+        </div>
+        <div className="space-y-1">
+          <h4 className="text-xs font-black text-amber-400">Suku Penyu 🐢</h4>
+          <p className="text-sm font-bold text-stone-200 leading-relaxed">
+            "{personalize(dialogue, studentName)}"
+          </p>
+        </div>
+      </div>
+
+      <Button
+        onClick={onCompleted}
+        className="w-full h-12 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-sm rounded-xl border-b-4 border-amber-700 active:translate-y-1 transition-all"
+      >
+        {isCompleted ? "Misi Bermula ✓" : "Jom Mula Kembara! ➡️"}
+      </Button>
+    </div>
+  );
+}
+
+// ==========================================
+// 2. VISUAL GUIDE BLOCK (Concept + Petua Suku)
+// ==========================================
+function VisualGuideBlock({ payload, studentName, onCompleted, isCompleted }) {
+  const conceptTitle = payload.concept_title || payload.title || "Mari Pelajari!";
+  const description = payload.description || payload.content || "";
+  const tip = payload.quick_tip || payload.tip || "Ingat nombor yang lebih besar adalah LEBIH BANYAK!";
+
+  return (
+    <div className="p-5 bg-stone-900 border-2 border-cyan-500/30 rounded-3xl space-y-4 text-left shadow-xl font-sans">
+      <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+        <span className="text-[10px] font-black uppercase text-cyan-400 tracking-wider flex items-center gap-1.5">
+          <BookOpen className="w-4 h-4 text-cyan-400" /> Panduan Visual
+        </span>
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">
+          Konsep Bergambar
+        </span>
+      </div>
+
+      <h4 className="text-sm font-black text-cyan-200">{personalize(conceptTitle, studentName)}</h4>
+
+      {description && (
+        <p className="text-xs text-stone-200 font-medium leading-relaxed p-3.5 bg-stone-950 rounded-2xl border border-stone-800">
+          {personalize(description, studentName)}
+        </p>
+      )}
+
+      {/* Petua Suku Tip Box */}
+      <div className="p-3.5 bg-amber-950/60 border border-amber-500/40 rounded-2xl flex items-start gap-3">
+        <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-base shrink-0 border border-amber-500/40">
+          🐢
+        </div>
+        <div className="space-y-0.5">
+          <span className="text-[10px] font-black text-amber-400 uppercase block">Petua Suku:</span>
+          <p className="text-xs font-bold text-amber-100 leading-relaxed">
+            "{personalize(tip, studentName)}"
+          </p>
+        </div>
+      </div>
+
+      <Button
+        onClick={onCompleted}
+        className="w-full h-12 bg-cyan-500 hover:bg-cyan-400 text-stone-950 font-black text-sm rounded-xl border-b-4 border-cyan-700 active:translate-y-1 transition-all"
+      >
+        {isCompleted ? "Faham ✓" : "Saya Dah Faham! ➡️"}
+      </Button>
+    </div>
+  );
+}
+
+// ==========================================
+// 3. CONCEPT SUMMARY BLOCK (Numbered Bullet Points)
+// ==========================================
+function ConceptSummaryBlock({ payload, studentName, onCompleted, isCompleted }) {
+  const points = payload.summary_points || payload.points || [
+    "Banyak = Bilangan objek yang lebih besar",
+    "Sedikit = Bilangan objek yang lebih kecil",
+    "Sama Banyak = Bilangan objek yang sama nilai"
+  ];
+
+  return (
+    <div className="p-5 bg-stone-900 border-2 border-amber-500/30 rounded-3xl space-y-4 text-left shadow-xl font-sans">
+      <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+        <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
+          <Brain className="w-4 h-4 text-amber-400" /> Nota Peringatan PBD
+        </span>
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/30">
+          Ringkasan
+        </span>
+      </div>
+
+      <div className="space-y-2">
+        {points.map((pt, idx) => (
+          <div key={idx} className="p-3 bg-stone-950 rounded-2xl border border-stone-800 flex items-start gap-3">
+            <span className="w-6 h-6 rounded-xl bg-amber-500/20 text-amber-300 font-black text-xs flex items-center justify-center shrink-0 border border-amber-500/30">
+              {idx + 1}
+            </span>
+            <p className="text-xs font-bold text-stone-200 leading-relaxed pt-0.5">
+              {personalize(pt, studentName)}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <Button
+        onClick={onCompleted}
+        className="w-full h-12 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-sm rounded-xl border-b-4 border-amber-700 active:translate-y-1 transition-all"
+      >
+        {isCompleted ? "Nota Selesai ✓" : "Teruskan ke Aktiviti ➡️"}
+      </Button>
+    </div>
+  );
+}
+
+// ==========================================
+// 4. CHECKPOINT QUIZ BLOCK
+// ==========================================
+function CheckpointQuizBlock({ payload, studentName, onCompleted, isCompleted, onMistake }) {
+  const questionText = payload.question || "Apakah jawapan yang betul?";
+  const rawOptions = payload.options || [
+    { text: "Pilihan A", is_correct: true, explanation: "Tepat sekali!" },
+    { text: "Pilihan B", is_correct: false, explanation: "Kurang tepat." }
+  ];
+
+  const options = rawOptions.map(opt => typeof opt === "string" ? { text: opt, is_correct: false } : opt);
+  const [selectedIdx, setSelectedIdx] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSelect = (idx) => {
+    if (submitted) return;
+    setSelectedIdx(idx);
+  };
+
+  const handleSubmit = () => {
+    if (selectedIdx === null) return;
+    setSubmitted(true);
+    const chosen = options[selectedIdx];
+    if (chosen?.is_correct || selectedIdx === (payload.correct_index ?? 0)) {
+      setTimeout(onCompleted, 1200);
+    } else {
+      if (onMistake) onMistake();
+    }
+  };
+
+  return (
+    <div className="p-5 bg-stone-900 border-2 border-rose-500/30 rounded-3xl space-y-4 text-left shadow-xl font-sans">
+      <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+        <span className="text-[10px] font-black uppercase text-rose-400 tracking-wider flex items-center gap-1.5">
+          <Award className="w-4 h-4 text-rose-400" /> Ujian Misi Diagnostik
+        </span>
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500/30">
+          Ujian PBD
+        </span>
+      </div>
+
+      <h4 className="text-sm font-black text-white leading-relaxed">
+        ❓ {personalize(questionText, studentName)}
+      </h4>
+
+      <div className="space-y-2">
+        {options.map((opt, idx) => {
+          const isSelected = selectedIdx === idx;
+          const isCorrect = opt.is_correct || idx === (payload.correct_index ?? 0);
+
+          let style = "bg-stone-950 border-stone-800 text-stone-200 hover:border-amber-500";
+          if (submitted) {
+            if (isCorrect) style = "bg-emerald-950 border-emerald-500 text-emerald-300 font-black";
+            else if (isSelected) style = "bg-rose-950 border-rose-500 text-rose-300";
+          } else if (isSelected) {
+            style = "bg-amber-500/20 border-amber-500 text-amber-200 font-bold";
+          }
+
+          return (
+            <button
+              key={idx}
+              onClick={() => handleSelect(idx)}
+              className={`w-full p-3.5 rounded-2xl border text-xs font-bold text-left transition-all flex items-center justify-between ${style}`}
+            >
+              <span>{personalize(opt.text || opt.label || String(opt), studentName)}</span>
+              {submitted && isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+            </button>
+          );
+        })}
+      </div>
+
+      {!submitted ? (
+        <Button
+          onClick={handleSubmit}
+          disabled={selectedIdx === null}
+          className="w-full h-12 bg-rose-500 hover:bg-rose-400 disabled:opacity-50 text-stone-950 font-black text-sm rounded-xl border-b-4 border-rose-700 transition-all"
+        >
+          Hantar Jawapan
+        </Button>
+      ) : (
+        <div className="p-3 bg-stone-950 rounded-xl border border-stone-800 text-xs space-y-1">
+          <span className="font-bold text-amber-400 block">💡 Penerangan Suku:</span>
+          <p className="text-stone-300 font-medium">
+            {options[selectedIdx]?.explanation || payload.explanation || "Jawapan yang dipilih telah disemak oleh Suku!"}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
+// 5. COMPLETE SUMMARY REWARD BLOCK
+// ==========================================
+function CompleteSummaryBlock({ payload, studentName, onCompleted, isCompleted }) {
+  const summaryMsg = payload.mastery_summary || payload.summary || "Tahniah! Anda telah berjaya menguasai modul pembelajaran ini!";
+
+  return (
+    <div className="p-6 bg-gradient-to-b from-amber-950/60 via-stone-950 to-stone-900 border-2 border-amber-500/40 rounded-3xl text-center space-y-4 shadow-2xl font-sans">
+      <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-400 mx-auto flex items-center justify-center text-3xl animate-bounce">
+        🏆
+      </div>
+      <div className="space-y-1">
+        <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest block">
+          TAHNIAH {studentName}! MISI SELESAI
+        </span>
+        <h3 className="text-lg font-black text-amber-100">
+          Wira Pembelajaran KSSR
+        </h3>
+        <p className="text-xs text-stone-300 max-w-md mx-auto leading-relaxed pt-1">
+          {personalize(summaryMsg, studentName)}
+        </p>
+      </div>
+
+      <div className="flex justify-center gap-4 bg-stone-900 p-3 rounded-2xl border border-stone-800 text-xs font-black">
+        <span className="text-amber-400 flex items-center gap-1">
+          <Sparkles className="w-4 h-4 fill-amber-400" /> +100 XP
+        </span>
+        <span className="text-yellow-400">🪙 +25 Syiling</span>
+      </div>
+
+      <Button
+        onClick={onCompleted}
+        className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-sm rounded-xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+      >
+        {isCompleted ? "Misi Selesai ✓" : "Selesai Misi! ➡️"}
       </Button>
     </div>
   );
@@ -1354,30 +1631,85 @@ export default function BlockRenderer({
         </div>
       );
 
-    // DEFAULT FALLBACK
+    // 5-STEP ADVENTURE BLOCK TYPES & EDUGAME INTEGRATIONS
+    case "INTRO":
+    case "HOOK":
+      return <IntroBlock payload={payload} studentName={studentName} onCompleted={onComplete} isCompleted={isCompleted} />;
+
+    case "VISUAL_GUIDE":
+    case "VISUAL_CPA":
+      return <VisualGuideBlock payload={payload} studentName={studentName} onCompleted={onComplete} isCompleted={isCompleted} />;
+
+    case "CONCEPT_SUMMARY":
+    case "NOTE_CARD":
+      return <ConceptSummaryBlock payload={payload} studentName={studentName} onCompleted={onComplete} isCompleted={isCompleted} />;
+
+    case "EDUGAME_WIDGET":
+    case "EDUGAME":
+    case "MINI_GAME": {
+      const wType = payload.widget_type || payload.type || "drag_and_drop";
+      const WidgetComp = getWidgetComponent(wType);
+      if (WidgetComp) {
+        return (
+          <WidgetComp
+            payload={payload.widget_config || payload}
+            instruction={payload.widget_config?.instruction || payload.instruction}
+            onComplete={onComplete}
+            isCompleted={isCompleted}
+            onMistake={onMistake}
+          />
+        );
+      }
+      return (
+        <DragAndDropWidget
+          payload={payload.widget_config || payload}
+          instruction={payload.widget_config?.instruction || payload.instruction}
+          onComplete={onComplete}
+          isCompleted={isCompleted}
+          onMistake={onMistake}
+        />
+      );
+    }
+
+    case "CHECKPOINT_QUIZ":
+    case "QUIZ_CHECKPOINT":
+      return (
+        <CheckpointQuizBlock
+          payload={payload}
+          studentName={studentName}
+          onCompleted={onComplete}
+          isCompleted={isCompleted}
+          onMistake={onMistake}
+        />
+      );
+
+    case "COMPLETE":
+    case "SUMMARY":
+    case "REWARD":
+      return <CompleteSummaryBlock payload={payload} studentName={studentName} onCompleted={onComplete} isCompleted={isCompleted} />;
+
+    // DEFAULT FALLBACK (ZERO RAW JSON LEAKS)
     default:
       return (
-        <div className="p-6 bg-stone-900 border border-stone-800 rounded-2xl space-y-3 text-left overflow-hidden">
-          <div className="flex items-center gap-2 mb-2">
-            <HelpCircle className="w-5 h-5 text-amber-400" />
-            <h3 className="text-sm font-black text-amber-300">Modul Belum Disokong ({blockType})</h3>
+        <div className="p-6 bg-stone-900 border-2 border-stone-800 rounded-3xl space-y-4 text-left shadow-xl font-sans">
+          <div className="flex items-center gap-2 border-b border-stone-800 pb-3">
+            <Sparkles className="w-5 h-5 text-amber-400" />
+            <h3 className="text-sm font-black text-amber-300">
+              {blockTitle || "Misi Pembelajaran DSKP"}
+            </h3>
           </div>
-          
-          {payload.markdown ? (
-            <div
-              className="text-stone-300 font-medium text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words space-y-2 mb-4"
-              dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(payload.markdown || "") }}
-            />
-          ) : (
-            <div className="bg-stone-950 p-3 rounded-lg border border-stone-800 overflow-x-auto">
-              <pre className="text-[10px] text-stone-400">
-                {JSON.stringify(payload, null, 2)}
-              </pre>
-            </div>
-          )}
 
-          <Button onClick={onComplete} className="w-full h-11 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-xs rounded-xl border-b-4 border-emerald-700 flex items-center justify-center gap-1.5 mt-4">
-            {isCompleted ? "Selesai ✓" : <>Teruskan Misi ➡️</>}
+          <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 space-y-2">
+            <p className="text-xs text-stone-200 font-bold leading-relaxed">
+              {personalize(payload.description || payload.content || payload.text || payload.markdown || "Teruskan kembara untuk menguasai kemahiran ini!", studentName)}
+            </p>
+          </div>
+
+          <Button
+            onClick={onComplete}
+            className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-sm rounded-xl border-b-4 border-emerald-700 active:translate-y-1 transition-all"
+          >
+            {isCompleted ? "Misi Selesai ✓" : "Teruskan Misi ➡️"}
           </Button>
         </div>
       );
