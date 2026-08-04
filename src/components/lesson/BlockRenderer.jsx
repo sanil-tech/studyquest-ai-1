@@ -19,13 +19,15 @@ import {
   Target,
   PenTool,
   Award,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import Flashcards from "@/components/lesson/Flashcards";
 import MindMap from "@/components/lesson/MindMap";
 import InfographicBlock from "@/components/lesson/InfographicBlock";
+import InteractiveActivity from "@/components/lesson/InteractiveActivity";
 import BaseTenBlocksWidget from "@/components/widgets/BaseTenBlocksWidget";
 import SentenceBuilderWidget from "@/components/widgets/SentenceBuilderWidget";
 import FractionSlicerWidget from "@/components/widgets/FractionSlicerWidget";

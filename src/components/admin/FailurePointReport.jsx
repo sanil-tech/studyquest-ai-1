@@ -32,7 +32,7 @@ const FailurePointReport = ({ error, drillRan, isSuccess }) => {
       </div>
       
       <div className="bg-stone-950 border border-stone-800 p-4 rounded-xl font-mono text-sm text-rose-300">
-        > {error}
+        {"> "}{error}
       </div>
 
       <div className="mt-4 flex gap-3">

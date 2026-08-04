@@ -1,4 +1,5 @@
 // dotenv removed
+/* global process, console */
 import { createClient } from '@base44/sdk';
 import { buildKSSRBatchLesson } from '../services/generateKSSRContent.js';
 
