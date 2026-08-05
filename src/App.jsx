@@ -20,6 +20,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // Admin Page Imports
 import AdminDashboard from "@/pages/AdminDashboard";
 import LessonResources from "@/pages/LessonResources";
+import LessonBuilder from "@/pages/LessonBuilder";
 import EditLessonResources from "@/pages/EditLessonResources";
 
 // Lazy-loaded public & auth pages
@@ -126,6 +127,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/textbooks" element={<TextbookUpload />} />
             <Route path="/admin/lesson-resources" element={<LessonResources />} />
+            <Route path="/admin/lesson-builder" element={<LessonBuilder />} />
             <Route path="/admin/edit-lesson" element={<EditLessonResources />} />
             <Route path="/admin/premium-access" element={<AdminPremiumAccess />} />
             <Route path="/admin/content-studio" element={<AdminContentStudio />} />

@@ -298,7 +298,6 @@ export default function AdminContentStudio() {
           </button>
         </div>
       </div>
-
       {/* STUDIO LAYOUT: GRID 1 (CONFIGURATOR) & GRID 2 (PREVIEW STUDIO) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
