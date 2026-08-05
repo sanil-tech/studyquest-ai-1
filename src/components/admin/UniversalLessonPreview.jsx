@@ -357,7 +357,14 @@ export default function UniversalLessonPreview({ lessonPackage, previewMode = tr
     return [];
   }, [lessonPackage]);
 
-  if (!lessonPackage || stepsList.length === 0) {
+  const isV2 = Boolean(
+    lessonPackage?.version === "2.0" || 
+    lessonPackage?.lesson?.version === "2.0" ||
+    lessonPackage?.lesson?.blocks ||
+    lessonPackage?.blocks
+  );
+
+  if (!lessonPackage || (!isV2 && stepsList.length === 0)) {
     return (
       <div className="p-8 text-center bg-stone-950 border border-stone-800 rounded-3xl space-y-3">
         <Sparkles className="w-8 h-8 text-amber-400 mx-auto" />
@@ -393,7 +400,7 @@ export default function UniversalLessonPreview({ lessonPackage, previewMode = tr
             <Eye className="w-4 h-4" /> Pratinjau Simulator Pelajar
           </span>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-500/30">
-            {lessonPackage.subject || "Matematik"} ({lessonPackage.grade || "Tahun 1"})
+            {lessonPackage.subject || lessonPackage.lesson?.metadata?.subject || lessonPackage.admin_metadata?.subject || "Matematik"} ({lessonPackage.grade || lessonPackage.lesson?.metadata?.grade || lessonPackage.admin_metadata?.year || "Tahun 1"})
           </span>
         </div>
 
