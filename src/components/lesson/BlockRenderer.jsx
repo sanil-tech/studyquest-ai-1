@@ -3,7 +3,7 @@
 // Enhancements for Phase 1-4: Pedagogical badges, Suku Mascot Induction Card 🐢, Worked Examples, PBD Assessments, Reflection Journal, and "Teruskan Misi ➡️" buttons.
 
 import React, { useMemo, useState } from "react";
-import sukuPenyuMascotImg from "@/assets/suku_penyu_mascot.jpg";
+import sukuPenyuMascotImg from "@/assets/images/suku_penyu_mascot_1785919182374.jpg";
 import { personalize, replaceStudentVariables } from "@/lib/personalize";
 import {
   Tv,
@@ -1440,7 +1440,6 @@ export default function BlockRenderer({
     case "ACTIVITIES":
     case "INTERACTIVE":
     case "DRAG_DROP":
-    case "MATCHING_GAME":
       if (payload.questions && Array.isArray(payload.questions)) {
         return (
           <div className="space-y-4 text-left">

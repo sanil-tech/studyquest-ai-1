@@ -6,7 +6,7 @@ import React from "react";
 import { Volume2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
-import sukuPenyuMascotImg from "@/assets/suku_penyu_mascot.jpg";
+import sukuPenyuMascotImg from "@/assets/images/suku_penyu_mascot_1785919182374.jpg";
 
 export default function StoryHookBlock({ content, mascot, studentName, onComplete, isCompleted }) {
   const storyText = personalize(content.story_text || "", studentName);

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import sukuPenyuMascotImg from "@/assets/suku_penyu_mascot.jpg";
+import sukuPenyuMascotImg from "@/assets/images/suku_penyu_mascot_1785919182374.jpg";
 import {
   Heart,
   Star,
