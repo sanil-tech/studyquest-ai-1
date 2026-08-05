@@ -6,6 +6,7 @@ import React from "react";
 import { Volume2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
+import sukuPenyuMascotImg from "@/assets/suku_penyu_mascot.jpg";
 
 export default function StoryHookBlock({ content, mascot, studentName, onComplete, isCompleted }) {
   const storyText = personalize(content.story_text || "", studentName);
@@ -13,6 +14,7 @@ export default function StoryHookBlock({ content, mascot, studentName, onComplet
   const ttsScript = content.tts_script || dialogue;
   const mascotEmoji = mascot?.includes("🦊") ? "🦊" : "🐢";
   const mascotName = mascot?.includes("Ejen") ? "Ejen Suku" : "Suku Penyu";
+  const storyVisual = content.image_url || content.visual_url || content.visual?.image_url || sukuPenyuMascotImg;
 
   const handleSpeak = () => {
     if (!window.speechSynthesis) return;
@@ -43,8 +45,12 @@ export default function StoryHookBlock({ content, mascot, studentName, onComplet
       <div className="overflow-hidden bg-stone-950/90 rounded-2xl border border-stone-800 space-y-3 shadow-lg">
         <div className="relative w-full h-44 sm:h-52 bg-gradient-to-t from-stone-950 via-stone-900 to-amber-950/40 flex items-center justify-center overflow-hidden">
           <img
-            src="/suku_penyu_mascot.jpg"
+            src={storyVisual}
             alt="Suku Penyu Mascot Story Visual"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = sukuPenyuMascotImg;
+            }}
             className="w-full h-full object-cover object-center opacity-90 hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-transparent" />
@@ -87,8 +93,12 @@ export default function StoryHookBlock({ content, mascot, studentName, onComplet
       <div className="p-4 bg-stone-950/90 rounded-2xl border border-stone-800 flex items-start gap-3 shadow-md">
         <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border-2 border-amber-500/50 flex items-center justify-center shrink-0 overflow-hidden shadow-md">
           <img
-            src="/suku_penyu_mascot.jpg"
+            src={sukuPenyuMascotImg}
             alt={mascotName}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = sukuPenyuMascotImg;
+            }}
             className="w-full h-full object-cover"
           />
         </div>

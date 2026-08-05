@@ -3,6 +3,7 @@
 // Enhancements for Phase 1-4: Pedagogical badges, Suku Mascot Induction Card 🐢, Worked Examples, PBD Assessments, Reflection Journal, and "Teruskan Misi ➡️" buttons.
 
 import React, { useMemo, useState } from "react";
+import sukuPenyuMascotImg from "@/assets/suku_penyu_mascot.jpg";
 import { personalize, replaceStudentVariables } from "@/lib/personalize";
 import {
   Tv,
@@ -685,8 +686,12 @@ function IntroBlock({ payload, studentName, onCompleted, isCompleted }) {
       <div className="overflow-hidden bg-stone-950/90 rounded-2xl border border-stone-800 space-y-3 shadow-lg">
         <div className="relative w-full h-44 sm:h-52 bg-gradient-to-t from-stone-950 via-stone-900 to-amber-950/40 flex items-center justify-center overflow-hidden">
           <img
-            src="/suku_penyu_mascot.jpg"
+            src={payload.image_url || payload.visual_url || payload.visual?.image_url || sukuPenyuMascotImg}
             alt="Suku Penyu Mascot Story Visual"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = sukuPenyuMascotImg;
+            }}
             className="w-full h-full object-cover object-center opacity-90 hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-transparent" />
@@ -729,8 +734,12 @@ function IntroBlock({ payload, studentName, onCompleted, isCompleted }) {
       <div className="p-4 bg-stone-950/80 rounded-2xl border border-stone-800 flex items-start gap-3 shadow-md">
         <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center shrink-0 overflow-hidden shadow-md">
           <img
-            src="/suku_penyu_mascot.jpg"
+            src={sukuPenyuMascotImg}
             alt="Suku Penyu"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = sukuPenyuMascotImg;
+            }}
             className="w-full h-full object-cover"
           />
         </div>
