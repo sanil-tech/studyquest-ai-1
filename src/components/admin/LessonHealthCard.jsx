@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, ShieldAlert, CheckCircle2, Archive, Wrench } from 'lucide-react';
+import { CheckCircle2, Archive, Wrench } from 'lucide-react';
 
 const LessonHealthCard = ({ lesson, onRepair, onArchive }) => {
   const isHealthy = lesson.status === "Healthy";

@@ -2,7 +2,7 @@
 // Displays Suku Mascot AI parent advice card for Parent Intelligence Dashboard
 
 import React from "react";
-import { Sparkles, MessageSquare } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export default function AIParentCoach({ aiParentMessage }) {
   if (!aiParentMessage) return null;

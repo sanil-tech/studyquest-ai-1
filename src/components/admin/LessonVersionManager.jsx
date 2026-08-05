@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getLessonVersions, updateLessonStatus } from '../../services/pilotReadinessService';
-import { GitCommit, Check, Clock, Edit3, Archive } from 'lucide-react';
+import { GitCommit, Check, Clock, Archive } from 'lucide-react';
 
 const LessonVersionManager = () => {
   const [versions, setVersions] = useState([]);

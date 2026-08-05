@@ -3,7 +3,7 @@ import { runLibraryAudit } from '../../services/lessonAuditService';
 import LessonHealthCard from './LessonHealthCard';
 import CurriculumCoverageMatrix from './CurriculumCoverageMatrix';
 import LessonRepairQueue from './LessonRepairQueue';
-import { ShieldCheck, BookOpen, AlertTriangle, Layers, Zap } from 'lucide-react';
+import { ShieldCheck, BookOpen, AlertTriangle, Zap } from 'lucide-react';
 
 const LessonAuditDashboard = () => {
   const [metrics, setMetrics] = useState(null);

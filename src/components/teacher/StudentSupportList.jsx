@@ -2,7 +2,7 @@
 // Displays list of students requiring pedagogical intervention or foundation support
 
 import React from "react";
-import { AlertCircle, User, ShieldAlert, ChevronRight } from "lucide-react";
+import { ShieldAlert, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function StudentSupportList({ students = [], onSelectStudent }) {

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, CheckCircle2, ShieldCheck, Layers, BookOpen } from "lucide-react";
+import { Sparkles, Loader2, CheckCircle2, ShieldCheck, Layers } from "lucide-react";
 import UniversalLessonPreview from "@/components/admin/UniversalLessonPreview";
 import { generateKSSRMissionPackage } from "@/services/aiContentEngine";
 

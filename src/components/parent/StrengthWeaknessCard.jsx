@@ -2,7 +2,7 @@
 // Displays child strengths (🌟) and needs support areas (🎯) for Parent Intelligence Dashboard
 
 import React from "react";
-import { Sparkles, Target, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Sparkles, Target } from "lucide-react";
 
 export default function StrengthWeaknessCard({ strengths = [], weaknesses = [] }) {
   return (

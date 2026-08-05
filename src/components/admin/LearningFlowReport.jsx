@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, AlertCircle, PlayCircle, BrainCircuit } from 'lucide-react';
+import { CheckCircle2, AlertCircle, BrainCircuit } from 'lucide-react';
 
 const LearningFlowReport = ({ result }) => {
   if (!result) return null;

@@ -4,8 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { Loader2, Users, BookOpen, Sparkles, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Loader2, Sparkles, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 import AITeacherCoach from "@/components/teacher/AITeacherCoach";

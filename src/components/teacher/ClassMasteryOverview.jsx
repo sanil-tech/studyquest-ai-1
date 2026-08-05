@@ -2,7 +2,7 @@
 // Displays classroom mastery score progress bar and DSKP Tahap Penguasaan (TP1-TP6) distribution breakdown
 
 import React from "react";
-import { BarChart3, Users, Award, BookOpen } from "lucide-react";
+import { BarChart3, Users } from "lucide-react";
 
 export default function ClassMasteryOverview({ classSummary, tpDistribution }) {
   if (!classSummary) return null;

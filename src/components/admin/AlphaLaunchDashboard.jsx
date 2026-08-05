@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import FounderAcceptanceRunner from './FounderAcceptanceRunner';
 import AlphaUserTracker from './AlphaUserTracker';
 import BugTriageDashboard from './BugTriageDashboard';
-import { getAcceptanceTests, getAlphaUsers, getBugBacklog, calculateLaunchReadiness } from '../../services/alphaOperationsService';
+import { getAcceptanceTests, getAlphaUsers, getBugBacklog } from '../../services/alphaOperationsService';
 import { Rocket, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { getVersionString } from '../../config/version';
 

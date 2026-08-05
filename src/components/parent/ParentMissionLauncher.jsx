@@ -2,7 +2,7 @@
 // Parent action launcher to assign extra practice missions to linked child
 
 import React, { useState } from "react";
-import { Zap, Target, Loader2, CheckCircle2 } from "lucide-react";
+import { Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";

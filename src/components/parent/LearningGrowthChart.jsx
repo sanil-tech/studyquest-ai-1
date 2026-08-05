@@ -2,7 +2,7 @@
 // Displays simple visual progress growth visualization for Parent Intelligence Dashboard
 
 import React from "react";
-import { TrendingUp, Award, Zap } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 
 export default function LearningGrowthChart({ learningProgress }) {
   if (!learningProgress) return null;

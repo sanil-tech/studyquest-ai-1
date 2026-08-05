@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, Compass, Star, Trophy, BookOpen, Layers, CheckCircle2, AlertCircle, HelpCircle } from "lucide-react";
+import { Sparkles, Compass, BookOpen, Layers, CheckCircle2 } from "lucide-react";
 
 /**
  * AdventurePreview Component

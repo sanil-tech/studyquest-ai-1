@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBase44 } from '@base44/sdk/react';
-import { ChevronRight, Target, Brain, ArrowRight } from 'lucide-react';
+import { ChevronRight, Target, Brain } from 'lucide-react';
 import RemediationView from './RemediationView';
 
 export default function TopicMasteryPlayer({ studentId, topic, onBack }) {

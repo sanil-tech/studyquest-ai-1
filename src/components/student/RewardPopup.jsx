@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Star, Zap, ChevronUp } from 'lucide-react';
+import { Star, ChevronUp } from 'lucide-react';
 
 const RewardPopup = ({ rewards, onClose }) => {
   const [visible, setVisible] = useState(false);

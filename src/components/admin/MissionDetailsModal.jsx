@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Eye, Edit3, CheckCircle2, Layers, BookOpen } from "lucide-react";
+import { Search, X, Eye, Edit3, BookOpen } from "lucide-react";
 
 export default function MissionDetailsModal({
   isOpen,

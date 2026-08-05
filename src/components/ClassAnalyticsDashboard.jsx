@@ -12,14 +12,10 @@ import {
   AlertCircle,
   CheckCircle2,
   Send,
-  Sparkles,
   BarChart3,
-  TrendingUp,
   ShieldAlert,
-  BookOpen,
   RefreshCw,
-  Flame,
-  ChevronRight
+  Flame
 } from "lucide-react";
 
 export default function ClassAnalyticsDashboard({

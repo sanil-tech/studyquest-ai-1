@@ -1,0 +1,5 @@
+{
+  "name": "saveGeneratedLesson",
+  "description": "Converts AI-generated lesson packages into persistent database records (Lesson, LessonVersion, LessonBlock, Assessment, QuestionBank, QuestionOption).",
+  "is_public": false
+}

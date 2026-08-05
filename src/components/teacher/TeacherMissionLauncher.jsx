@@ -2,7 +2,7 @@
 // Teacher action center launcher to assign class-wide or student-specific adaptive remediation missions
 
 import React, { useState } from "react";
-import { Zap, Send, Loader2, CheckCircle2 } from "lucide-react";
+import { Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
-import { Users, Award, BookOpen, AlertCircle, ChevronRight, Activity } from "lucide-react";
+import { Users, Award, BookOpen, ChevronRight, Activity } from "lucide-react";
 import ParentActionCard from "@/components/parent/ParentActionCard";
-import ChildSwitcher from "@/components/parent/ChildSwitcher";
 import { useViewMode } from "@/lib/ViewModeContext";
 
 export default function ParentDashboard() {

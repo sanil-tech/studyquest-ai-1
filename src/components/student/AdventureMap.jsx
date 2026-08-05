@@ -1,5 +1,5 @@
 import React from 'react';
-import { Map, Lock, Unlock, CheckCircle2 } from 'lucide-react';
+import { Map, Lock, CheckCircle2 } from 'lucide-react';
 import worldMap from '../../data/worldMap.json';
 
 const AdventureMap = ({ currentWorldId, masteryProfile }) => {

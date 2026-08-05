@@ -2,7 +2,7 @@
 // Displays Suku AI Teacher Assistant persona card with DSKP pedagogical recommendations
 
 import React from "react";
-import { Sparkles, BookOpen, Lightbulb } from "lucide-react";
+import { Sparkles, Lightbulb } from "lucide-react";
 
 export default function AITeacherCoach({ aiTeacherGuidance }) {
   if (!aiTeacherGuidance) return null;

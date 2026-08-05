@@ -2,7 +2,7 @@
 // Parent Notification Center Card displaying color-coded alerts (🟢 Improvement, 🟡 Reminder, 🔴 Needs Attention)
 
 import React, { useState } from "react";
-import { Bell, Check, AlertTriangle, TrendingUp, Sparkles, Flame, Gift, Loader2 } from "lucide-react";
+import { Bell, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";

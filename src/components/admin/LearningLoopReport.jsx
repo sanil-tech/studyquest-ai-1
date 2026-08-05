@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, AlertCircle, PlayCircle } from 'lucide-react';
+import { AlertCircle, PlayCircle } from 'lucide-react';
 
 const LearningLoopReport = ({ logs }) => {
   if (!logs || logs.length === 0) {

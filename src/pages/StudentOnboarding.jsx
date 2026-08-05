@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createDiagnosticAssessment, submitAnswer, updateMasteryEngine, getQuestions } from '../services/diagnosticAssessmentService';
+import { createDiagnosticAssessment, submitAnswer, updateMasteryEngine } from '../services/diagnosticAssessmentService';
 import { initializeStudentJourney } from '../services/studentJourneyService';
-import BlockRenderer from '../components/lesson/BlockRenderer'; // Assuming this can render diagnostic widgets if we mock standard lessons
+// Assuming this can render diagnostic widgets if we mock standard lessons
 
 export default function StudentOnboarding() {
   const navigate = useNavigate();

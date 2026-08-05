@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 import { generateKSSRMissionPackage, getPedagogyContext } from "@/services/aiContentEngine";
 import { generateLesson } from "@/services/aiContentFiller";
 import UniversalLessonPreview from "@/components/admin/UniversalLessonPreview";
@@ -51,6 +52,7 @@ export default function AdminContentStudio() {
 
   // SECTION 3: GENERATION, OVERRIDE & PUBLISHING STATE
   const [generating, setGenerating] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [activePackage, setActivePackage] = useState(null);
   const [studioMode, setStudioMode] = useState("PREVIEW"); // "EDIT" | "PREVIEW"
   const [publishStatus, setPublishStatus] = useState("DRAFT"); // "DRAFT" | "PUBLISHED"
@@ -241,28 +243,70 @@ export default function AdminContentStudio() {
   };
 
   // PUBLISHING DISPATCHER HANDLER
-  const handlePublishLesson = () => {
+  const handlePublishLesson = async () => {
     if (!activePackage) return;
+    setPublishing(true);
 
-    const publishedRecord = {
-      id: `lesson_${Date.now()}`,
-      status: "PUBLISHED",
-      published_at: new Date().toISOString(),
-      assigned_class: assignedClass,
-      subject,
-      grade: yearLevel,
-      sp_code: spCode,
-      topic,
-      lesson_data: activePackage
-    };
+    try {
+      // STEP 1: Save AI generated lesson package into database records
+      const saveRes = await base44.functions.invoke("saveGeneratedLesson", {
+        subject,
+        year_level: yearLevel,
+        topic,
+        sp_code: spCode,
+        sk_code: skCode,
+        target_tp: targetTP,
+        package: activePackage
+      });
 
-    setPublishStatus("PUBLISHED");
-    setPublishedLesson(publishedRecord);
+      const saveResult = saveRes.data || saveRes;
+      if (!saveResult || !saveResult.success || !saveResult.lesson_version_id) {
+        throw new Error(saveResult?.error || "Gagal menyimpan modul pelajaran ke pangkalan data.");
+      }
 
-    toast({
-      title: "🚀 Pelajaran Berjaya Diterbitkan!",
-      description: `Modul SP ${spCode} (${topic}) kini aktif untuk murid kelas ${assignedClass}.`
-    });
+      const { lesson_id, lesson_version_id } = saveResult;
+
+      // STEP 2: Publish the newly created LessonVersion
+      const pubRes = await base44.functions.invoke("publishLessonVersion", {
+        lesson_version_id,
+        preview_status: "APPROVED",
+        force_publish: true
+      });
+
+      const pubResult = pubRes.data || pubRes;
+      if (!pubResult || !pubResult.success) {
+        throw new Error(pubResult?.error || "Gagal menerbitkan versi pelajaran.");
+      }
+
+      // STEP 3: Update local UI state on confirmed database publishing
+      setPublishStatus("PUBLISHED");
+      setPublishedLesson({
+        id: lesson_id,
+        version_id: lesson_version_id,
+        status: "PUBLISHED",
+        published_at: new Date().toISOString(),
+        assigned_class: assignedClass,
+        subject,
+        grade: yearLevel,
+        sp_code: spCode,
+        topic,
+        lesson_data: activePackage
+      });
+
+      toast({
+        title: "🚀 Pelajaran Berjaya Diterbitkan!",
+        description: "Pelajaran berjaya diterbitkan dan kini tersedia untuk murid."
+      });
+    } catch (err) {
+      console.error("Studio Publishing Error:", err);
+      toast({
+        variant: "destructive",
+        title: "Gagal Menerbitkan Pelajaran",
+        description: err.message || "Terdapat ralat semasa menyimpan & menerbitkan modul pelajaran."
+      });
+    } finally {
+      setPublishing(false);
+    }
   };
 
   // Safe Dynamic Content Extraction for Edit View
@@ -308,14 +352,19 @@ export default function AdminContentStudio() {
           {activePackage && (
             <Button
               onClick={handlePublishLesson}
-              disabled={publishStatus === "PUBLISHED"}
+              disabled={publishStatus === "PUBLISHED" || publishing}
               className={`h-11 px-5 rounded-2xl font-black text-xs transition-all flex items-center gap-2 ${
                 publishStatus === "PUBLISHED"
                   ? "bg-emerald-950 text-emerald-300 border border-emerald-500/40"
                   : "bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-stone-950 shadow-lg border-b-4 border-emerald-700"
               }`}
             >
-              {publishStatus === "PUBLISHED" ? (
+              {publishing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-stone-950" />
+                  <span>Menyimpan & Menerbitkan...</span>
+                </>
+              ) : publishStatus === "PUBLISHED" ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   <span>Diterbitkan ke Kelas ✓</span>

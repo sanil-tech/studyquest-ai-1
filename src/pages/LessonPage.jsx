@@ -1,5 +1,5 @@
 // src/pages/LessonPage.jsx
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { getActiveStudentId } from "@/lib/rewardSystem";
@@ -10,13 +10,10 @@ import {
   Leaf,
   Loader2,
   ArrowLeft,
-  CheckCircle2,
-  Coins,
   Volume2,
   Star,
   Trophy
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import BlockRenderer, { bersihkanTeksUntukSuara } from "@/components/lesson/BlockRenderer";

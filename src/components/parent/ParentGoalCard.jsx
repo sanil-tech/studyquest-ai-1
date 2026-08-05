@@ -2,7 +2,7 @@
 // Displays active learning goals set by parent, progress bars, and goal creation launcher
 
 import React, { useState } from "react";
-import { Target, Plus, CheckCircle2, Award, Loader2 } from "lucide-react";
+import { Target, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";

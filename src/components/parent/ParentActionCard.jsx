@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lightbulb, ArrowRight, Target, AlertTriangle } from 'lucide-react';
+import { Lightbulb, ArrowRight, Target } from 'lucide-react';
 
 export default function ParentActionCard({ childName, weakSubtopic, tpLevel, remediationHint }) {
   // If no weak subtopic provided, show a positive encouragement

@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Gamepad2, CheckCircle2, Sparkles, RefreshCcw, HelpCircle } from "lucide-react";
+import { Gamepad2, CheckCircle2, HelpCircle } from "lucide-react";
 import confetti from "canvas-confetti";
 
 export default function QuizWheelWidget({

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, ArrowRight, MousePointerClick, FileQuestion, HelpCircle, Gamepad2 } from 'lucide-react';
+import { Eye, ArrowRight, FileQuestion, HelpCircle, Gamepad2 } from 'lucide-react';
 
 const LessonPreviewMode = ({ lesson }) => {
   if (!lesson) return null;

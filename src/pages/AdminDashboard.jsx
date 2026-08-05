@@ -4,9 +4,8 @@ import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { getTaxonomySubjects, getTaxonomyYears, getSPEntries } from "@/services/dskpRegistry";
 import MissionDetailsModal from "@/components/admin/MissionDetailsModal";
-import {
-  BookOpen, Edit3, FileText, Crown, Loader2, LogOut, Brain, ClipboardList, TrendingUp, Plus, ArrowRight, Sparkles,
-  Layers, CheckCircle2, ShieldCheck, Zap, ChevronRight, Target, Grid, Award, Eye
+import { Edit3, FileText, Crown, Loader2, LogOut, Brain, Plus, ArrowRight, Sparkles,
+  Layers, CheckCircle2, ChevronRight, Target, Grid, Eye
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 

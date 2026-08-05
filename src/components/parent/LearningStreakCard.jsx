@@ -2,7 +2,7 @@
 // Displays child learning streak activity (🔥), current/longest streak, and weekly checkmarks
 
 import React from "react";
-import { Flame, Calendar, CheckCircle2 } from "lucide-react";
+import { Flame } from "lucide-react";
 
 export default function LearningStreakCard({ currentStreak = 0, longestStreak = 14, weeklyActivity = [] }) {
   const days = ["Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu", "Ahad"];

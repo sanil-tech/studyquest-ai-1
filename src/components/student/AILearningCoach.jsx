@@ -6,13 +6,8 @@ import {
   Sparkles,
   Target,
   AlertTriangle,
-  Award,
-  BookOpen,
   ArrowRight,
-  TrendingUp,
-  CheckCircle2,
-  Brain,
-  Zap
+  TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

@@ -2,7 +2,7 @@
 // Displays child profile summary card for Parent Intelligence Dashboard
 
 import React from "react";
-import { Sparkles, Trophy, Award, BookOpen } from "lucide-react";
+import { Trophy, BookOpen } from "lucide-react";
 
 export default function ParentLearningOverview({ childProfile, learningProgress }) {
   if (!childProfile) return null;

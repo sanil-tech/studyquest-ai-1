@@ -2,7 +2,7 @@
 // Phase 6.1: Enhanced StudyQuest AI Quiz Feedback Engine & QuizResult Card
 
 import React, { useEffect, useState } from "react";
-import { Trophy, Leaf, Coins, RotateCcw, ArrowRight, CheckCircle2, XCircle, ChevronDown, ChevronUp, Sparkles, TrendingUp } from "lucide-react";
+import { Trophy, Leaf, Coins, RotateCcw, ArrowRight, CheckCircle2, XCircle, ChevronDown, ChevronUp, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";

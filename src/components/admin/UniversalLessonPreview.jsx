@@ -1,24 +1,17 @@
 import React, { useState, useMemo } from "react";
 import {
-  Compass,
   Heart,
   Star,
-  Trophy,
-  BookOpen,
-  Layers,
   ChevronLeft,
-  ChevronRight,
   RotateCcw,
   Smartphone,
   Tablet,
   Code,
   Eye,
   CheckCircle2,
-  HelpCircle,
-  Sparkles,
-  Zap
+  Sparkles
 } from "lucide-react";
-import { getWidgetComponent, GenericWidgetFallback } from "@/lib/widgetRegistry";
+import { getWidgetComponent } from "@/lib/widgetRegistry";
 import BlockRenderer from "@/components/lesson/BlockRenderer";
 import LessonShellRenderer from "@/components/lesson/LessonShellRenderer";
 import Flashcards from "@/components/lesson/Flashcards";

@@ -3,7 +3,7 @@
 // Three panels in pedagogically-correct sequence
 
 import React, { useState } from "react";
-import { BookOpen, Eye, Lightbulb, Brain } from "lucide-react";
+import { BookOpen, Eye, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
 
