@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import sukuPenyuMascotImg from "@/assets/images/suku_penyu_mascot_1785919182374.jpg";
 import { generateDynamicImagePrompt, getPromptSeed } from "@/utils/generateDynamicImagePrompt";
 import { getStaticFallbackImage } from "@/services/aiImageEngine";
+import StoryHookMedia from "@/components/lesson/StoryHookMedia";
 import {
   Heart,
   Star,
@@ -62,16 +63,8 @@ function StoryScene({ data, mascotName = "Suku Penyu 🐢", studentName = "Kawan
       {/* Story Banner with Suku Penyu Visual & Text */}
       <div className="overflow-hidden bg-stone-900 border border-stone-800 rounded-2xl space-y-3 shadow-lg">
         <div className="relative w-full h-44 sm:h-52 bg-gradient-to-t from-stone-950 via-stone-900 to-amber-950/40 flex items-center justify-center overflow-hidden">
-          <img
-            src={storyBannerUrl || fallbackStorySceneImg}
-            alt="Suku Penyu Mascot Story Visual"
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = fallbackStorySceneImg;
-            }}
-            className="w-full h-full object-cover object-center opacity-90 hover:scale-105 transition-transform duration-500"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-transparent" />
+          <StoryHookMedia content={payload} storyVisual={storyBannerUrl} fallbackSceneImg={fallbackStorySceneImg} />
+          <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-transparent pointer-events-none" />
           <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
             <span className="px-2.5 py-1 bg-amber-500/90 text-stone-950 text-[10px] font-black uppercase rounded-lg shadow">
               Kisah Misi Kembara

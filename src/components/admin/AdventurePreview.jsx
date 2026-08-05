@@ -2,6 +2,7 @@ import React from "react";
 import { Sparkles, Compass, BookOpen, Layers, CheckCircle2 } from "lucide-react";
 import sukuPenyuMascotImg from "@/assets/suku_penyu_mascot.jpg";
 import { getStaticFallbackImage } from "@/services/aiImageEngine";
+import StoryHookMedia from "@/components/lesson/StoryHookMedia";
 
 /**
  * AdventurePreview Component
@@ -141,16 +142,12 @@ export function AdventurePreview({ adventurePackage }) {
                 {stepType === "BRIEFING" && (
                   <div className="space-y-3 text-xs text-stone-300">
                     <div className="overflow-hidden rounded-xl border border-stone-800 relative h-36 bg-stone-900">
-                      <img
-                        src={st.payload?.image_url || st.payload?.visual?.image_url || getStaticFallbackImage(st.title, st.payload?.story_hook)}
-                        alt="Visual Story"
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = getStaticFallbackImage(st.title, st.payload?.story_hook);
-                        }}
-                        className="w-full h-full object-cover opacity-90"
+                      <StoryHookMedia
+                        content={st.payload || {}}
+                        storyVisual={st.payload?.image_url || st.payload?.visual?.image_url}
+                        fallbackSceneImg={getStaticFallbackImage(st.title, st.payload?.story_hook)}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/40 to-transparent p-3 flex flex-col justify-end">
+                      <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/40 to-transparent p-3 flex flex-col justify-end pointer-events-none">
                         <span className="text-[10px] font-black text-amber-400 uppercase">Kisah Hook:</span>
                         <p className="text-stone-200 font-medium line-clamp-2">{st.payload?.story_hook || st.description}</p>
                       </div>
