@@ -299,10 +299,11 @@ export default function AdminContentStudio() {
       });
     } catch (err) {
       console.error("Studio Publishing Error:", err);
+      const errorMsg = err.response?.data?.error || err.data?.error || err.message || "Terdapat ralat semasa menyimpan & menerbitkan modul pelajaran.";
       toast({
         variant: "destructive",
         title: "Gagal Menerbitkan Pelajaran",
-        description: err.message || "Terdapat ralat semasa menyimpan & menerbitkan modul pelajaran."
+        description: errorMsg
       });
     } finally {
       setPublishing(false);
