@@ -65,7 +65,16 @@ Deno.serve(async (req) => {
 
     if (!lesson && !targetVersionObj) {
       return Response.json(
-        { success: false, error: "Pelajaran atau penilaian tidak dijumpai." },
+        {
+          success: false,
+          error: "Pelajaran atau penilaian tidak dijumpai.",
+          debug: {
+            topic_id: topicIdParam || null,
+            lesson_id: lessonIdToFetch || null,
+            assessment_id: assessmentIdParam || null,
+            lesson_version_id: lessonVersionIdParam || null
+          }
+        },
         { status: 404, headers: resHeaders }
       );
     }
@@ -85,13 +94,16 @@ Deno.serve(async (req) => {
       db.entities.RewardRule.filter({ is_active: true }).catch(() => []),
     ]);
 
-    // SAFE LESSONVERSION RESOLUTION: Allow targetVersionObj if preview, otherwise published LessonVersions
+    // SAFE LESSONVERSION RESOLUTION
+    // Priority 1: explicit targetVersionObj (preview by ID)
+    // Priority 2: lesson.published_version_id (any status accepted)
+    // Priority 3: published versions from the versions array
+    // Priority 4 (fallback): latest available version by any status — allows draft/generated lessons to load
     let publishedVersion: any = targetVersionObj || null;
+
     if (!publishedVersion && lesson?.published_version_id) {
       const v = await db.entities.LessonVersion.get(lesson.published_version_id).catch(() => null);
-      if (v && (v.status === "published" || v.review_status === "published")) {
-        publishedVersion = v;
-      }
+      if (v) publishedVersion = v; // accept any status when fetched by explicit published_version_id
     }
 
     if (!publishedVersion && Array.isArray(versions) && versions.length > 0) {
@@ -99,17 +111,34 @@ Deno.serve(async (req) => {
         (v: any) => v.status === "published" || v.review_status === "published" || v.workflow_status === "PUBLISHED"
       );
       if (publishedOnly.length > 0) {
+        // Prefer highest version number among published
         publishedVersion = publishedOnly.sort(
           (a: any, b: any) => (b.version_number || 0) - (a.version_number || 0)
         )[0];
-      } else if (isPreviewParam && versions.length > 0) {
-        publishedVersion = versions[0];
+      } else {
+        // FALLBACK: No published version found — use most recently updated version regardless of status.
+        // This enables draft/generated lessons to load without requiring a publish step.
+        publishedVersion = [...versions].sort(
+          (a: any, b: any) =>
+            new Date(b.updated_at || b.created_at || 0).getTime() -
+            new Date(a.updated_at || a.created_at || 0).getTime()
+        )[0] || null;
       }
     }
 
     if (!publishedVersion) {
       return Response.json(
-        { success: false, error: "Tiada versi pelajaran yang ditemui." },
+        {
+          success: false,
+          error: "Tiada versi pelajaran yang ditemui.",
+          debug: {
+            lesson_id: lessonId || null,
+            versions_found: Array.isArray(versions) ? versions.length : 0,
+            version_statuses: Array.isArray(versions)
+              ? versions.map((v: any) => ({ id: v.id, status: v.status, workflow_status: v.workflow_status }))
+              : []
+          }
+        },
         { status: 404, headers: resHeaders }
       );
     }
@@ -135,15 +164,18 @@ Deno.serve(async (req) => {
     ] = await Promise.all([
       subjectId ? db.entities.Subject.get(subjectId).catch(() => null) : null,
       topic?.learning_standard_id ? db.entities.LearningStandard.get(topic.learning_standard_id).catch(() => null) : null,
-      db.entities.LessonContent.filter(isPreviewParam || targetVersionObj ? { lesson_version_id: versionId } : { lesson_version_id: versionId, status: "published" }).catch(() => []),
-      db.entities.LessonBlock.filter(isPreviewParam || targetVersionObj ? { lesson_version_id: versionId } : { lesson_version_id: versionId, status: "published" }).catch(() => []),
-      db.entities.LessonMediaAsset.filter(isPreviewParam || targetVersionObj ? { lesson_version_id: versionId } : { lesson_version_id: versionId, status: "published" }).catch(() => []),
-      db.entities.Flashcard.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
-      db.entities.LearningActivity.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
-      db.entities.TeacherGuide.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
-      db.entities.AIExplanation.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
-      db.entities.CommonMistake.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []),
-      db.entities.Assessment.filter({ lesson_id: lessonId, workflow_status: "PUBLISHED" }).catch(() => []),
+      // FIX: Fetch ALL content for the version without a status filter.
+      // We apply status prioritisation in-memory below, with a fallback to all available content.
+      // This ensures draft/generated lessons load while still preferring published rows.
+      db.entities.LessonContent.filter({ lesson_version_id: versionId }).catch(() => []),
+      db.entities.LessonBlock.filter({ lesson_version_id: versionId }).catch(() => []),
+      db.entities.LessonMediaAsset.filter({ lesson_version_id: versionId }).catch(() => []),
+      db.entities.Flashcard.filter({ lesson_version_id: versionId }).catch(() => []),
+      db.entities.LearningActivity.filter({ lesson_version_id: versionId }).catch(() => []),
+      db.entities.TeacherGuide.filter({ lesson_version_id: versionId }).catch(() => []),
+      db.entities.AIExplanation.filter({ lesson_version_id: versionId }).catch(() => []),
+      db.entities.CommonMistake.filter({ lesson_version_id: versionId }).catch(() => []),
+      db.entities.Assessment.filter({ lesson_id: lessonId }).catch(() => []),
     ]);
 
     // Ensure target assessment is present if requested directly
@@ -251,8 +283,33 @@ Deno.serve(async (req) => {
       questions: assembledQuestionsMap[a.id] || []
     }));
 
+    // In-memory status prioritisation:
+    // If any rows have status=published, keep only those.
+    // Otherwise fall back to ALL rows (covers draft/generated lessons).
+    const applyStatusFallback = (rows: any[]): any[] => {
+      if (!Array.isArray(rows) || rows.length === 0) return [];
+      const published = rows.filter(
+        (r: any) => r.status === "published" || r.review_status === "published" || r.workflow_status === "PUBLISHED"
+      );
+      return published.length > 0 ? published : rows;
+    };
+
+    const filteredContent = applyStatusFallback(lessonContent);
+    const filteredBlocks = applyStatusFallback(lessonBlocks);
+    const filteredAssets = applyStatusFallback(mediaAssets);
+    const filteredFlashcards = applyStatusFallback(flashcards);
+    const filteredActivities = applyStatusFallback(activities);
+    const filteredGuides = applyStatusFallback(teacherGuides);
+    const filteredExplanations = applyStatusFallback(explanations);
+    const filteredMistakes = applyStatusFallback(commonMistakes);
+    // For assessments, prefer PUBLISHED workflow but fall back to any
+    const filteredAssessments = (() => {
+      const pub = (assessments || []).filter((a: any) => a.workflow_status === "PUBLISHED" || a.status === "published");
+      return pub.length > 0 ? pub : (assessments || []);
+    })();
+
     // Combine raw blocks & standalone entities into unified content_blocks array
-    const rawCombinedBlocks = [...(lessonContent || []), ...(lessonBlocks || [])];
+    const rawCombinedBlocks = [...filteredContent, ...filteredBlocks];
 
     // Format & Parse LessonBlocks / LessonContent
     const formattedBlocks = rawCombinedBlocks
@@ -403,8 +460,8 @@ Deno.serve(async (req) => {
       .sort((a: any, b: any) => (a.order_number || 0) - (b.order_number || 0));
 
     // Append standalone LessonMediaAsset items as INFOGRAPHIC blocks if present
-    if (Array.isArray(mediaAssets) && mediaAssets.length > 0) {
-      mediaAssets.forEach((ma: any, idx: number) => {
+    if (Array.isArray(filteredAssets) && filteredAssets.length > 0) {
+      filteredAssets.forEach((ma: any, idx: number) => {
         const hasMediaBlock = formattedBlocks.some((b: any) => b.id === ma.id);
         if (!hasMediaBlock) {
           let keyPoints = [];
@@ -432,7 +489,7 @@ Deno.serve(async (req) => {
     }
 
     // Append standalone Flashcard deck to formattedBlocks if present and not already added
-    if (Array.isArray(flashcards) && flashcards.length > 0) {
+    if (Array.isArray(filteredFlashcards) && filteredFlashcards.length > 0) {
       const hasFlashcardBlock = formattedBlocks.some((b: any) => b.block_type === "FLASHCARD_DECK" || b.block_type === "FLASHCARD");
       if (!hasFlashcardBlock) {
         formattedBlocks.push({
@@ -441,7 +498,7 @@ Deno.serve(async (req) => {
           title: "Kad Minda Memori",
           order_number: 1.5,
           payload: {
-            cards: flashcards.map((f: any) => ({
+            cards: filteredFlashcards.map((f: any) => ({
               id: f.id,
               front: f.front || f.front_text || "",
               back: f.back || f.back_text || "",
@@ -453,8 +510,8 @@ Deno.serve(async (req) => {
     }
 
     // Append standalone LearningActivities to formattedBlocks if present
-    if (Array.isArray(activities) && activities.length > 0) {
-      activities.forEach((act: any, idx: number) => {
+    if (Array.isArray(filteredActivities) && filteredActivities.length > 0) {
+      filteredActivities.forEach((act: any, idx: number) => {
         const hasActBlock = formattedBlocks.some((b: any) => b.id === act.id);
         if (!hasActBlock) {
           let parsedData: any = {};
@@ -481,8 +538,8 @@ Deno.serve(async (req) => {
     }
 
     // Append TeacherGuide to formattedBlocks if present
-    if (Array.isArray(teacherGuides) && teacherGuides.length > 0) {
-      const tg = teacherGuides[0];
+    if (Array.isArray(filteredGuides) && filteredGuides.length > 0) {
+      const tg = filteredGuides[0];
       const hasTg = formattedBlocks.some((b: any) => b.block_type === "TEACHER_GUIDE");
       if (!hasTg) {
         formattedBlocks.push({
@@ -501,7 +558,7 @@ Deno.serve(async (req) => {
     }
 
     // Append AIExplanations to formattedBlocks if present
-    if (Array.isArray(explanations) && explanations.length > 0) {
+    if (Array.isArray(filteredExplanations) && filteredExplanations.length > 0) {
       const hasExp = formattedBlocks.some((b: any) => b.block_type === "AI_EXPLANATION");
       if (!hasExp) {
         formattedBlocks.push({
@@ -510,7 +567,7 @@ Deno.serve(async (req) => {
           title: "Penerangan Pintar AI",
           order_number: 0.8,
           payload: {
-            explanations: explanations.map((e: any) => ({
+            explanations: filteredExplanations.map((e: any) => ({
               concept: e.concept || "",
               explanation: e.explanation || "",
               example: e.example || "",
@@ -522,7 +579,7 @@ Deno.serve(async (req) => {
     }
 
     // Append CommonMistakes to formattedBlocks if present
-    if (Array.isArray(commonMistakes) && commonMistakes.length > 0) {
+    if (Array.isArray(filteredMistakes) && filteredMistakes.length > 0) {
       const hasCm = formattedBlocks.some((b: any) => b.block_type === "COMMON_MISTAKES");
       if (!hasCm) {
         formattedBlocks.push({
@@ -531,7 +588,7 @@ Deno.serve(async (req) => {
           title: "Kesilapan Lazim",
           order_number: 2.8,
           payload: {
-            mistakes: commonMistakes.map((m: any) => ({
+            mistakes: filteredMistakes.map((m: any) => ({
               mistake: m.mistake || "",
               correction: m.correction || "",
               explanation: m.explanation || "",
@@ -593,7 +650,7 @@ Deno.serve(async (req) => {
       lesson: {
         id: lessonId,
         title: lesson.title || topic?.name || 'Pelajaran',
-        status: publishedVersion.status || 'published'
+        status: publishedVersion.status || 'draft'
       },
       version: {
         id: versionId,
@@ -601,16 +658,24 @@ Deno.serve(async (req) => {
         published_at: publishedVersion.published_at || publishedVersion.updated_at || new Date().toISOString()
       },
       content_blocks: formattedBlocks,
+      // debug: block count breakdown visible to admin/dev for tracing
+      _debug: {
+        total_blocks: formattedBlocks.length,
+        raw_lesson_content_rows: filteredContent.length,
+        raw_lesson_block_rows: filteredBlocks.length,
+        version_status: publishedVersion.status || 'unknown',
+        version_id: versionId
+      },
       assessments: assembledAssessments,
       learning_entities: {
-        lesson_content: lessonContent,
-        blocks: lessonBlocks,
-        flashcards: flashcards,
+        lesson_content: filteredContent,
+        blocks: filteredBlocks,
+        flashcards: filteredFlashcards,
         questions: questions,
-        activities: activities,
-        teacher_guides: teacherGuides,
-        explanations: explanations,
-        common_mistakes: commonMistakes
+        activities: filteredActivities,
+        teacher_guides: filteredGuides,
+        explanations: filteredExplanations,
+        common_mistakes: filteredMistakes
       },
       assessment_context: assessmentContext,
       student_context: studentContext,
@@ -632,7 +697,11 @@ Deno.serve(async (req) => {
   } catch (error: any) {
     console.error('getLearningPackage Error:', error);
     return Response.json(
-      { success: false, error: error.message || 'Gagal memuatkan Pakej Pembelajaran.' },
+      {
+        success: false,
+        error: error.message || 'Gagal memuatkan Pakej Pembelajaran.',
+        debug: { stack: error.stack?.split('\n').slice(0, 3) }
+      },
       { status: 500, headers: resHeaders }
     );
   }

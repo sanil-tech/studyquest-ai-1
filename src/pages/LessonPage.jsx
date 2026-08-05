@@ -50,6 +50,7 @@ export default function LessonPage() {
 
   const [packageData, setPackageData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null); // captures API-level errors
   const [isSpeaking, setIsSpeaking] = useState(false);
   
   // New Mission Studio State
@@ -99,6 +100,11 @@ export default function LessonPage() {
 
         if (res.data?.success && isMounted) {
           setPackageData(res.data);
+        } else if (isMounted) {
+          // Surface the API error so the UI can display a meaningful message
+          const errMsg = res.data?.error || "Gagal memuatkan pakej pelajaran.";
+          console.warn("[LessonPage] getLearningPackage gagal:", errMsg, res.data?.debug);
+          setLoadError({ message: errMsg, debug: res.data?.debug || null });
         }
       } catch (err) {
         console.error("Gagal memuatkan pakej pelajaran:", err);
@@ -116,6 +122,37 @@ export default function LessonPage() {
     const rawBlocks = packageData?.content_blocks || [];
     return [...rawBlocks].sort((a, b) => (a.order_number || 0) - (b.order_number || 0));
   }, [packageData]);
+
+  // V2 detection: based on data structure (block_type names), NOT version string.
+  // The backend version field is an object {id, version_number} — never a "2.0" string.
+  const V2_BLOCK_TYPES = new Set([
+    "STORY_HOOK", "LEARNING_OBJECTIVE", "CONCEPT_CPA",
+    "WORKED_EXAMPLE", "INTERACTIVE_PRACTICE", "KNOWLEDGE_CHECK",
+    "KEY_TAKEAWAY", "MISSION_COMPLETE"
+  ]);
+  const isV2Lesson = useMemo(() => {
+    if (!Array.isArray(packageData?.content_blocks)) return false;
+    return packageData.content_blocks.some(b => V2_BLOCK_TYPES.has(b.block_type));
+  }, [packageData]);
+  const v2LessonData = useMemo(() => {
+    if (!isV2Lesson || !packageData) return null;
+    // Reconstruct a lesson object compatible with LessonShellRenderer
+    return {
+      lesson_id: packageData.lesson?.id,
+      metadata: {
+        subject: packageData.curriculum_context?.subject_name || "",
+        grade: packageData.curriculum_context?.form_level || "",
+        topic: packageData.curriculum_context?.topic_name || "",
+        mascot: "🐢"
+      },
+      blocks: sortedBlocks.map(b => ({
+        block_type: b.block_type,
+        content: b.payload || {},
+        xp_reward: b.xp_reward || 50,
+        coin_reward: b.coin_reward || 10
+      }))
+    };
+  }, [isV2Lesson, packageData, sortedBlocks]);
 
   const totalBlocks = sortedBlocks.length || 1;
   const currentBlock = sortedBlocks[currentBlockIndex] || null;
@@ -257,15 +294,48 @@ export default function LessonPage() {
 
   const worldTheme = WORLD_THEMES.default;
 
-  // ===============================================
-  // V2.0 LESSON SHELL — New Deterministic Renderer
-  // If packageData has version "2.0", use the new pipeline.
-  // Otherwise, fall through to the legacy BlockRenderer below.
-  // ===============================================
-  const isV2Lesson = packageData?.version === "2.0" || packageData?.lesson?.version === "2.0";
-  const v2LessonData = packageData?.lesson || packageData;
+  // ──────────────────────────────────────────────────────────────
+  // ERROR STATE: API returned success:false
+  // ──────────────────────────────────────────────────────────────
+  if (loadError) {
+    return (
+      <div className={`min-h-screen ${worldTheme.bgGradient} font-sans text-stone-100 flex flex-col items-center justify-center p-6`}>
+        <div className="max-w-md w-full bg-stone-900 border-2 border-rose-500/40 rounded-3xl p-8 text-center space-y-5">
+          <div className="text-5xl">🚧</div>
+          <h2 className="text-xl font-black text-rose-300">Kandungan Tidak Dapat Dimuatkan</h2>
+          <p className="text-sm text-stone-400 font-semibold">{loadError.message}</p>
+          {loadError.debug && (
+            <details className="text-left">
+              <summary className="text-xs text-stone-600 cursor-pointer">Debug info</summary>
+              <pre className="text-[10px] text-stone-600 mt-2 overflow-auto max-h-40">
+                {JSON.stringify(loadError.debug, null, 2)}
+              </pre>
+            </details>
+          )}
+          <div className="flex gap-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="flex-1 h-12 bg-blue-500 hover:bg-blue-400 text-white font-black text-sm rounded-2xl transition-all"
+            >
+              Cuba Semula
+            </button>
+            <button
+              onClick={() => navigate(`/study/${subjectId || ''}`)}
+              className="flex-1 h-12 bg-stone-800 hover:bg-stone-700 text-stone-300 font-black text-sm rounded-2xl border border-stone-700 transition-all"
+            >
+              Kembali
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  if (isV2Lesson && v2LessonData?.blocks) {
+  // ──────────────────────────────────────────────────────────────
+  // V2.0 LESSON SHELL — structure-based detection (not version string)
+  // isV2Lesson & v2LessonData are computed via useMemo above.
+  // ──────────────────────────────────────────────────────────────
+  if (isV2Lesson && v2LessonData?.blocks?.length > 0) {
     return (
       <div className={`min-h-screen ${worldTheme.bgGradient} font-sans text-stone-100`}>
         {isPreviewMode && (
@@ -365,7 +435,7 @@ export default function LessonPage() {
       {/* CARD CONTENT RENDERER */}
       <div className="max-w-3xl w-full mx-auto mt-6 flex-1 relative flex flex-col">
         <AnimatePresence mode="wait">
-          {currentBlock && (
+          {currentBlock ? (
             <motion.div
               key={currentBlock.id || currentBlockIndex}
               initial={{ opacity: 0, x: 50 }}
@@ -385,6 +455,38 @@ export default function LessonPage() {
                   onMistake={handleMistake}
                 />
               </div>
+            </motion.div>
+          ) : (
+            // EMPTY STATE: lesson loaded but no content blocks exist
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-stone-900/80 border-2 border-stone-800 rounded-[2.5rem] p-8 sm:p-12 text-center space-y-5 flex-1 flex flex-col items-center justify-center"
+            >
+              <div className="text-6xl">🚧</div>
+              <h3 className="text-xl font-black text-stone-200">
+                Kandungan Pembelajaran Belum Tersedia
+              </h3>
+              <p className="text-sm text-stone-400 max-w-sm">
+                Pelajaran ini belum mempunyai blok kandungan yang boleh dipaparkan.
+                Sila hubungi pentadbir untuk menerbitkan kandungan.
+              </p>
+              <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 text-left w-full max-w-sm space-y-1">
+                <p className="text-xs text-stone-500 font-bold">
+                  📚 {packageData?.curriculum_context?.subject_name || "Subjek"} &nbsp;|&nbsp;
+                  🏫 {packageData?.curriculum_context?.form_level || "Tahun"} &nbsp;|&nbsp;
+                  📖 {packageData?.lesson?.title || "Pelajaran"}
+                </p>
+                <p className="text-[10px] text-stone-600">
+                  Blok kandungan dijumpai: {sortedBlocks.length}
+                </p>
+              </div>
+              <button
+                onClick={() => navigate(`/study/${subjectId || ''}`)}
+                className="h-12 px-8 bg-blue-500 hover:bg-blue-400 text-white font-black text-sm rounded-2xl transition-all"
+              >
+                ← Kembali ke Peta Pembelajaran
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
