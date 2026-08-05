@@ -532,16 +532,8 @@ export default function AdminContentStudio() {
             </CardContent>
           </Card>
 
-          {/* AI GENERATION TRIGGER BUTTONS */}
+          {/* AI GENERATION TRIGGER BUTTON */}
           <div className="p-6 bg-gradient-to-r from-amber-950/40 via-stone-900 to-indigo-950/40 rounded-3xl border-2 border-amber-500/30 shadow-2xl space-y-4 text-center">
-            <button
-              onClick={() => handleGeneratePackage("v1")}
-              disabled={generating}
-              className="w-full h-12 bg-stone-800 hover:bg-stone-700 disabled:opacity-50 text-stone-300 font-bold text-sm sm:text-base rounded-xl border border-stone-700 flex items-center justify-center gap-2 transition-all"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Jana (Legasi v1.0)</span>
-            </button>
             <button
               onClick={() => handleGeneratePackage("v2")}
               disabled={generating}
@@ -550,7 +542,7 @@ export default function AdminContentStudio() {
               {generating ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin text-stone-950" />
-                  <span>Suku Penyu sedang merangka (v2.0)... 🐢</span>
+                  <span>Suku Penyu sedang merangka Pelajaran AI... 🐢</span>
                 </>
               ) : (
                 <>
