@@ -386,8 +386,8 @@ function buildFallbackContent(metadata) {
         instruction_context: `Aktiviti interaktif bagi ${displayTopic}`,
         target_val: 10,
         items: [
-          { id: "1", label: "Pilihan A", category: "Kategori 1" },
-          { id: "2", label: "Pilihan B", category: "Kategori 2" }
+          { id: "1", label: `Kumpulan A (${displayTopic})`, category: "Kumpulan A" },
+          { id: "2", label: `Kumpulan B (${displayTopic})`, category: "Kumpulan B" }
         ]
       }
     },
@@ -395,21 +395,21 @@ function buildFallbackContent(metadata) {
       questions: [
         {
           stem: `Apakah jawapan yang betul bagi latihan asas ${displayTopic}?`,
-          options: ["Jawapan Tepat", "Pilihan Pengganggu A", "Pilihan Pengganggu B"],
+          options: [`Menguasi ${displayTopic}`, `Belum Kuasa A`, `Belum Kuasa B`],
           correct_index: 0,
           explanation: "Jawapan ini tepat kerana mengikut konsep asas yang telah dipelajari.",
           misconception_tag: "Kesilapan asas"
         },
         {
           stem: `Pilih penyataan yang BENAR mengenai ${displayTopic}.`,
-          options: ["Penyataan Benar", "Penyataan Salah A", "Penyataan Salah B"],
+          options: [`Kuantiti sesuai bagi ${displayTopic}`, `Kuantiti tidak sepadan A`, `Kuantiti tidak sepadan B`],
           correct_index: 0,
           explanation: "Penyataan ini betul berdasarkan petunjuk dan panduan visual.",
           misconception_tag: "Pengecaman konsep"
         },
         {
           stem: `Antara berikut, yang manakah mewakili penyelesaian terbaik bagi soalan ${displayTopic}?`,
-          options: ["Langkah Betul", "Langkah Salah A", "Langkah Salah B"],
+          options: [`Mengira dengan berhati-hati`, `Membuat tekaan rambang`, `Abaikan jawapan`],
           correct_index: 0,
           explanation: "Langkah ini mematuhi urutan penyelesaian masalah KSSR.",
           misconception_tag: "Aplikasi penyelesaian masalah"

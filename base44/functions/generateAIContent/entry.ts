@@ -436,7 +436,24 @@ export default async function(req: Request): Promise<Response> {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { lesson_version_id, content_type, prompt_context } = body;
+    const { lesson_version_id, content_type, prompt_context, prompt, mode } = body;
+
+    // Handle v2 direct prompt mode (CONTENT_FILL_V2)
+    if (mode === "CONTENT_FILL_V2" && prompt) {
+      try {
+        const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+          prompt: prompt,
+          model: "gemini_3_flash",
+        });
+
+        return Response.json({
+          success: true,
+          content: aiResponse,
+        });
+      } catch (llmErr: any) {
+        return Response.json({ success: false, error: llmErr?.message || "Ralat penjanaan LLM" }, { status: 500 });
+      }
+    }
 
     if (!lesson_version_id || !content_type) {
       return Response.json({ success: false, error: "lesson_version_id dan content_type diperlukan." }, { status: 400 });
