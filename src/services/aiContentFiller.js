@@ -4,6 +4,7 @@
 
 import { base44 } from "../api/base44Client.js";
 import { buildLessonShell, validateLessonShell, getWidgetSeedSchema, SUPPORTED_WIDGETS } from "./lessonShellBuilder.js";
+import { generateDynamicImagePrompt } from "../utils/generateDynamicImagePrompt.js";
 
 /**
  * Builds the AI prompt that fills content for a pre-built lesson shell.
@@ -95,10 +96,11 @@ The JSON must have exactly this shape:
 
 {
   "story_hook": {
-    "story_text": "A 2-3 sentence story hook narrative introducing ${mascot}'s adventure in '${sp_description}'. Must be specific to '${sp_description}', NOT generic.",
+    "story_text": "A 2-3 sentence story hook narrative introducing ${mascot}'s adventure in '${sp_description}'. Must be a concrete real-world mission (e.g. Suku Penyu helping Pak Cik Abu at a fruit stall with baskets of apples, Kak Siti at a bakery with boxes of donuts, Pak Cik Samad at a stationery shop with pencil boxes, etc.) with specific objects and quantities matching '${sp_description}'.",
     "help_continuation": "A clear 1-2 sentence suggestive continuation explaining HOW {student_name} can help ${mascot} and WHY learning this subtopic '${sp_description}' is necessary to solve the mission challenge.",
     "mascot_dialogue": "A warm 1-sentence greeting from ${mascot} to the student. Use {student_name} placeholder.",
-    "tts_script": "Clean version of mascot_dialogue for text-to-speech (no emojis, no special chars)"
+    "tts_script": "Clean version of mascot_dialogue for text-to-speech (no emojis, no special chars)",
+    "image_prompt": "A detailed 3D Pixar style image prompt describing the story scene in story_text with ${mascot} and specific objects/quantities (e.g. '3D Pixar style render of Suku Penyu 🐢 helping Pak Cik Abu in a fruit shop with 3 baskets of 10 red apples each and 5 apples on the table')."
   },
   "learning_objective": {
     "i_can_statement": "A child-friendly 'Saya boleh...' statement directly derived from SP '${sp_description}'. Example: 'Saya boleh membandingkan kuantiti banyak dan sedikit.'"
@@ -199,10 +201,26 @@ function mergeContentIntoShell(shell, aiContent) {
 
   // Block 1: STORY_HOOK
   if (aiContent.story_hook) {
-    filled.blocks[0].content.story_text = aiContent.story_hook.story_text || "";
+    const storyText = aiContent.story_hook.story_text || "";
+    const imagePrompt = aiContent.story_hook.image_prompt || aiContent.story_hook.visual_prompt || "";
+
+    const prompt = generateDynamicImagePrompt({
+      subject: shell.metadata?.subject || "Matematik",
+      grade: shell.metadata?.grade || "Tahun 1",
+      topic: shell.metadata?.sp_description || shell.metadata?.topic || "Nombor hingga 100",
+      sceneType: "STORY",
+      visualDescription: imagePrompt,
+      storyText
+    });
+
+    const generatedImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=450&nologo=true&seed=101`;
+
+    filled.blocks[0].content.story_text = storyText;
     filled.blocks[0].content.help_continuation = aiContent.story_hook.help_continuation || "";
     filled.blocks[0].content.mascot_dialogue = aiContent.story_hook.mascot_dialogue || "";
     filled.blocks[0].content.tts_script = aiContent.story_hook.tts_script || aiContent.story_hook.mascot_dialogue || "";
+    filled.blocks[0].content.image_prompt = imagePrompt;
+    filled.blocks[0].content.image_url = aiContent.story_hook.image_url || generatedImageUrl;
   }
 
   // Block 2: LEARNING_OBJECTIVE

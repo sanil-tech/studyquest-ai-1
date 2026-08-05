@@ -2,11 +2,12 @@
 // Block 1: Emotional engagement & context setting
 // Renders mascot story illustration, text, and mascot dialogue with TTS audio button
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Volume2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
 import sukuPenyuMascotImg from "@/assets/images/suku_penyu_mascot_1785919182374.jpg";
+import { generateDynamicImagePrompt } from "@/utils/generateDynamicImagePrompt";
 
 export default function StoryHookBlock({ content, mascot, studentName, onComplete, isCompleted }) {
   const storyText = personalize(content.story_text || "", studentName);
@@ -14,7 +15,28 @@ export default function StoryHookBlock({ content, mascot, studentName, onComplet
   const ttsScript = content.tts_script || dialogue;
   const mascotEmoji = mascot?.includes("🦊") ? "🦊" : "🐢";
   const mascotName = mascot?.includes("Ejen") ? "Ejen Suku" : "Suku Penyu";
-  const storyVisual = content.image_url || content.visual_url || content.visual?.image_url || sukuPenyuMascotImg;
+
+  // Build high quality Pollinations image URL if content.image_url is missing or generic asset
+  const computedStoryImageUrl = useMemo(() => {
+    const rawUrl = content.image_url || content.visual_url || content.visual?.image_url;
+    if (rawUrl && !rawUrl.includes("unsplash.com") && !rawUrl.includes("suku_penyu_mascot")) {
+      return rawUrl;
+    }
+
+    const storyPromptText = content.image_prompt || content.visual_prompt || storyText || content.topic || "";
+    const prompt = generateDynamicImagePrompt({
+      subject: content.subject || "Matematik",
+      grade: content.grade || "Tahun 1",
+      topic: content.topic || "Nombor hingga 100",
+      sceneType: "STORY",
+      visualDescription: content.visual_description || "",
+      storyText: storyPromptText
+    });
+
+    return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=450&nologo=true&seed=101`;
+  }, [content, storyText]);
+
+  const storyVisual = computedStoryImageUrl || sukuPenyuMascotImg;
 
   const handleSpeak = () => {
     if (!window.speechSynthesis) return;
