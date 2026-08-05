@@ -85,12 +85,12 @@ export function AdventurePreview({ adventurePackage }) {
       {/* 3. Mascot Companion Layer */}
       <div className="bg-stone-950 text-amber-100 p-4 rounded-2xl border border-stone-800 space-y-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl shrink-0">
-            {mode === "SENIOR" ? "🦊" : "🐢"}
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 overflow-hidden shadow">
+            <img src="/suku_penyu_mascot.jpg" alt="Suku Penyu" className="w-full h-full object-cover" />
           </div>
           <div>
             <h4 className="text-xs font-black text-amber-400 uppercase tracking-wider">
-              {mode === "SENIOR" ? "Maskot Ejen Suku" : "Maskot Suku Penyu"}
+              {mode === "SENIOR" ? "Maskot Ejen Suku" : "Maskot Suku Penyu"} 🐢
             </h4>
             <p className="text-xs text-stone-200 font-medium">"{otan_companion.greeting || "Hai! Mari kita belajar bersama!"}"</p>
           </div>
@@ -129,12 +129,21 @@ export function AdventurePreview({ adventurePackage }) {
 
                 {/* Step 1: Briefing */}
                 {stepType === "BRIEFING" && (
-                  <div className="space-y-1.5 text-xs text-stone-300">
-                    <p><strong>Naratif Hook:</strong> {st.payload?.story_hook || st.description}</p>
+                  <div className="space-y-3 text-xs text-stone-300">
+                    <div className="overflow-hidden rounded-xl border border-stone-800 relative h-36 bg-stone-900">
+                      <img src="/suku_penyu_mascot.jpg" alt="Visual Story" className="w-full h-full object-cover opacity-90" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/40 to-transparent p-3 flex flex-col justify-end">
+                        <span className="text-[10px] font-black text-amber-400 uppercase">Kisah Hook:</span>
+                        <p className="text-stone-200 font-medium line-clamp-2">{st.payload?.story_hook || st.description}</p>
+                      </div>
+                    </div>
                     {st.payload?.mascot_dialogue && (
-                      <p className="text-amber-300 font-bold bg-stone-900 p-2.5 rounded-xl border border-stone-800">
-                        🗣️ "{st.payload.mascot_dialogue}"
-                      </p>
+                      <div className="text-amber-300 font-bold bg-stone-900 p-2.5 rounded-xl border border-stone-800 flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 overflow-hidden shrink-0">
+                          <img src="/suku_penyu_mascot.jpg" alt="Suku" className="w-full h-full object-cover" />
+                        </div>
+                        <p className="flex-1">🗣️ "{st.payload.mascot_dialogue}"</p>
+                      </div>
                     )}
                   </div>
                 )}

@@ -95,7 +95,8 @@ The JSON must have exactly this shape:
 
 {
   "story_hook": {
-    "story_text": "A 2-3 sentence story hook that introduces the subtopic '${sp_description}' through ${mascot}'s adventure. Must be specific to '${sp_description}', NOT generic.",
+    "story_text": "A 2-3 sentence story hook narrative introducing ${mascot}'s adventure in '${sp_description}'. Must be specific to '${sp_description}', NOT generic.",
+    "help_continuation": "A clear 1-2 sentence suggestive continuation explaining HOW {student_name} can help ${mascot} and WHY learning this subtopic '${sp_description}' is necessary to solve the mission challenge.",
     "mascot_dialogue": "A warm 1-sentence greeting from ${mascot} to the student. Use {student_name} placeholder.",
     "tts_script": "Clean version of mascot_dialogue for text-to-speech (no emojis, no special chars)"
   },
@@ -199,6 +200,7 @@ function mergeContentIntoShell(shell, aiContent) {
   // Block 1: STORY_HOOK
   if (aiContent.story_hook) {
     filled.blocks[0].content.story_text = aiContent.story_hook.story_text || "";
+    filled.blocks[0].content.help_continuation = aiContent.story_hook.help_continuation || "";
     filled.blocks[0].content.mascot_dialogue = aiContent.story_hook.mascot_dialogue || "";
     filled.blocks[0].content.tts_script = aiContent.story_hook.tts_script || aiContent.story_hook.mascot_dialogue || "";
   }
@@ -345,7 +347,8 @@ function buildFallbackContent(metadata) {
 
   return {
     story_hook: {
-      story_text: `Hai {student_name}! Hari ini ${mascot} ingin mengajak anda mengembara menerokai subtopik ${displayTopic}. Mari kita selesaikan cabaran ini bersama-sama!`,
+      story_text: `Hari ini ${mascot} sedang mengembara menerokai subtopik ${displayTopic} dan memerlukan bantuan anda!`,
+      help_continuation: `Untuk membantu ${mascot} menyelesaikan misi ini dengan jayanya, mari kita pelajari dan kuasai kemahiran ${displayTopic} bersama-sama!`,
       mascot_dialogue: `Hai {student_name}! Bersedia untuk belajar tentang ${displayTopic} hari ini? Jom kita mulakan!`,
       tts_script: `Hai Kawan! Bersedia untuk belajar tentang ${displayTopic} hari ini? Jom kita mulakan!`
     },

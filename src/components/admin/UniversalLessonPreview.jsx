@@ -40,21 +40,63 @@ function StoryScene({ data, mascotName = "Suku Penyu 🐢", studentName = "Kawan
 
   return (
     <div className="space-y-4 text-left font-sans">
-      <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2">
-        <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider block">
-          📣 Pengenalan Misi Kembara
-        </span>
-        <h3 className="text-base font-black text-amber-200">
-          {devView ? (data.title || "Kisah Misi KSSR") : sanitizeStudentText(data.title || "Kisah Misi Kembara")}
-        </h3>
-        <p className="text-xs text-stone-300 leading-relaxed font-medium">
-          {cleanHook}
-        </p>
+      {/* Story Banner with Suku Penyu Visual & Text */}
+      <div className="overflow-hidden bg-stone-900 border border-stone-800 rounded-2xl space-y-3 shadow-lg">
+        <div className="relative w-full h-44 sm:h-52 bg-gradient-to-t from-stone-950 via-stone-900 to-amber-950/40 flex items-center justify-center overflow-hidden">
+          <img
+            src="/suku_penyu_mascot.jpg"
+            alt="Suku Penyu Mascot Story Visual"
+            className="w-full h-full object-cover object-center opacity-90 hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-transparent" />
+          <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
+            <span className="px-2.5 py-1 bg-amber-500/90 text-stone-950 text-[10px] font-black uppercase rounded-lg shadow">
+              Kisah Misi Kembara
+            </span>
+            <span className="text-xs">🐢✨</span>
+          </div>
+        </div>
+
+        <div className="p-4 space-y-2">
+          <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider block">
+            📣 Pengenalan Misi Kembara
+          </span>
+          <h3 className="text-base font-black text-amber-200">
+            {devView ? (data.title || "Kisah Misi KSSR") : sanitizeStudentText(data.title || "Kisah Misi Kembara")}
+          </h3>
+          <p className="text-xs text-stone-300 leading-relaxed font-medium">
+            {cleanHook}
+          </p>
+        </div>
       </div>
 
-      <div className="p-4 bg-stone-900 border border-stone-800 rounded-2xl flex items-start gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl shrink-0">
-          🐢
+      {/* Suggestive Story Continuation: How to Help Suku Penyu */}
+      <div className="p-3.5 bg-gradient-to-r from-amber-900/40 via-amber-950/60 to-stone-900 rounded-2xl border border-amber-500/40 flex items-start gap-3 shadow-md">
+        <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center shrink-0 text-amber-300 font-bold text-sm shadow">
+          💡
+        </div>
+        <div className="space-y-0.5 text-left">
+          <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider block">
+            Cara Membantu {mascotName} 🐢
+          </span>
+          <p className="text-xs sm:text-sm text-stone-200 font-semibold leading-relaxed">
+            {devView
+              ? payload.help_continuation || payload.help_guide || "Mari kita bantu Suku Penyu menyelesaikan cabaran ini dengan menguasai kemahiran subtopik ini bersama-sama!"
+              : sanitizeStudentText(
+                  payload.help_continuation || payload.help_guide || "Mari kita bantu Suku Penyu menyelesaikan cabaran ini dengan menguasai kemahiran subtopik ini bersama-sama!"
+                )}
+          </p>
+        </div>
+      </div>
+
+      {/* Mascot Dialogue Bubble with Profile Picture */}
+      <div className="p-4 bg-stone-900 border border-stone-800 rounded-2xl flex items-start gap-3 shadow-md">
+        <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center shrink-0 overflow-hidden shadow-md">
+          <img
+            src="/suku_penyu_mascot.jpg"
+            alt={mascotName}
+            className="w-full h-full object-cover"
+          />
         </div>
         <div className="space-y-2 flex-1">
           <div className="flex items-center justify-between">

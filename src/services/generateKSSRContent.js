@@ -204,6 +204,7 @@ function resolveDynamicTopicContext(subject = "Matematik", grade = "Tahun 1", to
       theme: "Kedai Kembara Suku",
       worldIcon: "🪙",
       storyHook: "Di Kedai Kembara Suku Penyu 🐢, Suku sedang mengira wang syiling 10 sen, 20 sen, dan 50 sen serta wang kertas untuk membeli kelengkapan sekolah!",
+      helpContinuation: "Untuk membantu Suku Penyu memilih wang yang betul, mari kita pelajari nilai mata wang Malaysia dan cara mengira wang baki bersama-sama!",
       mascotDialogue: "Hai kawan-kawan! Jom kita bantu Suku mengenal pasti nilai mata wang Malaysia dan mengira wang baki dengan tepat!",
       visualMethod: "Suku meletakkan wang syiling 50 sen dan 20 sen di atas meja kedai untuk dikira.",
       leftGroup: "50 sen & 20 sen",
@@ -232,6 +233,7 @@ function resolveDynamicTopicContext(subject = "Matematik", grade = "Tahun 1", to
       theme: "Jam Kembara Masa",
       worldIcon: "⏰",
       storyHook: "Di Jam Kembara Masa, Suku Penyu 🐢 sedang memerhati jarum jam dan jarum minit untuk menentukan waktu aktiviti harian!",
+      helpContinuation: "Untuk membantu Suku Penyu menyusun waktu aktiviti harian dengan betul, mari kita pelajari cara membaca muka jam dan menentukan masa bersama-sama!",
       mascotDialogue: "Hai kawan-kawan! Jom kita belajar membaca muka jam dan menyatakan waktu pagi, tengah hari, dan malam!",
       visualMethod: "Muka jam analog dengan jarum pendek menunjuk jam dan jarum panjang menunjuk minit.",
       leftGroup: "Waktu Pagi (8:00 AM)",
@@ -260,6 +262,7 @@ function resolveDynamicTopicContext(subject = "Matematik", grade = "Tahun 1", to
       theme: "Taman Geometri 3D",
       worldIcon: "📐",
       storyHook: "Di Taman Geometri, Suku Penyu 🐢 sedang mengelaskan bongkah tiga dimensi seperti kubus, kuboid, sfera, dan silinder!",
+      helpContinuation: "Untuk membantu Suku Penyu mengisipadu dan menyusun bentuk 3D, mari kita kuasai ciri-ciri permukaan rata, bucu, dan tepi bentuk ini bersama-sama!",
       mascotDialogue: "Hai kawan-kawan! Jom kita terokai permukaan rata, permukaan melengkung, bucu, dan sisi bagi bentuk 3D!",
       visualMethod: "Bongkah 3D berwarna-warni yang menunjukkan permukaan rata dan bucu secara jelas.",
       leftGroup: "Bentuk Permukaan Rata (Kubus)",
@@ -288,6 +291,7 @@ function resolveDynamicTopicContext(subject = "Matematik", grade = "Tahun 1", to
       theme: "Dapur Pecahan Suku",
       worldIcon: "🍕",
       storyHook: "Di Dapur Pecahan, Suku Penyu 🐢 sedang memotong kek dan pizza kepada bahagian satu per dua dan satu per empat!",
+      helpContinuation: "Untuk membantu Suku Penyu membahagikan makanan secara adil kepada rakan-rakan, mari kita pelajari konsep pecahan satu per dua dan satu per empat bersama-sama!",
       mascotDialogue: "Hai kawan-kawan! Jom kita belajar memotong dan membahagi makanan secara adil menggunakan pecahan!",
       visualMethod: "Pizza bulat yang dibahagikan kepada 2 bahagian sama besar (1/2) dan 4 bahagian (1/4).",
       leftGroup: "Satu Perdua (1/2)",
@@ -384,6 +388,7 @@ function resolveDynamicTopicContext(subject = "Matematik", grade = "Tahun 1", to
     theme: `Dunia ${subject}`,
     worldIcon: isMath ? "🔢" : "🌎",
     storyHook: `Di Dunia ${subject}, Suku Penyu 🐢 sedang mengumpul dan meneroka objek fizikal bagi tajuk ${topicTitle}! Jom kita bantu Suku membilang dan mengira jumlahnya bersama-sama!`,
+    helpContinuation: `Untuk membantu Suku Penyu menyelesaikan cabaran ini dengan lancar, mari kita pelajari dan kuasai konsep asas ${topicTitle} bersama-sama!`,
     mascotDialogue: `Hai kawan-kawan! Saya Suku Penyu 🐢. Jom kita kembara dan menguasai ${topicTitle} bersama-sama!`,
     visualMethod: `Suku meletakkan perwakilan visual objek bagi tajuk ${topicTitle} untuk dikaji dan dikira.`,
     leftGroup: `Kumpulan Utama A (${topicTitle})`,
@@ -496,6 +501,7 @@ export function build9StepKSSRMissionPackage({
         title: "Pengenalan Misi",
         payload: {
           story_hook: dynamicCtx.storyHook,
+          help_continuation: dynamicCtx.helpContinuation || `Untuk membantu Suku Penyu menyelesaikan cabaran ini, mari kita pelajari dan kuasai subtopik ${topicTitle} bersama-sama!`,
           mascot_dialogue: mode === "SENIOR"
             ? `Hai {student_name}! Saya Ejen Suku 🦊. Jom kita rungkai cabaran ${topicTitle} ini!`
             : `Hai {student_name}! Saya Suku Penyu 🐢. Jom kita kembara dan menguasai ${topicTitle} bersama-sama!`,

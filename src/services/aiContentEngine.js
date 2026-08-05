@@ -137,7 +137,7 @@ DUAL-ENGINE MODE: ${mode}
 MASCOT COMPANION: ${mascot}${pedagogySection}
 
 STRICT STEP ARCHITECTURE:
-Step 1: BRIEFING (Rich story hook & mascot dialogue)
+Step 1: BRIEFING (Rich story hook, suggestive help_continuation explaining HOW to help Suku Penyu and WHY learning this subtopic is needed, & mascot dialogue)
 Step 2: ENGAGEMENT (4 CPA blocks: VISUAL_STORY, COMPARISON_SPLIT, STEP_BY_STEP, MYTH_BUSTER)
 Step 3: LESSON (Core concept breakdown with dedicated INFOGRAPHIC structure: title, visual_labels, key_takeaway)
 Step 4: PRACTICE (Interactive student exercise with widget)
