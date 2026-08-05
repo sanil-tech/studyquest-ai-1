@@ -544,8 +544,15 @@ export default function LessonResources() {
           </Card>
 
           <Card className="p-5 bg-white border border-slate-100 rounded-2xl shadow-sm space-y-4">
-            <h3 className="text-sm font-black text-slate-700 border-b pb-2 uppercase text-[11px] tracking-wider text-emerald-600"><Video className="w-4 h-4 inline mr-1" /> 2. Dahan 1: Video Youtube</h3>
-            <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 uppercase">URL YouTube Video*</label><input type="url" required value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium" /></div>
+            <h3 className="text-sm font-black text-slate-700 border-b pb-2 uppercase text-[11px] tracking-wider text-emerald-600"><Video className="w-4 h-4 inline mr-1" /> 2. Dahan 1: Video Pengajaran / Story Visual</h3>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">URL Video (Firebase Storage MP4 / YouTube)*</label>
+              <input 
+                type="text" required value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} 
+                placeholder="https://firebasestorage.googleapis.com/.../video.mp4 atau https://youtube.com/..."
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium" 
+              />
+            </div>
           </Card>
 
           <Card className="p-5 bg-blue-50/40 border border-blue-200/70 rounded-2xl shadow-sm space-y-4">

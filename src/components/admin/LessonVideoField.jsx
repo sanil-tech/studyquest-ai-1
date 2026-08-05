@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Save, Youtube, CheckCircle2 } from "lucide-react";
+import { Loader2, Save, Video, CheckCircle2 } from "lucide-react";
 
 export default function LessonVideoField({ lessonVersionId, onSaveComplete }) {
   const [videoUrl, setVideoUrl] = useState("");
@@ -39,16 +39,16 @@ export default function LessonVideoField({ lessonVersionId, onSaveComplete }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-sm font-heading font-bold text-primary">
-        <Youtube className="w-4 h-4" /> URL Video Pengenalan
+        <Video className="w-4 h-4" /> URL Video Pengajaran / Story Visual
       </div>
       <p className="text-xs text-muted-foreground">
-        Tampal pautan YouTube. Video ini akan dipaparkan kepada pelajar pada langkah "Taklimat Video" selepas penerbitan.
+        Tampal pautan video MP4 Firebase Storage atau pautan YouTube. Video ini akan dipaparkan secara automatik kepada murid.
       </p>
       <div className="flex gap-2">
         <Input
           value={videoUrl}
           onChange={(e) => setVideoUrl(e.target.value)}
-          placeholder="https://www.youtube.com/watch?v=..."
+          placeholder="https://firebasestorage.googleapis.com/.../video.mp4 atau https://youtube.com/..."
           disabled={loading || saving}
         />
         <Button onClick={handleSave} disabled={saving || loading} size="sm" className="shrink-0">
