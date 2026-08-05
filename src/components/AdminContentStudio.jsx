@@ -8,6 +8,7 @@ import { base44 } from "@/api/base44Client";
 import { generateKSSRMissionPackage, getPedagogyContext } from "@/services/aiContentEngine";
 import { generateLesson } from "@/services/aiContentFiller";
 import UniversalLessonPreview from "@/components/admin/UniversalLessonPreview";
+import InteractiveLessonEditor from "@/components/admin/InteractiveLessonEditor";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -728,80 +729,12 @@ export default function AdminContentStudio() {
             </div>
           )}
 
-          {/* VIEW B: INTERACTIVE BLOCK OVERRIDE STUDIO */}
+          {/* VIEW B: INTERACTIVE LIVE LESSON EDITOR */}
           {studioMode === "EDIT" && (
-            <Card className="bg-stone-900 border-stone-800 shadow-xl text-xs font-sans">
-              <CardHeader className="border-b border-stone-800/60 pb-3">
-                <CardTitle className="text-sm font-black text-indigo-400 flex items-center gap-2">
-                  <Edit3 className="w-4 h-4 text-indigo-400" /> Studio Penyuntingan Teks Blok Guru
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 space-y-4">
-                {activePackage ? (
-                  <div className="space-y-4">
-                    
-                    {/* Mascot Speech Override */}
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-amber-400 uppercase">
-                        🗣️ Dialogue Mascot Suku Penyu ({`{student_name}`} placeholder)
-                      </label>
-                      <textarea
-                        value={currentDialogue}
-                        onChange={(e) => handleDialogueOverride(e.target.value)}
-                        rows={2}
-                        className="w-full p-2.5 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 text-xs font-medium focus:border-amber-500 outline-none resize-none"
-                      />
-                    </div>
-
-                    {/* Quiz Questions Override */}
-                    <div className="p-3 bg-stone-950 rounded-xl border border-stone-800 space-y-3">
-                      <span className="font-bold text-rose-400 block">❓ Soalan Pentaksiran Diagnostik (PBD):</span>
-                      {currentQuizQuestions.map((q, qI) => (
-                        <div key={qI} className="space-y-2 p-3 bg-stone-900 rounded-xl border border-stone-800">
-                          <label className="text-[10px] font-bold text-stone-400 uppercase">Batang Soalan {qI + 1}:</label>
-                          <input
-                            type="text"
-                            value={q.question || q.stem || ""}
-                            onChange={(e) => {
-                              const newQText = e.target.value;
-                              if (activePackage.version === "2.0") {
-                                setActivePackage(prev => {
-                                  const newLesson = JSON.parse(JSON.stringify(prev.lesson));
-                                  // FIX: Dynamic lookup — no hardcoded block index
-                                  const quizBlock = newLesson.blocks?.find(b => b.block_type === "QUIZ" || b.content?.questions !== undefined);
-                                  if (quizBlock?.content?.questions?.[qI]) {
-                                    quizBlock.content.questions[qI].stem = newQText;
-                                  }
-                                  return { ...prev, lesson: newLesson };
-                                });
-                              } else {
-                                setActivePackage(prev => {
-                                  const newSteps = prev.steps.map(st => {
-                                    if (st.step_type === "QUIZ") {
-                                      const newQs = [...st.questions];
-                                      newQs[qI] = { ...newQs[qI], question: newQText };
-                                      return { ...st, questions: newQs };
-                                    }
-                                    return st;
-                                  });
-                                  return { ...prev, steps: newSteps };
-                                });
-                              }
-                            }}
-                            className="w-full h-9 px-3 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 font-bold focus:border-amber-500 outline-none"
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                  </div>
-                ) : (
-                  <div className="p-8 text-center text-stone-500">
-                    Tiada kandungan untuk disunting. Sila jana pakej pelajaran terlebih dahulu.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <InteractiveLessonEditor
+              activePackage={activePackage}
+              onUpdatePackage={setActivePackage}
+            />
           )}
 
         </div>
