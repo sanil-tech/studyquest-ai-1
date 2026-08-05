@@ -1,12 +1,11 @@
 // src/components/AdminContentStudio.jsx
-// Lesson Generation & Publishing Studio (v1.0)
+// Lesson Generation & Publishing Studio (v1.0 / v2.0)
 // DSKP selection, deep AI content generation, interactive block override editor, live student preview, and 1-click publishing dispatcher.
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { generateKSSRMissionPackage, getPedagogyContext } from "@/services/aiContentEngine";
 import { generateLesson } from "@/services/aiContentFiller";
-import { getKSSRModeByGrade } from "@/services/generateKSSRContent";
 import UniversalLessonPreview from "@/components/admin/UniversalLessonPreview";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,22 +14,12 @@ import {
   BookOpen,
   Loader2,
   Sparkles,
-  Layers,
-  ChevronRight,
   Eye,
   CheckCircle2,
-  AlertCircle,
   Zap,
   Sliders,
-  Code,
-  ShieldCheck,
-  Award,
-  RefreshCcw,
-  Gamepad2,
   Edit3,
-  Rocket,
-  Check,
-  Send
+  Rocket
 } from "lucide-react";
 
 import {
@@ -63,9 +52,9 @@ export default function AdminContentStudio() {
   // SECTION 3: GENERATION, OVERRIDE & PUBLISHING STATE
   const [generating, setGenerating] = useState(false);
   const [activePackage, setActivePackage] = useState(null);
-  const [studioMode, setStudioMode] = useState("PREVIEW"); // "EDIT" | "PREVIEW" | "DIAGNOSTIC"
+  const [studioMode, setStudioMode] = useState("PREVIEW"); // "EDIT" | "PREVIEW"
   const [publishStatus, setPublishStatus] = useState("DRAFT"); // "DRAFT" | "PUBLISHED"
-  const [publishedLesson, setPublishedLesson] = useState(null);
+  const [, setPublishedLesson] = useState(null);
 
   // Taxonomy Data Resolution via Centralized DSKP Registry
   const availableSubjects = useMemo(() => getTaxonomySubjects(), []);
@@ -84,7 +73,7 @@ export default function AdminContentStudio() {
     if (availableTopics.length > 0 && !availableTopics.includes(topic)) {
       setTopic(availableTopics[0]);
     }
-  }, [subject, yearLevel, availableTopics]);
+  }, [subject, yearLevel, availableTopics, topic]);
 
   useEffect(() => {
     if (availableSKs.length > 0) {
@@ -125,7 +114,6 @@ export default function AdminContentStudio() {
         });
 
         if (res.success) {
-          // Wrap the new shell in a package structure that matches the expected activePackage format
           setActivePackage({
             version: "2.0",
             lesson: res.lesson,
@@ -140,15 +128,15 @@ export default function AdminContentStudio() {
             description: `Berjaya menjana modul ${subject} (${yearLevel}) menggunakan saluran baru.`
           });
         } else {
-          console.error("Validation failed:", res.validation.errors);
+          console.error("Validation failed:", res.validation?.errors);
           toast({
             variant: "destructive",
             title: "Gagal Menjana Shell",
-            description: res.validation.errors?.[0] || "Ralat pengesahan struktur AI."
+            description: res.validation?.errors?.[0] || "Ralat pengesahan struktur AI."
           });
         }
       } else {
-        // Legasi v1.0 Generation
+        // Legacy v1.0 Generation
         const res = await generateKSSRMissionPackage({
           spCode,
           spDescription: currentSPData.title || `Pelajaran SP ${spCode} bagi ${topic}`,
@@ -194,19 +182,51 @@ export default function AdminContentStudio() {
   // INTERACTIVE BLOCK OVERRIDE HANDLERS
   const handleDialogueOverride = (newDialogue) => {
     if (!activePackage) return;
-    setActivePackage(prev => ({
-      ...prev,
-      student_ui: {
-        ...prev.student_ui,
-        mascot_dialogue: newDialogue
-      }
-    }));
+
+    if (activePackage.version === "2.0") {
+      setActivePackage(prev => {
+        const newLesson = JSON.parse(JSON.stringify(prev.lesson));
+        // FIX: Dynamic lookup by block_type or property existence — no hardcoded index
+        const introBlock = newLesson.blocks?.find(b => b.block_type === "INTRO" || b.content?.mascot_dialogue !== undefined);
+        if (introBlock?.content) {
+          introBlock.content.mascot_dialogue = newDialogue;
+        }
+        return { ...prev, lesson: newLesson };
+      });
+    } else {
+      setActivePackage(prev => ({
+        ...prev,
+        student_ui: {
+          ...prev.student_ui,
+          mascot_dialogue: newDialogue
+        }
+      }));
+    }
   };
 
   const handleWidgetOverride = (newWidget) => {
     setSelectedWidget(newWidget);
     if (!activePackage) return;
+
     setActivePackage(prev => {
+      // FIX: v2.0 path — update lesson.blocks instead of prev.steps
+      if (prev.version === "2.0" && prev.lesson) {
+        const updatedBlocks = (prev.lesson.blocks || []).map(b => {
+          if (b.block_type === "PRACTICE" || b.content?.widget_type !== undefined) {
+            return {
+              ...b,
+              content: { ...b.content, widget_type: newWidget }
+            };
+          }
+          return b;
+        });
+        return {
+          ...prev,
+          lesson: { ...prev.lesson, blocks: updatedBlocks }
+        };
+      }
+
+      // v1.0 legacy path
       const updatedSteps = (prev.steps || []).map(st => {
         if (st.step_type === "PRACTICE") {
           return {
@@ -245,7 +265,26 @@ export default function AdminContentStudio() {
     });
   };
 
-  const mode = getKSSRModeByGrade(yearLevel);
+  // Safe Dynamic Content Extraction for Edit View
+  // FIX: Dynamic .find() lookup — no hardcoded block indexes
+  const currentDialogue = useMemo(() => {
+    if (!activePackage) return "";
+    if (activePackage.version === "2.0") {
+      const block = activePackage.lesson?.blocks?.find(b => b.block_type === "INTRO" || b.content?.mascot_dialogue !== undefined);
+      return block?.content?.mascot_dialogue || "";
+    }
+    return activePackage.student_ui?.mascot_dialogue || "";
+  }, [activePackage]);
+
+  const currentQuizQuestions = useMemo(() => {
+    if (!activePackage) return [];
+    if (activePackage.version === "2.0") {
+      const quizBlock = activePackage.lesson?.blocks?.find(b => b.block_type === "QUIZ" || b.content?.questions !== undefined);
+      return quizBlock?.content?.questions || [];
+    }
+    const quizStep = activePackage.steps?.find(st => st.step_type === "QUIZ");
+    return quizStep?.questions || [];
+  }, [activePackage]);
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 p-4 sm:p-8 space-y-8 font-sans">
@@ -298,10 +337,11 @@ export default function AdminContentStudio() {
           </button>
         </div>
       </div>
-      {/* STUDIO LAYOUT: GRID 1 (CONFIGURATOR) & GRID 2 (PREVIEW STUDIO) */}
+
+      {/* STUDIO LAYOUT GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* LEFT COLUMN: SECTIONS 1, 2, 3 (CONFIG & TRIGGER) */}
+        {/* LEFT COLUMN: CONFIGURATOR & TRIGGER */}
         <div className="lg:col-span-5 space-y-6">
           
           {/* SECTION 1: DSKP SELECTION HUB */}
@@ -313,7 +353,6 @@ export default function AdminContentStudio() {
             </CardHeader>
             <CardContent className="p-4 space-y-4 text-xs font-sans">
               
-              {/* Subject & Year Selection */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-stone-400 uppercase">Subjek</label>
@@ -342,7 +381,6 @@ export default function AdminContentStudio() {
                 </div>
               </div>
 
-              {/* Topic Selection */}
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-stone-400 uppercase">Tajuk Utama DSKP</label>
                 <select
@@ -354,7 +392,6 @@ export default function AdminContentStudio() {
                 </select>
               </div>
 
-              {/* SK & SP Selection */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-stone-400 uppercase">Standard Kandungan (SK)</label>
@@ -379,7 +416,6 @@ export default function AdminContentStudio() {
                 </div>
               </div>
 
-              {/* Target Class Assignment */}
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-stone-400 uppercase">Sasaran Kelas Sasaran</label>
                 <select
@@ -405,7 +441,6 @@ export default function AdminContentStudio() {
             </CardHeader>
             <CardContent className="p-4 space-y-4 text-xs font-sans">
               
-              {/* Target Mastery TP Selector */}
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-stone-400 uppercase">Sasaran Tahap Penguasaan (TP1 - TP6)</label>
                 <div className="grid grid-cols-6 gap-1.5">
@@ -425,7 +460,6 @@ export default function AdminContentStudio() {
                 </div>
               </div>
 
-              {/* EduGame Widget Selector */}
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-stone-400 uppercase">Fokus Widget Interaktif EduGame</label>
                 <select
@@ -479,10 +513,9 @@ export default function AdminContentStudio() {
 
         </div>
 
-        {/* RIGHT COLUMN: SECTION 4 (STUDIO EDITOR & PREVIEW) */}
+        {/* RIGHT COLUMN: STUDIO EDITOR & PREVIEW */}
         <div className="lg:col-span-7 space-y-4">
           
-          {/* TAB CONTROL HEADER: EDIT vs PREVIEW */}
           <div className="p-2 bg-stone-900 border border-stone-800 rounded-2xl flex items-center justify-between">
             <div className="flex bg-stone-950 p-1 rounded-xl border border-stone-800">
               <button
@@ -543,31 +576,15 @@ export default function AdminContentStudio() {
               <CardContent className="p-4 space-y-4">
                 {activePackage ? (
                   <div className="space-y-4">
+                    
                     {/* Mascot Speech Override */}
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-amber-400 uppercase">
                         🗣️ Dialogue Mascot Suku Penyu ({`{student_name}`} placeholder)
                       </label>
                       <textarea
-                        value={
-                          activePackage.version === "2.0"
-                            ? activePackage.lesson?.blocks?.[0]?.content?.mascot_dialogue || ""
-                            : activePackage.student_ui?.mascot_dialogue || ""
-                        }
-                        onChange={(e) => {
-                          const newDialogue = e.target.value;
-                          if (activePackage.version === "2.0") {
-                            setActivePackage(prev => {
-                              const newLesson = JSON.parse(JSON.stringify(prev.lesson));
-                              if (newLesson.blocks[0]?.content) {
-                                newLesson.blocks[0].content.mascot_dialogue = newDialogue;
-                              }
-                              return { ...prev, lesson: newLesson };
-                            });
-                          } else {
-                            handleDialogueOverride(newDialogue);
-                          }
-                        }}
+                        value={currentDialogue}
+                        onChange={(e) => handleDialogueOverride(e.target.value)}
                         rows={2}
                         className="w-full p-2.5 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 text-xs font-medium focus:border-amber-500 outline-none resize-none"
                       />
@@ -576,11 +593,7 @@ export default function AdminContentStudio() {
                     {/* Quiz Questions Override */}
                     <div className="p-3 bg-stone-950 rounded-xl border border-stone-800 space-y-3">
                       <span className="font-bold text-rose-400 block">❓ Soalan Pentaksiran Diagnostik (PBD):</span>
-                      {(
-                        activePackage.version === "2.0"
-                          ? activePackage.lesson?.blocks?.[5]?.content?.questions || []
-                          : activePackage.steps?.find(st => st.step_type === "QUIZ")?.questions || []
-                      ).map((q, qI) => (
+                      {currentQuizQuestions.map((q, qI) => (
                         <div key={qI} className="space-y-2 p-3 bg-stone-900 rounded-xl border border-stone-800">
                           <label className="text-[10px] font-bold text-stone-400 uppercase">Batang Soalan {qI + 1}:</label>
                           <input
@@ -591,8 +604,10 @@ export default function AdminContentStudio() {
                               if (activePackage.version === "2.0") {
                                 setActivePackage(prev => {
                                   const newLesson = JSON.parse(JSON.stringify(prev.lesson));
-                                  if (newLesson.blocks[5]?.content?.questions?.[qI]) {
-                                    newLesson.blocks[5].content.questions[qI].stem = newQText;
+                                  // FIX: Dynamic lookup — no hardcoded block index
+                                  const quizBlock = newLesson.blocks?.find(b => b.block_type === "QUIZ" || b.content?.questions !== undefined);
+                                  if (quizBlock?.content?.questions?.[qI]) {
+                                    quizBlock.content.questions[qI].stem = newQText;
                                   }
                                   return { ...prev, lesson: newLesson };
                                 });
@@ -615,6 +630,7 @@ export default function AdminContentStudio() {
                         </div>
                       ))}
                     </div>
+
                   </div>
                 ) : (
                   <div className="p-8 text-center text-stone-500">
