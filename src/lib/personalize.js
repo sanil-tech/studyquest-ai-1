@@ -105,7 +105,7 @@ export const resolveStudentName = (studentData, currentUser = null) => {
 export const personalize = (text, studentDataOrName = "Pengembara", currentUser = null) => {
   if (!text) return "";
   const name = resolveStudentName(studentDataOrName, currentUser);
-  return String(text).replace(/\{\{\s*(nama|nickname|student_name|studentName|nama_pelajar)\s*\}\}/gi, name);
+  return String(text).replace(/\{{1,2}\s*(nama|nickname|student_name|studentName|nama_pelajar)\s*\}{1,2}/gi, name);
 };
 
 export const replaceStudentVariables = personalize;

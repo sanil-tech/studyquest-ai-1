@@ -105,10 +105,12 @@ export default function AdminContentStudio() {
 
     try {
       if (version === "v2") {
+        const currentSKObj = availableSKs.find(sk => sk.sk_code === skCode) || {};
         const res = await generateLesson({
           subject,
           grade: yearLevel,
           sk_code: skCode,
+          sk_title: currentSKObj.title || "",
           sp_code: spCode,
           sp_description: currentSPData.title || `Pelajaran SP ${spCode} bagi ${topic}`,
           topic,

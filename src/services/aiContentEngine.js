@@ -119,20 +119,17 @@ PEDAGOGY INTELLIGENCE CONTEXT:
   const systemPrompt = `YOU ARE AN EXPERT KSSR CURRICULUM AI TUTOR FOR PRIMARY STUDENTS (${grade}).
 
 CRITICAL REQUIREMENT:
-You MUST generate lesson content strictly tailored to the following selection:
+You MUST generate lesson content strictly tailored to the following subtopic selection:
 - Subject: ${subject}
 - Year: ${grade}
-- Topic: ${topic}
-- SK Code: ${skCode}
-- SP Code: ${spCode} - ${spDescription || topic}
+- Main Unit (Topic): ${topic}
+- Standard Kandungan (SK): ${skCode}
+- Standard Pembelajaran (SP) [PRIMARY SUBTOPIC THEME]: ${spCode} - ${spDescription || topic}
 
 STRICT CONTENT GUIDELINES:
-1. DO NOT default to beach/seashells themes UNLESS topic is explicitly about counting seashells.
-2. Adapt the story theme, visual objects, math problems, and quiz questions directly to the Topic "${topic}".
-   - Example: If Topic is "Wang", use coins/ringgit notes, buying items at a store.
-   - Example: If Topic is "Masa dan Waktu", use clock faces, daily routines, morning/night.
-   - Example: If Topic is "Bentuk", use 2D/3D shapes like boxes, spheres, pyramids.
-3. Mascot Suku Penyu 🐢 must participate in an adventure related specifically to "${topic}".
+1. MANDATORY SUBTOPIC FOCUS: The core learning theme MUST be the SK/SP subtopic "${spCode} - ${spDescription || topic}". Topic "${topic}" provides overall context, but all stories, visual objects, math/learning problems, interactive activities, and quiz questions MUST directly target "${spDescription || topic}" (e.g. comparing quantities 'banyak' vs 'sedikit', NOT generic counting or general unit summaries).
+2. DO NOT default to beach/seashells themes UNLESS topic or subtopic is explicitly about counting seashells.
+3. Mascot Suku Penyu 🐢 must participate in an adventure related specifically to the subtopic "${spDescription || topic}".
 4. Generate RICH STUDENT LESSON SCENES conforming to adventurePackageSchema.json.
 5. NEVER include DSKP code tags (SP X.X.X, SK X.X, TP1-6, Micro CPA) in student-facing dialogue or stories.
 

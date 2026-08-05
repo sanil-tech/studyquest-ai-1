@@ -17,6 +17,8 @@ function buildContentFillPrompt(metadata) {
   const {
     subject,
     grade,
+    sk_code,
+    sk_title,
     sp_code,
     sp_description,
     topic,
@@ -26,6 +28,8 @@ function buildContentFillPrompt(metadata) {
     widget_type,
     pedagogy_context
   } = metadata;
+
+  const focusSubtopic = sp_description || sk_title || topic;
 
   const widgetSeedSchema = getWidgetSeedSchema(widget_type);
   const widgetSchemaStr = widgetSeedSchema
@@ -47,9 +51,9 @@ PEDAGOGY CONTEXT (use this to guide your content):
 CHILD-FRIENDLY LANGUAGE RULES (CRITICAL — ages 7-9):
 - Use short sentences (maximum 8-10 words per sentence)
 - BANNED: Academic terms like "Perwakilan Visual", "Analisis Konsep", "Aplikasi Kehidupan Harian"
-- BANNED: Raw DSKP phrases like "${sp_description}" verbatim — rephrase in child language
+- BANNED: Raw DSKP phrases verbatim — rephrase in simple child language
 - BANNED: Placeholder text like "Pilihan A (Jawapan Tepat)" or "Kategori 1"
-- Use concrete objects children know: biskut, belon, epal, kucing, gula-gula
+- Use concrete objects children know: biskut, belon, epal, kucing, gula-gula, pensel
 - Mascot ${mascot} speaks warmly, like a fun older friend
 - All quiz options must be REAL, SPECIFIC answers — never generic labels`
     : `
@@ -67,15 +71,22 @@ You do NOT decide the lesson structure — it is already fixed.
 You do NOT choose the widget type — it is already "${widget_type}".
 You do NOT set reward amounts — they are already calculated.
 
-LESSON PARAMETERS:
+LESSON PARAMETERS & MANDATORY SUBTOPIC FOCUS:
 - Subject: ${subject}
 - Year: ${grade}
-- Topic: ${topic}
-- SK Code: ${sp_code.split(".").slice(0, 2).join(".")}
-- SP Code: ${sp_code} — ${sp_description}
+- Main Unit (Topic): ${topic}
+- Standard Kandungan (SK): ${sk_code} ${sk_title ? `- ${sk_title}` : ''}
+- Standard Pembelajaran (SP) [PRIMARY SUBTOPIC THEME]: ${sp_code} — ${sp_description}
 - Target Mastery Level: ${target_tp}
 - Mascot: ${mascot}
 - Widget Type: ${widget_type}
+
+CRITICAL SUBTOPIC MANDATE:
+The Main Unit "${topic}" is only the top-level unit.
+This micro-lesson MUST be strictly focused on the specific SK/SP subtopic: "${sp_code} - ${sp_description}".
+For example, if Topic is "Nombor hingga 100", but SK/SP is "1.1 - Kuantiti Secara Intuitif (membanding banyak dan sedikit)", ALL lesson elements (story hook, learning objective, CPA concrete/pictorial/abstract, worked example, practice widget activity, and quiz questions) MUST directly teach and test comparing quantities ("banyak" vs "sedikit").
+DO NOT generate generic explanations or generic counting questions about "${topic}" as a whole. Every single block must hone in on "${sp_description}".
+
 ${pedagogyBlock}
 ${languageRules}
 
@@ -84,63 +95,63 @@ The JSON must have exactly this shape:
 
 {
   "story_hook": {
-    "story_text": "A 2-3 sentence story hook that introduces the topic through ${mascot}'s adventure. Must be specific to '${topic}', NOT generic.",
+    "story_text": "A 2-3 sentence story hook that introduces the subtopic '${sp_description}' through ${mascot}'s adventure. Must be specific to '${sp_description}', NOT generic.",
     "mascot_dialogue": "A warm 1-sentence greeting from ${mascot} to the student. Use {student_name} placeholder.",
     "tts_script": "Clean version of mascot_dialogue for text-to-speech (no emojis, no special chars)"
   },
   "learning_objective": {
-    "i_can_statement": "A child-friendly 'Saya boleh...' statement. Example: 'Saya boleh membandingkan kuantiti banyak dan sedikit.'"
+    "i_can_statement": "A child-friendly 'Saya boleh...' statement directly derived from SP '${sp_description}'. Example: 'Saya boleh membandingkan kuantiti banyak dan sedikit.'"
   },
   "concept_cpa": {
     "concrete": {
-      "title": "Short title for the Concrete phase",
-      "explanation": "Explain the concept using REAL physical objects children can touch/see. Minimum 2 sentences.",
-      "visual_prompt": "Image generation prompt: describe a child-friendly illustration for this concept"
+      "title": "Short title for Concrete phase (e.g. Objek Sebenar: Membanding Kuantiti)",
+      "explanation": "Explain the subtopic concept '${sp_description}' using REAL physical objects children can touch/see (e.g. comparing piles of biscuits/apples). Minimum 2 sentences.",
+      "visual_prompt": "Image generation prompt: describe a child-friendly illustration comparing physical objects for ${sp_description}"
     },
     "pictorial": {
-      "title": "Short title for the Pictorial phase",
-      "explanation": "Explain using drawings, diagrams, or visual representations. Minimum 2 sentences.",
-      "visual_prompt": "Image generation prompt for a diagram/visual aid"
+      "title": "Short title for Pictorial phase (e.g. Rajah Visual)",
+      "explanation": "Explain using drawings, card groups, or visual representations for ${sp_description}. Minimum 2 sentences.",
+      "visual_prompt": "Image generation prompt for a visual diagram/card comparison for ${sp_description}"
     },
     "abstract": {
-      "title": "Short title for the Abstract phase",
-      "explanation": "State the rule, formula, or principle in simple terms. Minimum 2 sentences.",
-      "key_term": "One key vocabulary word for this topic",
+      "title": "Short title for Abstract phase (e.g. Simbol & Perkataan)",
+      "explanation": "State the rule or concept of ${sp_description} in simple terms. Minimum 2 sentences.",
+      "key_term": "One key vocabulary term for this subtopic",
       "key_definition": "Child-friendly definition of the key term"
     }
   },
   "worked_example": {
-    "problem_statement": "A specific, realistic math/science/language problem. NOT generic.",
+    "problem_statement": "A specific, realistic problem specifically testing '${sp_description}'. NOT generic.",
     "solution_steps": [
       "Step 1: ...",
       "Step 2: ...",
       "Step 3: ..."
     ],
-    "common_mistake": "What students commonly get wrong, and why",
+    "common_mistake": "What students commonly get wrong when dealing with '${sp_description}'",
     "correct_reasoning": "Why the correct approach works"
   },
   "practice": {
-    "instruction": "A 1-sentence instruction for the ${widget_type} widget activity, specific to ${topic}",
+    "instruction": "A 1-sentence instruction for the ${widget_type} activity, specifically guiding the student on '${sp_description}'",
     "seed_data": ${widgetSchemaStr}
   },
   "quiz": {
     "questions": [
       {
-        "stem": "Question 1 specific to ${topic}",
+        "stem": "Question 1 specifically testing '${sp_description}'",
         "options": ["Correct answer", "Plausible wrong answer 1", "Plausible wrong answer 2"],
         "correct_index": 0,
-        "explanation": "Why this is correct — educational, not just 'correct!'",
+        "explanation": "Why this is correct — educational reasoning",
         "misconception_tag": "What misconception the wrong answers test"
       },
       {
-        "stem": "Question 2 ...",
+        "stem": "Question 2 specifically testing '${sp_description}'",
         "options": ["...", "...", "..."],
         "correct_index": 0,
         "explanation": "...",
         "misconception_tag": "..."
       },
       {
-        "stem": "Question 3 ...",
+        "stem": "Question 3 specifically testing '${sp_description}'",
         "options": ["...", "...", "..."],
         "correct_index": 0,
         "explanation": "...",
@@ -150,26 +161,26 @@ The JSON must have exactly this shape:
   },
   "key_takeaway": {
     "summary_points": [
-      "Key point 1 — what students must remember",
-      "Key point 2 — the most important rule/concept",
-      "Key point 3 — how to apply this in daily life"
+      "Summary point 1 about ${sp_description}",
+      "Summary point 2 about ${sp_description}",
+      "Summary point 3 about ${sp_description}"
     ],
-    "memory_tip": "A memorable tip, mnemonic, or rhyme to help remember the concept",
+    "memory_tip": "A short, catchy memory tip from ${mascot} for ${sp_description}",
     "flashcards": [
-      { "term": "Key term 1", "definition": "Definition 1" },
-      { "term": "Key term 2", "definition": "Definition 2" }
+      { "term": "Key Term 1", "definition": "Definition 1 for ${sp_description}" },
+      { "term": "Key Term 2", "definition": "Definition 2 for ${sp_description}" }
     ]
   },
   "celebration": {
-    "celebration_message": "A personalized congratulation using {student_name}. Warm, enthusiastic, specific to ${topic}.",
-    "badge_name": "A fun badge name like 'Wira Nombor' or 'Pakar Wang'"
+    "celebration_message": "A personalized congratulation using {student_name} for mastering ${sp_description}",
+    "badge_name": "Name of badge awarded for ${sp_description}"
   }
 }
 
 CRITICAL RULES:
-1. Every answer, option, and example MUST be specific to "${topic}" — zero generic placeholders.
-2. Quiz questions must test REAL understanding, not recognition of "correct" labels.
-3. Worked example must show a COMPLETE step-by-step solution a teacher would use.
+1. Every answer, option, and example MUST be specific to "${sp_description}" under "${topic}" — zero generic placeholders.
+2. Quiz questions must test REAL understanding of "${sp_description}", not recognition of "correct" labels.
+3. Worked example must show a COMPLETE step-by-step solution for "${sp_description}".
 4. CPA phases must follow Concrete → Pictorial → Abstract progression with REAL content at each level.
 5. The seed_data for the "${widget_type}" widget must match the schema exactly.
 6. Minimum 3 quiz questions, each with 3 options.`;
@@ -328,45 +339,46 @@ async function callLLMForContent(metadata) {
  * @returns {object} Fallback aiContent object matching the 8-block contract
  */
 function buildFallbackContent(metadata) {
-  const { subject, topic, sp_code, sp_description, mascot, mode, widget_type } = metadata;
-  const displayTopic = topic || sp_description || "Pelajaran KSSR";
+  const { subject, topic, sk_code, sk_title, sp_code, sp_description, mascot, mode, widget_type } = metadata;
+  const focusSubtopic = sp_description || sk_title || topic || "Pelajaran KSSR";
+  const displayTopic = focusSubtopic;
 
   return {
     story_hook: {
-      story_text: `Hai {student_name}! Hari ini ${mascot} ingin mengajak anda mengembara menerokai tajuk ${displayTopic}. Mari kita selesaikan cabaran ini bersama-sama!`,
-      mascot_dialogue: `Hai {student_name}! Bersedia untuk belajar ${displayTopic} hari ini? Jom kita mulakan!`,
-      tts_script: `Hai Kawan! Bersedia untuk belajar ${displayTopic} hari ini? Jom kita mulakan!`
+      story_text: `Hai {student_name}! Hari ini ${mascot} ingin mengajak anda mengembara menerokai subtopik ${displayTopic}. Mari kita selesaikan cabaran ini bersama-sama!`,
+      mascot_dialogue: `Hai {student_name}! Bersedia untuk belajar tentang ${displayTopic} hari ini? Jom kita mulakan!`,
+      tts_script: `Hai Kawan! Bersedia untuk belajar tentang ${displayTopic} hari ini? Jom kita mulakan!`
     },
     learning_objective: {
-      i_can_statement: `Saya boleh memahami dan menguasai konsep asas bagi ${displayTopic}.`
+      i_can_statement: `Saya boleh memahami dan menguasai ${displayTopic}.`
     },
     concept_cpa: {
       concrete: {
         title: "Peringkat Konkrit (Objek Sebenar)",
-        explanation: `Mari kita gunakan objek sebenar dalam kehidupan harian untuk memahami tajuk ${displayTopic} secara tersusun.`,
-        visual_prompt: `Kids illustration showing real counting objects for ${displayTopic}, colorful education concept`
+        explanation: `Mari kita gunakan objek sebenar dalam kehidupan harian untuk memahami ${displayTopic} secara tersusun.`,
+        visual_prompt: `Kids illustration showing real physical objects for learning ${displayTopic}, colorful education concept`
       },
       pictorial: {
         title: "Peringkat Bergambar (Visual)",
-        explanation: `Perhatikan rajah dan gambar rajah visual berikut untuk melihat bagaimana nombor dan kuantiti diwakilkan.`,
+        explanation: `Perhatikan rajah dan gambar rajah visual berikut untuk melihat perwakilan ${displayTopic}.`,
         visual_prompt: `Visual diagram illustration explaining ${displayTopic} step by step`
       },
       abstract: {
         title: "Peringkat Abstrak (Simbol & Petua)",
-        explanation: `Gunakan simbol dan nombor untuk menulis jawapan anda dengan betul dan kemas.`,
+        explanation: `Gunakan simbol, nombor, dan perkataan untuk menulis jawapan bagi ${displayTopic} dengan betul dan kemas.`,
         key_term: displayTopic,
-        key_definition: `Konsep asas KSSR bagi tajuk ${displayTopic}.`
+        key_definition: `Konsep asas KSSR bagi ${displayTopic}.`
       }
     },
     worked_example: {
-      problem_statement: `Selesaikan soalan contoh berikut bagi tajuk ${displayTopic}: Nyatakan jawapan yang tepat berdasarkan rajah.`,
+      problem_statement: `Selesaikan soalan contoh berikut bagi ${displayTopic}: Nyatakan jawapan yang tepat berdasarkan rajah.`,
       solution_steps: [
-        "Langkah 1: Baca soalan dan kenal pasti maklumat utama.",
-        "Langkah 2: Bilang atau hitung kuantiti objek secara bersistem.",
-        "Langkah 3: Tuliskan jawapan akhir dengan menggunakan simbol yang betul."
+        `Langkah 1: Baca soalan dan fahami kehendak ${displayTopic}.`,
+        "Langkah 2: Bilang atau bandingkan kuantiti objek secara bersistem.",
+        "Langkah 3: Tuliskan jawapan akhir dengan tepat."
       ],
-      common_mistake: "Tersalah mengira kuantiti atau keliru nilai tempat digit.",
-      correct_reasoning: "Semak jawapan secara terbalik untuk memastikan tiada keciciran."
+      common_mistake: "Keliru membaca soalan atau tidak menyemak jawapan.",
+      correct_reasoning: "Semak jawapan secara berperingkat untuk memastikan ketepatan."
     },
     practice: {
       instruction: `Lengkapkan aktiviti interaktif ${widget_type} berikut berkaitan ${displayTopic}.`,
@@ -374,8 +386,8 @@ function buildFallbackContent(metadata) {
         instruction_context: `Aktiviti interaktif bagi ${displayTopic}`,
         target_val: 10,
         items: [
-          { id: "1", label: "Objek A", category: "Kumpulan 1" },
-          { id: "2", label: "Objek B", category: "Kumpulan 2" }
+          { id: "1", label: "Pilihan A", category: "Kategori 1" },
+          { id: "2", label: "Pilihan B", category: "Kategori 2" }
         ]
       }
     },
@@ -386,10 +398,10 @@ function buildFallbackContent(metadata) {
           options: ["Jawapan Tepat", "Pilihan Pengganggu A", "Pilihan Pengganggu B"],
           correct_index: 0,
           explanation: "Jawapan ini tepat kerana mengikut konsep asas yang telah dipelajari.",
-          misconception_tag: "Kesilapan asas pengiraan"
+          misconception_tag: "Kesilapan asas"
         },
         {
-          stem: `Pilih penyataan yang BENAR mengenai tajuk ${displayTopic}.`,
+          stem: `Pilih penyataan yang BENAR mengenai ${displayTopic}.`,
           options: ["Penyataan Benar", "Penyataan Salah A", "Penyataan Salah B"],
           correct_index: 0,
           explanation: "Penyataan ini betul berdasarkan petunjuk dan panduan visual.",
@@ -406,18 +418,18 @@ function buildFallbackContent(metadata) {
     },
     key_takeaway: {
       summary_points: [
-        `Memahami konsep asas tajuk ${displayTopic} dengan jelas.`,
-        "Menggunakan kaedah pengiraan yang tersusun dan menyemak jawapan.",
+        `Memahami konsep ${displayTopic} dengan jelas.`,
+        "Menggunakan kaedah pengiraan dan perbandingan yang tersusun.",
         "Mengaplikasikan kemahiran ini dalam kehidupan harian."
       ],
-      memory_tip: `Petua Penyu: Bilang dengan cermat, semak dengan teliti! 🐢`,
+      memory_tip: `Petua Penyu: Semak dengan cermat, pasti jawapan tepat! 🐢`,
       flashcards: [
-        { term: displayTopic, definition: `Asas penguasaan tajuk ${displayTopic} mengikut DSKP.` },
+        { term: displayTopic, definition: `Asas penguasaan subtopik ${displayTopic} mengikut DSKP.` },
         { term: "Petua Semakan", definition: "Sentiasa semak semula pengiraan anda." }
       ]
     },
     celebration: {
-      celebration_message: `Tahniah {student_name}! Anda telah berjaya menyelesaikan keseluruhan modul ${displayTopic}!`,
+      celebration_message: `Tahniah {student_name}! Anda telah berjaya menyelesaikan subtopik ${displayTopic}!`,
       badge_name: `Wira ${displayTopic}`
     }
   };
@@ -435,6 +447,7 @@ function buildFallbackContent(metadata) {
  * @param {string} params.subject
  * @param {string} params.grade
  * @param {string} params.sk_code
+ * @param {string} params.sk_title
  * @param {string} params.sp_code
  * @param {string} params.sp_description
  * @param {string} params.topic
@@ -445,6 +458,7 @@ export async function generateLesson({
   subject = "Matematik",
   grade = "Tahun 1",
   sk_code = "1.1",
+  sk_title = "",
   sp_code = "1.1.1",
   sp_description = "",
   topic = "",
@@ -455,6 +469,7 @@ export async function generateLesson({
     subject,
     grade,
     sk_code,
+    sk_title,
     sp_code,
     sp_description,
     topic,
