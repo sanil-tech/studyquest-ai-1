@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import sukuPenyuMascotImg from "@/assets/images/suku_penyu_mascot_1785919182374.jpg";
-import { generateDynamicImagePrompt } from "@/utils/generateDynamicImagePrompt";
+import { generateDynamicImagePrompt, getPromptSeed } from "@/utils/generateDynamicImagePrompt";
 import { getStaticFallbackImage } from "@/services/aiImageEngine";
 import {
   Heart,
@@ -52,9 +52,10 @@ function StoryScene({ data, mascotName = "Suku Penyu 🐢", studentName = "Kawan
     visualDescription: payload.visual_description || "",
     storyText: storyImagePrompt
   });
+  const storySeed = getPromptSeed(dynamicStoryPrompt);
   const storyBannerUrl = (payload.image_url && !payload.image_url.includes("suku_penyu_mascot"))
     ? payload.image_url
-    : `https://image.pollinations.ai/prompt/${encodeURIComponent(dynamicStoryPrompt)}?width=800&height=450&nologo=true&seed=101`;
+    : `https://image.pollinations.ai/prompt/${encodeURIComponent(dynamicStoryPrompt)}?width=800&height=450&nologo=true&seed=${storySeed}`;
 
   return (
     <div className="space-y-4 text-left font-sans">

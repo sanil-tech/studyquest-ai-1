@@ -384,60 +384,30 @@ function resolveDynamicTopicContext(subject = "Matematik", grade = "Tahun 1", to
   }
 
   // 7. DEFAULT DYNAMIC TOPIC ANCHOR (NOMBOR / GENERIC)
-  const isFruitShopTopic = tLower.includes("buah") || tLower.includes("epal") || tLower.includes("kuantiti") || tLower.includes("bilang") || tLower.includes("nombor") || isMath;
-  
-  if (isFruitShopTopic) {
-    return {
-      theme: `Kedai Buah Pak Cik Abu`,
-      worldIcon: "🍎",
-      storyHook: `Suku Penyu 🐢 sedang membantu Pak Cik Abu di kedai buah. Ada 3 bakul besar yang berisi 10 biji epal setiap satu dan 5 biji epal lagi di atas meja. Suku Penyu 🐢 perlu tahu jumlah semua epal itu untuk diletakkan tanda harga.`,
-      helpContinuation: `Untuk membantu Suku Penyu membilang dan meletakkan tanda harga epal Pak Cik Abu dengan tepat, mari kita kuasai kemahiran ${spDescription || topicTitle} bersama-sama!`,
-      mascotDialogue: `Hai kawan-kawan! Jom kita bantu Pak Cik Abu mengira jumlah epal di dalam bakul dan di atas meja!`,
-      visualMethod: `Pak Cik Abu meletakkan 3 bakul besar berisi 10 biji epal dan 5 biji epal di atas meja kayu.`,
-      leftGroup: `3 Bakul Epal (10 + 10 + 10 = 30)`,
-      rightGroup: `5 Epal di Atas Meja`,
-      stepsList: [`1. Kira epal dalam setiap bakul (30 biji)`, `2. Tambahkan epal di atas meja (5 biji)`, `3. Jumlahkan semua sekali (35 biji)`],
-      myth: `Adakah kita perlu mengira epal satu demi satu dari awal?`,
-      fact: `Kita boleh mengira secara sepuluh-sepuluh (10, 20, 30) dan tambah 5!`,
-      widgetType: "base_ten_blocks",
-      instruction: `Bantu Suku membilang dan menyusun bakul epal untuk Pak Cik Abu.`,
-      practiceTarget: { targetNumber: 35, targetSentence: `Suku mengira tiga puluh lima biji epal di kedai Pak Cik Abu` },
-      flashcards: [
-        { term: "Kumpulan Sepuluh", definition: "Bungkusan atau bakul yang mengandungi 10 objek." },
-        { term: "Sa (Unit)", definition: "Bilangan objek tunggal yang tinggal." }
-      ],
-      gameItems: ["3 Bakul (30)", "5 Epal Meja (5)", "Jumlah (35)"],
-      quizQuestion: "Suku Penyu membantu Pak Cik Abu mengira 3 bakul berisi 10 biji epal dan 5 biji epal di atas meja. Berapakah jumlah semua epal?",
-      quizOptions: ["35 biji epal", "30 biji epal", "25 biji epal"],
-      quizCorrectIdx: 0,
-      quizExplanation: "3 bakul x 10 = 30 epal, tambah 5 epal di atas meja = 35 biji epal kesemuanya!"
-    };
-  }
-
   return {
     theme: `Dunia ${subject}`,
     worldIcon: isMath ? "🔢" : "🌎",
-    storyHook: `Suku Penyu 🐢 sedang membantu rakan-rakan di sekolah untuk menyusun objek dan menyelesaikan misi ${spDescription || topicTitle}!`,
-    helpContinuation: `Untuk membantu Suku Penyu menyelesaikan cabaran ini dengan lancar, mari kita pelajari dan kuasai konsep asas ${spDescription || topicTitle} bersama-sama!`,
-    mascotDialogue: `Hai kawan-kawan! Saya Suku Penyu 🐢. Jom kita kembara dan menguasai ${spDescription || topicTitle} bersama-sama!`,
-    visualMethod: `Suku meletakkan perwakilan visual objek bagi tajuk ${spDescription || topicTitle} untuk dikaji dan dikira.`,
-    leftGroup: `Kumpulan Utama A (${spDescription || topicTitle})`,
-    rightGroup: `Kumpulan Pembanding B (${spDescription || topicTitle})`,
-    stepsList: [`1. Perhatikan perwakilan visual ${spDescription || topicTitle}`, `2. Terapkan kaedah asas pengiraan`, `3. Semak jawapan anda dengan teliti`],
+    storyHook: `Di Dunia ${subject}, Suku Penyu 🐢 sedang mengumpul dan meneroka objek fizikal bagi tajuk ${topicTitle}! Jom kita bantu Suku membilang dan mengira jumlahnya bersama-sama!`,
+    helpContinuation: `Untuk membantu Suku Penyu menyelesaikan cabaran ini dengan lancar, mari kita pelajari dan kuasai konsep asas ${topicTitle} bersama-sama!`,
+    mascotDialogue: `Hai kawan-kawan! Saya Suku Penyu 🐢. Jom kita kembara dan menguasai ${topicTitle} bersama-sama!`,
+    visualMethod: `Suku meletakkan perwakilan visual objek bagi tajuk ${topicTitle} untuk dikaji dan dikira.`,
+    leftGroup: `Kumpulan Utama A (${topicTitle})`,
+    rightGroup: `Kumpulan Pembanding B (${topicTitle})`,
+    stepsList: [`1. Perhatikan perwakilan visual ${topicTitle}`, `2. Terapkan kaedah asas pengiraan`, `3. Semak jawapan anda dengan teliti`],
     myth: `Adakah kuantiti yang lebih besar bermaksud bilangan yang lebih sedikit?`,
     fact: `Kuantiti yang lebih besar sentiasa mewakili bilangan yang lebih banyak!`,
     widgetType: "base_ten_blocks",
-    instruction: `Bantu Suku membilang dan menyusun objek mengikut jumlah ${spDescription || topicTitle}.`,
-    practiceTarget: { targetNumber: 34, targetSentence: `Suku menguasai pembelajaran ${spDescription || topicTitle}` },
+    instruction: `Bantu Suku membilang dan menyusun blok mengikut jumlah ${topicTitle}.`,
+    practiceTarget: { targetNumber: 34, targetSentence: `Suku menguasai pembelajaran ${topicTitle}` },
     flashcards: [
-      { term: spDescription || topicTitle, definition: `Istilah dan konsep utama yang diterokai dalam tajuk ini.` },
+      { term: topicTitle, definition: `Istilah dan konsep utama yang diterokai dalam tajuk ini.` },
       { term: "Kuantiti", definition: `Jumlah atau bilangan objek yang kita ukur dan kira.` }
     ],
-    gameItems: [`Kategori 1`, `Kategori 2`, `Kategori 3`],
-    quizQuestion: `Apakah jawapan yang tepat bagi latihan ${spDescription || topicTitle} di bawah?`,
-    quizOptions: [`Jawapan Tepat`, `Pilihan Kurang Tepat`, `Pilihan Salah`],
+    gameItems: [`Kategori 1 (${topicTitle})`, `Kategori 2 (${topicTitle})`, `Kategori 3 (${topicTitle})`],
+    quizQuestion: `Apakah jawapan yang tepat bagi latihan ${topicTitle} di bawah?`,
+    quizOptions: [`Pilihan A (Jawapan Tepat)`, `Pilihan B (Kurang Tepat)`, `Pilihan C (Salah)`],
     quizCorrectIdx: 0,
-    quizExplanation: `Mengikut konsep asas tajuk ${spDescription || topicTitle}, jawapan ini adalah tepat!`
+    quizExplanation: `Pilihan A ialah jawapan yang tepat kerana mengikut konsep asas tajuk ${topicTitle}!`
   };
 }
 

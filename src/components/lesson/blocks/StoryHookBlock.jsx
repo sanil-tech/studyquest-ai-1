@@ -7,7 +7,7 @@ import { Volume2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
 import sukuPenyuMascotImg from "@/assets/images/suku_penyu_mascot_1785919182374.jpg";
-import { generateDynamicImagePrompt } from "@/utils/generateDynamicImagePrompt";
+import { generateDynamicImagePrompt, getPromptSeed } from "@/utils/generateDynamicImagePrompt";
 import { getStaticFallbackImage } from "@/services/aiImageEngine";
 
 export default function StoryHookBlock({ content, mascot, studentName, onComplete, isCompleted }) {
@@ -34,7 +34,8 @@ export default function StoryHookBlock({ content, mascot, studentName, onComplet
       storyText: storyPromptText
     });
 
-    return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=450&nologo=true&seed=101`;
+    const seed = getPromptSeed(prompt);
+    return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=450&nologo=true&seed=${seed}`;
   }, [content, storyText]);
 
   const fallbackSceneImg = getStaticFallbackImage(content.topic, storyText);

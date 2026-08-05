@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from "react";
 import sukuPenyuMascotImg from "@/assets/images/suku_penyu_mascot_1785919182374.jpg";
 import { personalize, replaceStudentVariables } from "@/lib/personalize";
-import { generateDynamicImagePrompt } from "@/utils/generateDynamicImagePrompt";
+import { generateDynamicImagePrompt, getPromptSeed } from "@/utils/generateDynamicImagePrompt";
 import { getStaticFallbackImage } from "@/services/aiImageEngine";
 import {
   Tv,
@@ -680,9 +680,10 @@ function IntroBlock({ payload, studentName, onCompleted, isCompleted }) {
     visualDescription: payload.visual_description || "",
     storyText: storyImagePrompt
   });
+  const storySeed = getPromptSeed(dynamicStoryPrompt);
   const storyBannerUrl = (payload.image_url && !payload.image_url.includes("suku_penyu_mascot"))
     ? payload.image_url
-    : `https://image.pollinations.ai/prompt/${encodeURIComponent(dynamicStoryPrompt)}?width=800&height=450&nologo=true&seed=101`;
+    : `https://image.pollinations.ai/prompt/${encodeURIComponent(dynamicStoryPrompt)}?width=800&height=450&nologo=true&seed=${storySeed}`;
 
   return (
     <div className="p-5 bg-gradient-to-br from-amber-950/50 via-stone-900 to-indigo-950/50 border-2 border-amber-500/30 rounded-3xl space-y-4 text-left shadow-xl font-sans">
