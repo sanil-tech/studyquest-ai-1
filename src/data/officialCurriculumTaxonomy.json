@@ -1,0 +1,1320 @@
+[
+  {
+    "curriculum": "KSSR Semakan",
+    "subject": "Matematik",
+    "level": "Tahun 1",
+    "domains": [
+      {
+        "name": "Nombor dan Operasi",
+        "topics": [
+          {
+            "topic_name": "Nombor hingga 100",
+            "subtopics": [
+              {
+                "name": "Banyak dan Sedikit",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.1",
+                    "sk_title": "Kuantiti Secara Intuitif",
+                    "sp_code": "1.1.1",
+                    "title": "Menyatakan kuantiti secara membandingkan banyak atau sedikit, sama banyak atau tidak sama banyak"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali 1 hingga 10",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.2",
+                    "sk_title": "Nilai Nombor",
+                    "sp_code": "1.2.1",
+                    "title": "Menamai nombor hingga 10 mengikut kumpulan objek"
+                  },
+                  {
+                    "sk_code": "1.2",
+                    "sk_title": "Nilai Nombor",
+                    "sp_code": "1.2.2",
+                    "title": "Membandingkan nilai dua nombor dalam lingkungan 10"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali Sifar",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.2",
+                    "sk_title": "Nilai Nombor",
+                    "sp_code": "1.2.1",
+                    "title": "Menerangkan konsep sifar sebagai tiada objek"
+                  }
+                ]
+              },
+              {
+                "name": "Tulis 0 hingga 10",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.3",
+                    "sk_title": "Menulis Nombor",
+                    "sp_code": "1.3.1",
+                    "title": "Menulis nombor 0 hingga 10 dalam angka dan perkataan"
+                  }
+                ]
+              },
+              {
+                "name": "Kombinasi Nombor",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.4",
+                    "sk_title": "Kombinasi Nombor",
+                    "sp_code": "1.4.1",
+                    "title": "Menyatakan kombinasi dua nombor yang membentuk satu nombor"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali 11 hingga 20",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.2",
+                    "sk_title": "Nilai Nombor",
+                    "sp_code": "1.2.1",
+                    "title": "Menamai nombor 11 hingga 20 dengan membentuk kumpulan 10"
+                  }
+                ]
+              },
+              {
+                "name": "Tulis 11 hingga 20",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.3",
+                    "sk_title": "Menulis Nombor",
+                    "sp_code": "1.3.1",
+                    "title": "Menulis nombor 11 hingga 20 dalam angka dan perkataan"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali 21 hingga 100",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.2",
+                    "sk_title": "Nilai Nombor",
+                    "sp_code": "1.2.1",
+                    "title": "Membilang dan menamai nombor 21 hingga 100"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali Nilai Tempat dan Nilai Digit",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.6",
+                    "sk_title": "Nilai Tempat dan Nilai Digit",
+                    "sp_code": "1.6.1",
+                    "title": "Menyatakan nilai tempat (puluh dan sa) serta nilai digit bagi sebarang nombor hingga 100"
+                  }
+                ]
+              },
+              {
+                "name": "Lebih atau Kurang",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.2",
+                    "sk_title": "Nilai Nombor",
+                    "sp_code": "1.2.2",
+                    "title": "Membandingkan dua nombor menggunakan istilah lebih daripada dan kurang daripada"
+                  }
+                ]
+              },
+              {
+                "name": "Susunan Nombor",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.5",
+                    "sk_title": "Rangkaian Nombor",
+                    "sp_code": "1.5.1",
+                    "title": "Membilang nombor dalam tertib menaik dan tertib menurun"
+                  },
+                  {
+                    "sk_code": "1.5",
+                    "sk_title": "Rangkaian Nombor",
+                    "sp_code": "1.5.2",
+                    "title": "Melengkapkan sebarang rangkaian nombor dalam tertib menaik dan menurun"
+                  }
+                ]
+              },
+              {
+                "name": "Pola Nombor",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.9",
+                    "sk_title": "Pola Nombor",
+                    "sp_code": "1.9.1",
+                    "title": "Mengenal pasti pola bagi siri nombor yang diberi"
+                  },
+                  {
+                    "sk_code": "1.9",
+                    "sk_title": "Pola Nombor",
+                    "sp_code": "1.9.2",
+                    "title": "Melengkapkan pelbagai pola nombor yang mudah"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali Anggaran",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.7",
+                    "sk_title": "Anggaran",
+                    "sp_code": "1.7.1",
+                    "title": "Membuat anggaran kuantiti objek yang munasabah"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali Bundar",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.8",
+                    "sk_title": "Bundar Nombor",
+                    "sp_code": "1.8.1",
+                    "title": "Membundarkan nombor bulat kepada puluh terdekat"
+                  }
+                ]
+              },
+              {
+                "name": "Selesaikan",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.10",
+                    "sk_title": "Penyelesaian Masalah",
+                    "sp_code": "1.10.1",
+                    "title": "Menyelesaikan masalah harian yang melibatkan nombor bulat"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "topic_name": "Tambah dan Tolak",
+            "subtopics": [
+              {
+                "name": "Kenali Tambah",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.1",
+                    "sk_title": "Konsep Tambah dan Tolak",
+                    "sp_code": "2.1.1",
+                    "title": "Menggunakan perbendaharaan kata dan simbol berkaitan tambah (+ dan =)"
+                  }
+                ]
+              },
+              {
+                "name": "Tambah Cepat",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.2",
+                    "sk_title": "Tambah dalam Lingkungan 100",
+                    "sp_code": "2.2.1",
+                    "title": "Menambah fakta asas dalam lingkungan 18"
+                  }
+                ]
+              },
+              {
+                "name": "Tambah Mudah",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.2",
+                    "sk_title": "Tambah dalam Lingkungan 100",
+                    "sp_code": "2.2.2",
+                    "title": "Menambah dua nombor tanpa kumpul semula dalam lingkungan 100"
+                  }
+                ]
+              },
+              {
+                "name": "Tambah Lagi",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.2",
+                    "sk_title": "Tambah dalam Lingkungan 100",
+                    "sp_code": "2.2.2",
+                    "title": "Menambah dua nombor dengan kumpul semula dalam lingkungan 100"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali Tolak",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.1",
+                    "sk_title": "Konsep Tambah dan Tolak",
+                    "sp_code": "2.1.1",
+                    "title": "Menggunakan perbendaharaan kata dan simbol berkaitan tolak (- dan =)"
+                  }
+                ]
+              },
+              {
+                "name": "Tolak Cepat",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.3",
+                    "sk_title": "Tolak dalam Lingkungan 100",
+                    "sp_code": "2.3.1",
+                    "title": "Menolak fakta asas dalam lingkungan 18"
+                  }
+                ]
+              },
+              {
+                "name": "Tolak Mudah",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.3",
+                    "sk_title": "Tolak dalam Lingkungan 100",
+                    "sp_code": "2.3.2",
+                    "title": "Menolak dua nombor tanpa kumpul semula dalam lingkungan 100"
+                  }
+                ]
+              },
+              {
+                "name": "Tolak Lagi",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.3",
+                    "sk_title": "Tolak dalam Lingkungan 100",
+                    "sp_code": "2.3.2",
+                    "title": "Menolak dua nombor dengan kumpul semula dalam lingkungan 100"
+                  }
+                ]
+              },
+              {
+                "name": "Cerita Tambah dan Tolak",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.4",
+                    "sk_title": "Penyelesaian Masalah",
+                    "sp_code": "2.4.1",
+                    "title": "Reka cerita melibatkan tambah dan tolak dalam lingkungan 100"
+                  }
+                ]
+              },
+              {
+                "name": "Selesaikan",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.4",
+                    "sk_title": "Penyelesaian Masalah",
+                    "sp_code": "2.4.2",
+                    "title": "Menyelesaikan masalah harian melibatkan tambah dan tolak"
+                  }
+                ]
+              },
+              {
+                "name": "Tambah Berulang",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.5",
+                    "sk_title": "Tambah Berulang",
+                    "sp_code": "2.5.1",
+                    "title": "Menulis ayat matematik tambah berulang dua-dua, lima-lima, sepuluh-sepuluh dan empat-empat"
+                  }
+                ]
+              },
+              {
+                "name": "Tolak Berturut-turut",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.6",
+                    "sk_title": "Tolak Berturut-turut",
+                    "sp_code": "2.6.1",
+                    "title": "Menulis ayat matematik tolak berturut-turut dua-dua, lima-lima, sepuluh-sepuluh dan empat-empat"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "topic_name": "Pecahan",
+            "subtopics": [
+              {
+                "name": "Kenali Pecahan",
+                "standard_learning": [
+                  {
+                    "sk_code": "3.1",
+                    "sk_title": "Pecahan Wajar",
+                    "sp_code": "3.1.1",
+                    "title": "Mengenal pasti satu dua, satu perempat, dua perempat dan tiga perempat"
+                  }
+                ]
+              },
+              {
+                "name": "Selesaikan",
+                "standard_learning": [
+                  {
+                    "sk_code": "3.2",
+                    "sk_title": "Penyelesaian Masalah",
+                    "sp_code": "3.2.1",
+                    "title": "Menyelesaikan masalah harian melibatkan pecahan"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "topic_name": "Wang",
+            "subtopics": [
+              {
+                "name": "Kenali Wang",
+                "standard_learning": [
+                  {
+                    "sk_code": "4.1",
+                    "sk_title": "Wang Ringgit dan Sen",
+                    "sp_code": "4.1.1",
+                    "title": "Mengenal pasti duit syiling dan wang kertas Malaysia hingga RM10"
+                  }
+                ]
+              },
+              {
+                "name": "Nilai Wang",
+                "standard_learning": [
+                  {
+                    "sk_code": "4.1",
+                    "sk_title": "Wang Ringgit dan Sen",
+                    "sp_code": "4.1.2",
+                    "title": "Menentukan nilai wang dalam sen dan ringgit"
+                  }
+                ]
+              },
+              {
+                "name": "Tukar Wang",
+                "standard_learning": [
+                  {
+                    "sk_code": "4.1",
+                    "sk_title": "Wang Ringgit dan Sen",
+                    "sp_code": "4.1.3",
+                    "title": "Menunjukkan penukaran wang yang berasingan dengan nilai yang sama"
+                  }
+                ]
+              },
+              {
+                "name": "Dapat Wang dan Catat Wang",
+                "standard_learning": [
+                  {
+                    "sk_code": "4.2",
+                    "sk_title": "Sumber Wang dan Simpanan",
+                    "sp_code": "4.2.1",
+                    "title": "Mengenal pasti sumber wang dan simpanan serta merekodkan simpanan dan perbelanjaan"
+                  }
+                ]
+              },
+              {
+                "name": "Selesaikan",
+                "standard_learning": [
+                  {
+                    "sk_code": "4.3",
+                    "sk_title": "Penyelesaian Masalah",
+                    "sp_code": "4.3.1",
+                    "title": "Menyelesaikan masalah harian melibatkan tambah dan tolak wang"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Sukatan dan Geometri",
+        "topics": [
+          {
+            "topic_name": "Masa dan Waktu",
+            "subtopics": [
+              {
+                "name": "Kenali Waktu",
+                "standard_learning": [
+                  {
+                    "sk_code": "5.1",
+                    "sk_title": "Hari dan Bulan",
+                    "sp_code": "5.1.1",
+                    "title": "Menyatakan waktu dalam sehari (pagi, tengah hari, petang, malam)"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali Jam dan Masa",
+                "standard_learning": [
+                  {
+                    "sk_code": "5.2",
+                    "sk_title": "Muka Jam",
+                    "sp_code": "5.2.1",
+                    "title": "Mengenal pasti jarum jam dan jarum minit pada muka jam"
+                  },
+                  {
+                    "sk_code": "5.2",
+                    "sk_title": "Muka Jam",
+                    "sp_code": "5.2.2",
+                    "title": "Mengenal pasti setengah jam, suku jam dan tiga suku jam"
+                  }
+                ]
+              },
+              {
+                "name": "Sebut dan Tulis Waktu",
+                "standard_learning": [
+                  {
+                    "sk_code": "5.2",
+                    "sk_title": "Muka Jam",
+                    "sp_code": "5.2.3",
+                    "title": "Menyebut dan menulis waktu dalam jam, setengah jam dan suku jam"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali Hari, Minggu dan Bulan",
+                "standard_learning": [
+                  {
+                    "sk_code": "5.1",
+                    "sk_title": "Hari dan Bulan",
+                    "sp_code": "5.1.3",
+                    "title": "Menyatakan urutan hari dalam seminggu"
+                  },
+                  {
+                    "sk_code": "5.1",
+                    "sk_title": "Hari dan Bulan",
+                    "sp_code": "5.1.4",
+                    "title": "Menyatakan urutan bulan dalam setahun"
+                  }
+                ]
+              },
+              {
+                "name": "Selesaikan",
+                "standard_learning": [
+                  {
+                    "sk_code": "5.3",
+                    "sk_title": "Penyelesaian Masalah",
+                    "sp_code": "5.3.1",
+                    "title": "Menyelesaikan masalah harian melibatkan masa dan waktu"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "topic_name": "Panjang, Jisim dan Isi Padu Cecair",
+            "subtopics": [
+              {
+                "name": "Kenali Panjang Objek",
+                "standard_learning": [
+                  {
+                    "sk_code": "6.1",
+                    "sk_title": "Unit Bukan Piawai",
+                    "sp_code": "6.1.1",
+                    "title": "Menggunakan perbendaharaan kata berkaitan panjang, tinggi, rendah, jauh dan dekat"
+                  }
+                ]
+              },
+              {
+                "name": "Ukur dan Banding Panjang Objek",
+                "standard_learning": [
+                  {
+                    "sk_code": "6.1",
+                    "sk_title": "Unit Bukan Piawai",
+                    "sp_code": "6.1.2",
+                    "title": "Mengukur panjang objek menggunakan unit bukan piawai"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali Jisim Objek",
+                "standard_learning": [
+                  {
+                    "sk_code": "6.1",
+                    "sk_title": "Unit Bukan Piawai",
+                    "sp_code": "6.1.1",
+                    "title": "Menggunakan perbendaharaan kata berkaitan berat dan ringan"
+                  }
+                ]
+              },
+              {
+                "name": "Timbang dan Banding Jisim Objek",
+                "standard_learning": [
+                  {
+                    "sk_code": "6.1",
+                    "sk_title": "Unit Bukan Piawai",
+                    "sp_code": "6.1.2",
+                    "title": "Menimbang jisim objek menggunakan unit bukan piawai"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali Isi Padu Cecair",
+                "standard_learning": [
+                  {
+                    "sk_code": "6.1",
+                    "sk_title": "Unit Bukan Piawai",
+                    "sp_code": "6.1.1",
+                    "title": "Menggunakan perbendaharaan kata berkaitan isi padu cecair (penuh, sedikit, setengah, suku)"
+                  }
+                ]
+              },
+              {
+                "name": "Sukat dan Banding Isi Padu Cecair",
+                "standard_learning": [
+                  {
+                    "sk_code": "6.1",
+                    "sk_title": "Unit Bukan Piawai",
+                    "sp_code": "6.1.2",
+                    "title": "Menyukat isi padu cecair menggunakan unit bukan piawai"
+                  }
+                ]
+              },
+              {
+                "name": "Selesaikan",
+                "standard_learning": [
+                  {
+                    "sk_code": "6.2",
+                    "sk_title": "Penyelesaian Masalah",
+                    "sp_code": "6.2.1",
+                    "title": "Menyelesaikan masalah harian melibatkan panjang, jisim dan isi padu cecair"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "topic_name": "Bentuk",
+            "subtopics": [
+              {
+                "name": "Bentuk 3D",
+                "standard_learning": [
+                  {
+                    "sk_code": "7.1",
+                    "sk_title": "Bentuk Tiga Dimensi (3D)",
+                    "sp_code": "7.1.1",
+                    "title": "Menamakan bentuk kubus, kuboid, piramid, silinder, kon dan sfera"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali Bentuk 3D",
+                "standard_learning": [
+                  {
+                    "sk_code": "7.1",
+                    "sk_title": "Bentuk Tiga Dimensi (3D)",
+                    "sp_code": "7.1.2",
+                    "title": "Menerangkan permukaan rata, permukaan melengkung, bucu dan sisi bagi bentuk 3D"
+                  }
+                ]
+              },
+              {
+                "name": "Pola Bentuk 3D",
+                "standard_learning": [
+                  {
+                    "sk_code": "7.1",
+                    "sk_title": "Bentuk Tiga Dimensi (3D)",
+                    "sp_code": "7.1.3",
+                    "title": "Menyusun bentuk 3D mengikut pola"
+                  }
+                ]
+              },
+              {
+                "name": "Bina Model",
+                "standard_learning": [
+                  {
+                    "sk_code": "7.1",
+                    "sk_title": "Bentuk Tiga Dimensi (3D)",
+                    "sp_code": "7.1.4",
+                    "title": "Membina model menggunakan gabungan bentuk 3D"
+                  }
+                ]
+              },
+              {
+                "name": "Bentuk 2D",
+                "standard_learning": [
+                  {
+                    "sk_code": "7.2",
+                    "sk_title": "Bentuk Dua Dimensi (2D)",
+                    "sp_code": "7.2.1",
+                    "title": "Menamakan bentuk segi empat sama, segi empat tepat, segi tiga dan bulatan"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali Bentuk 2D",
+                "standard_learning": [
+                  {
+                    "sk_code": "7.2",
+                    "sk_title": "Bentuk Dua Dimensi (2D)",
+                    "sp_code": "7.2.2",
+                    "title": "Menerangkan garis lurus, bucu, garis melengkung bagi bentuk 2D"
+                  }
+                ]
+              },
+              {
+                "name": "Pola Bentuk 2D",
+                "standard_learning": [
+                  {
+                    "sk_code": "7.2",
+                    "sk_title": "Bentuk Dua Dimensi (2D)",
+                    "sp_code": "7.2.3",
+                    "title": "Menyusun bentuk 2D mengikut pola"
+                  }
+                ]
+              },
+              {
+                "name": "Buat Corak",
+                "standard_learning": [
+                  {
+                    "sk_code": "7.2",
+                    "sk_title": "Bentuk Dua Dimensi (2D)",
+                    "sp_code": "7.2.4",
+                    "title": "Reka corak berdasarkan bentuk 2D"
+                  }
+                ]
+              },
+              {
+                "name": "Selesaikan",
+                "standard_learning": [
+                  {
+                    "sk_code": "7.3",
+                    "sk_title": "Penyelesaian Masalah",
+                    "sp_code": "7.3.1",
+                    "title": "Menyelesaikan masalah harian melibatkan bentuk 3D dan 2D"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Statistik dan Kebarangkalian",
+        "topics": [
+          {
+            "topic_name": "Data",
+            "subtopics": [
+              {
+                "name": "Kumpul Data",
+                "standard_learning": [
+                  {
+                    "sk_code": "8.1",
+                    "sk_title": "Pengurusan Data",
+                    "sp_code": "8.1.1",
+                    "title": "Mengumpul data berdasarkan situasi harian mengguna gundal"
+                  }
+                ]
+              },
+              {
+                "name": "Kenali Piktograf",
+                "standard_learning": [
+                  {
+                    "sk_code": "8.2",
+                    "sk_title": "Piktograf",
+                    "sp_code": "8.2.1",
+                    "title": "Membaca dan memperoleh maklumat daripada piktograf"
+                  }
+                ]
+              },
+              {
+                "name": "Selesaikan",
+                "standard_learning": [
+                  {
+                    "sk_code": "8.3",
+                    "sk_title": "Penyelesaian Masalah",
+                    "sp_code": "8.3.1",
+                    "title": "Menyelesaikan masalah harian melibatkan pengurusan data"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "curriculum": "KSSR Semakan",
+    "subject": "Matematik",
+    "level": "Tahun 2",
+    "domains": [
+      {
+        "name": "Nombor dan Operasi",
+        "topics": [
+          {
+            "topic_name": "Nombor Bulat hingga 1000",
+            "subtopics": [
+              {
+                "name": "Nilai nombor hingga 1000",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.1",
+                    "sk_title": "Nilai Nombor hingga 1000",
+                    "sp_code": "1.1.1",
+                    "title": "Menamakan nombor hingga 1000 mengikut kumpulan objek dan nombor"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "topic_name": "Tambah, Tolak, Darab dan Bahagi",
+            "subtopics": [
+              {
+                "name": "Tambah dalam lingkungan 1000",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.1",
+                    "sk_title": "Tambah dalam Lingkungan 1000",
+                    "sp_code": "2.1.1",
+                    "title": "Menambah dua nombor mengumpul semula dalam lingkungan 1000"
+                  }
+                ]
+              },
+              {
+                "name": "Konsep darab dan bahagi",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.2",
+                    "sk_title": "Pendaraban dan Pembagian",
+                    "sp_code": "2.2.1",
+                    "title": "Membina dan menyatakan sifir darab dan bahagi 2, 5, 10 dan 100"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "topic_name": "Pecahan dan Perpuluhan",
+            "subtopics": [
+              {
+                "name": "Pecahan wajar dan perpuluhan",
+                "standard_learning": [
+                  {
+                    "sk_code": "3.1",
+                    "sk_title": "Pecahan Wajar dan Perpuluhan",
+                    "sp_code": "3.1.1",
+                    "title": "Mengenal pasti dan menyebut pecahan wajar penyebut hingga 10 dan perpuluhan"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "topic_name": "Wang",
+            "subtopics": [
+              {
+                "name": "Tambah dan tolak wang hingga RM100",
+                "standard_learning": [
+                  {
+                    "sk_code": "4.1",
+                    "sk_title": "Operasi Asas Wang",
+                    "sp_code": "4.1.1",
+                    "title": "Menambah dan menolak nilai wang hingga RM100"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "curriculum": "KSSR Semakan",
+    "subject": "Matematik",
+    "level": "Tahun 3",
+    "domains": [
+      {
+        "name": "Nombor dan Operasi",
+        "topics": [
+          {
+            "topic_name": "Nombor Bulat hingga 10,000",
+            "subtopics": [
+              {
+                "name": "Nilai nombor hingga 10,000",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.1",
+                    "sk_title": "Nilai Nombor hingga 10,000",
+                    "sp_code": "1.1.1",
+                    "title": "Menamai nombor hingga 10,000 dan membilang secara tertib"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "topic_name": "Pecahan, Perpuluhan & Peratus",
+            "subtopics": [
+              {
+                "name": "Pecahan tak wajar dan nombor bercampur",
+                "standard_learning": [
+                  {
+                    "sk_code": "3.1",
+                    "sk_title": "Pecahan Tak Wajar",
+                    "sp_code": "3.1.1",
+                    "title": "Mengenal pasti pecahan tak wajar dan nombor bercampur"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "curriculum": "KSSR Semakan",
+    "subject": "Matematik",
+    "level": "Tahun 4",
+    "domains": [
+      {
+        "name": "Nombor dan Operasi",
+        "topics": [
+          {
+            "topic_name": "Nombor Bulat hingga 100,000",
+            "subtopics": [
+              {
+                "name": "Operasi asas nombor besar",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.6",
+                    "sk_title": "Operasi Asas Nombor Besar",
+                    "sp_code": "1.6.1",
+                    "title": "Operasi asas melibatkan nombor hingga 100,000 dan penyelesaian masalah KBAT"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Sukatan dan Geometri",
+        "topics": [
+          {
+            "topic_name": "Masa dan Waktu",
+            "subtopics": [
+              {
+                "name": "Penukaran unit masa",
+                "standard_learning": [
+                  {
+                    "sk_code": "4.1",
+                    "sk_title": "Penukaran Unit Masa",
+                    "sp_code": "4.1.1",
+                    "title": "Menukar unit masa melibatkan jam, hari, minggu, bulan dan tahun"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "curriculum": "KSSR Semakan",
+    "subject": "Matematik",
+    "level": "Tahun 5",
+    "domains": [
+      {
+        "name": "Nombor dan Operasi",
+        "topics": [
+          {
+            "topic_name": "Nombor Bulat hingga 1,000,000",
+            "subtopics": [
+              {
+                "name": "Nilai nombor hingga 1,000,000",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.1",
+                    "sk_title": "Nilai Nombor hingga 1,000,000",
+                    "sp_code": "1.1.1",
+                    "title": "Membaca, menyebut dan menulis sebarang nombor hingga 1,000,000"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "curriculum": "KSSR Semakan",
+    "subject": "Matematik",
+    "level": "Tahun 6",
+    "domains": [
+      {
+        "name": "Nombor dan Operasi",
+        "topics": [
+          {
+            "topic_name": "Nombor Bulat dan Pecahan Juta",
+            "subtopics": [
+              {
+                "name": "Nombor juta dan pecahan juta",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.1",
+                    "sk_title": "Nombor Juta",
+                    "sp_code": "1.1.1",
+                    "title": "Menyelesaikan ayat matematik melibatkan pecahan juta dan perpuluhan juta"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "curriculum": "KSSR Semakan",
+    "subject": "Sains",
+    "level": "Tahun 1",
+    "domains": [
+      {
+        "name": "Inkuiri Dalam Sains",
+        "topics": [
+          {
+            "topic_name": "Kemahiran Saintifik",
+            "subtopics": [
+              {
+                "name": "Kemahiran proses sains",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.1",
+                    "sk_title": "Memerhati dan Berkomunikasi",
+                    "sp_code": "1.1.1",
+                    "title": "Memerhati menggunakan deria yang terlibat untuk mengumpul maklumat tentang objek dan fenomena"
+                  }
+                ]
+              },
+              {
+                "name": "Kemahiran manipulatif",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.2",
+                    "sk_title": "Pengendalian Peralatan Sains",
+                    "sp_code": "1.2.1",
+                    "title": "Mengguna dan mengendalikan peralatan dan bahan sains dengan betul"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Sains Hayat",
+        "topics": [
+          {
+            "topic_name": "Benda Hidup dan Benda Bukan Hidup",
+            "subtopics": [
+              {
+                "name": "Ciri-ciri benda hidup",
+                "standard_learning": [
+                  {
+                    "sk_code": "3.1",
+                    "sk_title": "Ciri Benda Hidup",
+                    "sp_code": "3.1.1",
+                    "title": "Membanding dan membezakan benda hidup dan benda bukan hidup berdasarkan ciri bernafas, bergerak, membesar"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "topic_name": "Manusia dan Deria",
+            "subtopics": [
+              {
+                "name": "Bahagian tubuh dan deria manusia",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.1",
+                    "sk_title": "Deria Manusia",
+                    "sp_code": "2.1.1",
+                    "title": "Mengenal pasti lima deria utama manusia dan fungsinya"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Sains Fizikal",
+        "topics": [
+          {
+            "topic_name": "Magnet",
+            "subtopics": [
+              {
+                "name": "Bentuk dan tindakan magnet",
+                "standard_learning": [
+                  {
+                    "sk_code": "7.1",
+                    "sk_title": "Tindakan Magnet",
+                    "sp_code": "7.1.1",
+                    "title": "Mengenal pasti bentuk magnet dan sifat tarikan/tolakan kutub magnet"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "curriculum": "KSSR Semakan",
+    "subject": "Bahasa Melayu",
+    "level": "Tahun 1",
+    "domains": [
+      {
+        "name": "Kemahiran Mendengar dan Bertutur",
+        "topics": [
+          {
+            "topic_name": "Mendengar dan Memahami",
+            "subtopics": [
+              {
+                "name": "Mendengar dan menyebut abjad, suku kata dan perkataan",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.1",
+                    "sk_title": "Mendengar dan Menyebut",
+                    "sp_code": "1.1.1",
+                    "title": "Mendengar, memahami dan menyebut abjad, suku kata, perkataan dan ayat tunggal"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Kemahiran Membaca",
+        "topics": [
+          {
+            "topic_name": "Membaca Ayat",
+            "subtopics": [
+              {
+                "name": "Asas membaca dan memahami",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.1",
+                    "sk_title": "Asas Membaca",
+                    "sp_code": "2.1.1",
+                    "title": "Membaca dan memahami perkataan, frasa dan ayat tunggal dengan sebutan yang betul"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Tatabahasa",
+        "topics": [
+          {
+            "topic_name": "Golongan Kata",
+            "subtopics": [
+              {
+                "name": "Kata nama am dan kata nama khas",
+                "standard_learning": [
+                  {
+                    "sk_code": "5.1",
+                    "sk_title": "Kata Nama Am & Khas",
+                    "sp_code": "5.1.1",
+                    "title": "Memahami dan menggunakan kata nama am dan kata nama khas mengikut konteks"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "curriculum": "KSSR Semakan",
+    "subject": "English",
+    "level": "Tahun 1",
+    "domains": [
+      {
+        "name": "Listening & Speaking",
+        "topics": [
+          {
+            "topic_name": "Phonics and Greetings",
+            "subtopics": [
+              {
+                "name": "Target sounds and basic vocabulary",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.1",
+                    "sk_title": "Recognise Sounds and Greetings",
+                    "sp_code": "1.1.1",
+                    "title": "Recognise and reproduce target language phonemes accurately"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Reading & Writing",
+        "topics": [
+          {
+            "topic_name": "Vocabulary & Classroom",
+            "subtopics": [
+              {
+                "name": "Reading simple phrases and vocabulary",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.1",
+                    "sk_title": "Basic Reading",
+                    "sp_code": "2.1.1",
+                    "title": "Read and understand simple phrase frames and classroom vocabulary"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "curriculum": "KSSM",
+    "subject": "Matematik",
+    "level": "Tingkatan 1",
+    "domains": [
+      {
+        "name": "Nombor dan Operasi",
+        "topics": [
+          {
+            "topic_name": "Nombor Nisbah",
+            "subtopics": [
+              {
+                "name": "Integer dan operasi aritmetik",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.1",
+                    "sk_title": "Integer",
+                    "sp_code": "1.1.1",
+                    "title": "Mengenal integer berdasarkan situasi kehidupan sebenar"
+                  },
+                  {
+                    "sk_code": "1.2",
+                    "sk_title": "Operasi Asas Aritmetik Integer",
+                    "sp_code": "1.2.1",
+                    "title": "Menambah dan menolak integer menggunakan garis nombor"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "topic_name": "Faktor dan Gandaan",
+            "subtopics": [
+              {
+                "name": "Faktor perdana dan GSTK/FSTB",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.1",
+                    "sk_title": "Faktor dan Faktor Perdana",
+                    "sp_code": "2.1.1",
+                    "title": "Menentukan dan menyenaraikan faktor bagi nombor bulat"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Perkaitan dan Algebra",
+        "topics": [
+          {
+            "topic_name": "Ungkapan Algebra",
+            "subtopics": [
+              {
+                "name": "Pemboleh ubah dan ungkapan",
+                "standard_learning": [
+                  {
+                    "sk_code": "5.1",
+                    "sk_title": "Pemboleh Ubah dan Ungkapan Algebra",
+                    "sp_code": "5.1.1",
+                    "title": "Menggunakan huruf untuk mewakili pemboleh ubah dalam situasi harian"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "topic_name": "Persamaan Linear",
+            "subtopics": [
+              {
+                "name": "Persamaan linear dalam satu pemboleh ubah",
+                "standard_learning": [
+                  {
+                    "sk_code": "6.1",
+                    "sk_title": "Persamaan Linear",
+                    "sp_code": "6.1.1",
+                    "title": "Mengenal pasti persamaan linear dalam satu pemboleh ubah dan menyelesaikan masalah"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "curriculum": "KSSM",
+    "subject": "Sains",
+    "level": "Tingkatan 1",
+    "domains": [
+      {
+        "name": "Kaedah Saintifik",
+        "topics": [
+          {
+            "topic_name": "Pengenalan kepada Penyiasatan Saintifik",
+            "subtopics": [
+              {
+                "name": "Sains dan makmal sains",
+                "standard_learning": [
+                  {
+                    "sk_code": "1.1",
+                    "sk_title": "Sains dalam Kehidupan",
+                    "sp_code": "1.1.1",
+                    "title": "Menghubungkaitkan aktiviti harian dengan Sains dan aplikasi teknologi"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Penyenggaraan dan Kesinambungan Hidup",
+        "topics": [
+          {
+            "topic_name": "Sel Sebagai Unit Asas Hidupan",
+            "subtopics": [
+              {
+                "name": "Struktur dan fungsi sel haiwan dan tumbuhan",
+                "standard_learning": [
+                  {
+                    "sk_code": "2.1",
+                    "sk_title": "Sel – Struktur dan Fungsi",
+                    "sp_code": "2.1.1",
+                    "title": "Menerangkan fungsi mikroskop dan struktur sel haiwan serta tumbuhan"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

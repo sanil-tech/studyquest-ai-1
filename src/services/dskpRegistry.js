@@ -1,183 +1,225 @@
 // src/services/dskpRegistry.js
-// Centralized KSSR Semakan Curriculum & DSKP Taxonomy Registry Service
+// Centralized KSSR Semakan & KSSM DSKP Official Taxonomy Registry Service
+
+import officialTaxonomy from "@/data/officialCurriculumTaxonomy.json";
+
+export const OFFICIAL_TAXONOMY_TREE = officialTaxonomy;
 
 /**
- * Extended Master DSKP Topic & SK/SP Registry
- * Guarantees rich DSKP mappings for Matematik, Sains, Bahasa Melayu, and English across Tahun 1-6.
+ * Returns list of available curriculums (e.g. ["KSSR Semakan", "KSSM"])
  */
-const EXTENDED_DSKP_TAXONOMY = {
-  "Matematik": {
-    "Tahun 1": [
-      { topic: "Nombor hingga 100", sk_code: "1.1", sk_title: "Kuantiti Secara Intuitif", sp_code: "1.1.1", title: "Menyatakan kuantiti secara membandingkan banyak atau sedikit" },
-      { topic: "Nombor hingga 100", sk_code: "1.2", sk_title: "Nilai Nombor", sp_code: "1.2.1", title: "Menamai nombor hingga 100 mengikut kumpulan objek" },
-      { topic: "Nombor hingga 100", sk_code: "1.4", sk_title: "Nilai Tempat dan Nilai Digit", sp_code: "1.4.1", title: "Menyatakan nilai tempat (puluh dan sa) dan nilai digit" },
-      { topic: "Tambah dan Tolak", sk_code: "2.1", sk_title: "Konsep Tambah dan Tolak", sp_code: "2.1.1", title: "Menggunakan perbendaharaan kata dan simbol + dan =" },
-      { topic: "Tambah dan Tolak", sk_code: "2.2", sk_title: "Tambah dalam Lingkungan 100", sp_code: "2.2.1", title: "Menambah dua nombor tanpa dan dengan kumpul semula" },
-      { topic: "Pecahan", sk_code: "3.1", sk_title: "Pecahan Wajar", sp_code: "3.1.1", title: "Mengenal pasti setengah, suku, satu perdua, dan satu perempat" },
-      { topic: "Wang", sk_code: "4.1", sk_title: "Wang Kertas dan Syiling", sp_code: "4.1.1", title: "Mengenal pasti duit syiling (5c, 10c, 20c, 50c) dan wang kertas (RM1, RM5, RM10)" },
-      { topic: "Masa dan Waktu", sk_code: "5.1", sk_title: "Muka Jam dan Waktu", sp_code: "5.1.1", title: "Menyebut dan menulis waktu dalam jam dan setengah jam" },
-      { topic: "Bentuk", sk_code: "7.1", sk_title: "Bentuk 3D & 2D", sp_code: "7.1.1", title: "Menamakan bentuk kubus, kuboid, piramid, silinder dan sfera" }
-    ],
-    "Tahun 2": [
-      { topic: "Nombor hingga 1000", sk_code: "1.1", sk_title: "Nilai Nombor hingga 1000", sp_code: "1.1.1", title: "Menamakan nombor hingga 1000 mengikut kumpulan objek" },
-      { topic: "Tambah, Tolak, Darab dan Bahagi", sk_code: "2.1", sk_title: "Tambah dalam Lingkungan 1000", sp_code: "2.1.1", title: "Menambah dua nombor mengumpul semula hingga 1000" },
-      { topic: "Pecahan dan Perpuluhan", sk_code: "3.1", sk_title: "Pecahan Wajar", sp_code: "3.1.1", title: "Mengenal pasti dan menyebut pecahan wajar penyebut hingga 10" },
-      { topic: "Wang", sk_code: "4.1", sk_title: "Tambah dan Tolak Wang", sp_code: "4.1.1", title: "Menambah dan menolak nilai wang hingga RM100" }
-    ],
-    "Tahun 3": [
-      { topic: "Nombor hingga 10,000", sk_code: "1.1", sk_title: "Nilai Nombor hingga 10,000", sp_code: "1.1.1", title: "Menamai nombor hingga 10,000 dan membilang secara tertib" },
-      { topic: "Pecahan, Perpuluhan & Peratus", sk_code: "3.1", sk_title: "Pecahan Tak Wajar", sp_code: "3.1.1", title: "Mengenal pasti pecahan tak wajar dan nombor bercampur" }
-    ],
-    "Tahun 4": [
-      { topic: "Nombor hingga 100,000", sk_code: "1.6", sk_title: "Operasi Asas Nombor Besar", sp_code: "1.6.1", title: "Operasi asas melibatkan nombor hingga 100,000 dan KBAT" },
-      { topic: "Masa dan Waktu", sk_code: "4.1", sk_title: "Penukaran Unit Masa", sp_code: "4.1.1", title: "Menukar unit masa melibatkan jam, hari, minggu, bulan dan tahun" }
-    ],
-    "Tahun 5": [
-      { topic: "Nombor hingga 1,000,000", sk_code: "1.1", sk_title: "Nilai Nombor hingga 1,000,000", sp_code: "1.1.1", title: "Membaca, menyebut dan menulis sebarang nombor hingga 1,000,000" }
-    ],
-    "Tahun 6": [
-      { topic: "Nombor Bulat dan Pecahan Juta", sk_code: "1.1", sk_title: "Nombor Juta", sp_code: "1.1.1", title: "Menyelesaikan ayat matematik melibatkan pecahan juta" }
-    ]
-  },
-  "Sains": {
-    "Tahun 1": [
-      { topic: "Kemahiran Proses Sains", sk_code: "1.1", sk_title: "Memerhati dan Berkomunikasi", sp_code: "1.1.1", title: "Memerhati menggunakan deria yang terlibat untuk mengumpul maklumat" },
-      { topic: "Manusia dan Deria", sk_code: "2.1", sk_title: "Deria Manusia", sp_code: "2.1.1", title: "Mengenal pasti lima deria utama manusia dan fungsinya" },
-      { topic: "Benda Hidup dan Bukan Hidup", sk_code: "3.1", sk_title: "Ciri Benda Hidup", sp_code: "3.1.1", title: "Membandingkan dan membezakan benda hidup dan benda bukan hidup" }
-    ],
-    "Tahun 2": [
-      { topic: "Tumbesaran Manusia & Haiwan", sk_code: "4.1", sk_title: "Peringkat Tumbesaran", sp_code: "4.1.1", title: "Menyatakan peringkat tumbesaran manusia dan haiwan" }
-    ],
-    "Tahun 3": [
-      { topic: "Gigi dan Pemakanan", sk_code: "3.1", sk_title: "Set Gigi Manusia", sp_code: "3.1.1", title: "Membanding dan membezakan set gigi susu dan set gigi kekal" }
-    ],
-    "Tahun 4": [
-      { topic: "Pernafasan Manusia", sk_code: "2.1", sk_title: "Organ Pernafasan", sp_code: "2.1.1", title: "Mengenal pasti organ yang terlibat dalam proses pernafasan manusia" }
-    ],
-    "Tahun 5": [
-      { topic: "Sistem Rangka & Peredaran Darah", sk_code: "2.1", sk_title: "Sistem Rangka Manusia", sp_code: "2.1.1", title: "Mengenal pasti fungsi sistem rangka utama manusia" }
-    ],
-    "Tahun 6": [
-      { topic: "Mikroorganisma", sk_code: "3.1", sk_title: "Hidupan Seni", sp_code: "3.1.1", title: "Mengenal pasti jenis mikroorganisma melalui pemerhatian" }
-    ]
-  },
-  "Bahasa Melayu": {
-    "Tahun 1": [
-      { topic: "Mendengar dan Memahami", sk_code: "1.1", sk_title: "Mendengar dan Menyebut", sp_code: "1.1.1", title: "Mendengar, memahami dan menyebut abjad, suku kata dan perkataan" },
-      { topic: "Membaca Ayat", sk_code: "2.1", sk_title: "Asas Membaca", sp_code: "2.1.1", title: "Membaca dan memahami perkataan dan ayat tunggal" },
-      { topic: "Tatabahasa", sk_code: "5.1", sk_title: "Kata Nama Am & Khas", sp_code: "5.1.1", title: "Memahami dan menggunakan kata nama am dan kata nama khas" }
-    ],
-    "Tahun 2": [
-      { topic: "Kemahiran Membaca & Menulis", sk_code: "2.2", sk_title: "Membaca Perenggan", sp_code: "2.2.1", title: "Membaca dan memahami maklumat daripada petikan" }
-    ],
-    "Tahun 3": [
-      { topic: "Tatabahasa & Imbuhan", sk_code: "5.2", sk_title: "Kata Kerja & Imbuhan Awalan", sp_code: "5.2.1", title: "Memahami dan menggunakan kata kerja mengikut konteks" }
-    ],
-    "Tahun 4": [
-      { topic: "Penulisan Karangan", sk_code: "3.2", sk_title: "Menulis Karangan Berpandu", sp_code: "3.2.1", title: "Membina dan menulis jawapan pemahaman dan karangan pendek" }
-    ],
-    "Tahun 5": [
-      { topic: "Apresiasi Bahasa & Peribahasa", sk_code: "4.1", sk_title: "Seni Bahasa", sp_code: "4.1.1", title: "Memahami dan menyatakan maksud peribahasa dalam petikan" }
-    ],
-    "Tahun 6": [
-      { topic: "Tatabahasa Aras Tinggi", sk_code: "5.3", sk_title: "Ayat Majmuk & Ayat Aktif", sp_code: "5.3.1", title: "Memahami dan membina pelbagai jenis ayat majmuk" }
-    ]
-  },
-  "English": {
-    "Tahun 1": [
-      { topic: "Phonics and Greeting", sk_code: "1.1", sk_title: "Recognise Sounds and Greetings", sp_code: "1.1.1", title: "Recognise and reproduce target language phonemes accurately" },
-      { topic: "Vocabulary & Classroom", sk_code: "2.1", sk_title: "Basic Reading", sp_code: "2.1.1", title: "Read and understand simple phrase frames and vocabulary" }
-    ],
-    "Tahun 2": [
-      { topic: "Daily Routines & Hobbies", sk_code: "1.2", sk_title: "Listening & Speaking", sp_code: "1.2.1", title: "Understand main points of simple short stories and routines" }
-    ],
-    "Tahun 3": [
-      { topic: "Time and Activities", sk_code: "2.2", sk_title: "Reading Comprehension", sp_code: "2.2.1", title: "Read and comprehend short texts about daily activities" }
-    ],
-    "Tahun 4": [
-      { topic: "Past Events & History", sk_code: "3.1", sk_title: "Guided Writing", sp_code: "3.1.1", title: "Write simple guided paragraphs using simple past tense" }
-    ],
-    "Tahun 5": [
-      { topic: "World of Knowledge", sk_code: "2.3", sk_title: "Informational Text", sp_code: "2.3.1", title: "Read and extract key details from non-fiction articles" }
-    ],
-    "Tahun 6": [
-      { topic: "Advanced Composition", sk_code: "3.3", sk_title: "Creative Writing", sp_code: "3.3.1", title: "Compose creative short stories and opinion essays" }
-    ]
-  }
-};
-
-/**
- * Returns available subjects list
- */
-export function getTaxonomySubjects() {
-  return Object.keys(EXTENDED_DSKP_TAXONOMY);
+export function getTaxonomyCurriculums() {
+  const list = Array.from(new Set(officialTaxonomy.map(item => item.curriculum).filter(Boolean)));
+  return list.length > 0 ? list : ["KSSR Semakan", "KSSM"];
 }
 
 /**
- * Returns available years for a subject
+ * Returns available levels for a given curriculum (e.g., Tahun 1-6 for KSSR Semakan, Tingkatan 1-5 for KSSM)
+ */
+export function getTaxonomyLevels(curriculum = "KSSR Semakan") {
+  const filtered = officialTaxonomy.filter(item => item.curriculum === curriculum);
+  const levels = Array.from(new Set(filtered.map(item => item.level).filter(Boolean)));
+  if (levels.length > 0) return levels;
+
+  return curriculum === "KSSM"
+    ? ["Tingkatan 1", "Tingkatan 2", "Tingkatan 3", "Tingkatan 4", "Tingkatan 5"]
+    : ["Tahun 1", "Tahun 2", "Tahun 3", "Tahun 4", "Tahun 5", "Tahun 6"];
+}
+
+/**
+ * Returns available subjects for a curriculum & level
+ */
+export function getTaxonomySubjects(curriculum = "KSSR Semakan", level = "Tahun 1") {
+  let filtered = officialTaxonomy;
+  if (curriculum) filtered = filtered.filter(i => i.curriculum === curriculum);
+  if (level) filtered = filtered.filter(i => i.level === level);
+
+  const subjects = Array.from(new Set(filtered.map(i => i.subject).filter(Boolean)));
+  return subjects.length > 0 ? subjects : ["Matematik", "Sains", "Bahasa Melayu", "English"];
+}
+
+/**
+ * Returns available domains (Bidang Pembelajaran) for curriculum, level & subject
+ */
+export function getTaxonomyDomains(curriculum = "KSSR Semakan", level = "Tahun 1", subject = "Matematik") {
+  const entry = officialTaxonomy.find(
+    i => (i.curriculum === curriculum || !curriculum) && i.level === level && i.subject === subject
+  );
+
+  if (entry && entry.domains && entry.domains.length > 0) {
+    return entry.domains.map(d => d.name);
+  }
+
+  // Fallbacks by subject
+  if (subject === "Matematik") return ["Nombor dan Operasi", "Sukatan dan Geometri", "Statistik dan Kebarangkalian"];
+  if (subject === "Sains") return ["Inkuiri Dalam Sains", "Sains Hayat", "Sains Fizikal", "Sains Bahan", "Bumi dan Angkasa"];
+  if (subject === "Bahasa Melayu") return ["Kemahiran Mendengar dan Bertutur", "Kemahiran Membaca", "Kemahiran Menulis", "Tatabahasa"];
+  return ["Bidang Utama"];
+}
+
+/**
+ * Returns available topics for curriculum, level, subject & domain
+ */
+export function getTaxonomyTopics(curriculum = "KSSR Semakan", level = "Tahun 1", subject = "Matematik", domain = "") {
+  // Support legacy signature (subject, year)
+  if (typeof curriculum === "string" && !["KSSR Semakan", "KSSM"].includes(curriculum)) {
+    subject = curriculum;
+    level = level || "Tahun 1";
+    curriculum = level.startsWith("Tingkatan") ? "KSSM" : "KSSR Semakan";
+  }
+
+  const entry = officialTaxonomy.find(
+    i => (i.curriculum === curriculum || !curriculum) && i.level === level && i.subject === subject
+  );
+
+  if (entry && entry.domains) {
+    let topics = [];
+    entry.domains.forEach(d => {
+      if (!domain || d.name === domain) {
+        d.topics.forEach(t => topics.push(t.topic_name));
+      }
+    });
+    if (topics.length > 0) return Array.from(new Set(topics));
+  }
+
+  return ["Nombor Bulat hingga 100", "Tambah dan Tolak", "Pecahan", "Wang"];
+}
+
+/**
+ * Returns subtopics for curriculum, level, subject, domain & topic
+ */
+export function getTaxonomySubtopics(curriculum = "KSSR Semakan", level = "Tahun 1", subject = "Matematik", domain = "", topic = "") {
+  const entry = officialTaxonomy.find(
+    i => (i.curriculum === curriculum || !curriculum) && i.level === level && i.subject === subject
+  );
+
+  if (entry && entry.domains) {
+    let subtopics = [];
+    entry.domains.forEach(d => {
+      if (!domain || d.name === domain) {
+        d.topics.forEach(t => {
+          if (!topic || t.topic_name === topic) {
+            t.subtopics.forEach(st => subtopics.push(st.name));
+          }
+        });
+      }
+    });
+    if (subtopics.length > 0) return Array.from(new Set(subtopics));
+  }
+
+  return ["Membilang dan nilai nombor", "Operasi asas", "Penyelesaian masalah"];
+}
+
+/**
+ * Returns Standard Pembelajaran (SP) entries
+ */
+export function getTaxonomySPs(curriculum = "KSSR Semakan", level = "Tahun 1", subject = "Matematik", domain = "", topic = "", subtopic = "", skCode = "") {
+  // Legacy signature handling (subject, year, topic, skCode)
+  if (typeof curriculum === "string" && !["KSSR Semakan", "KSSM"].includes(curriculum)) {
+    subject = curriculum;
+    level = level || "Tahun 1";
+    topic = subject;
+    skCode = domain;
+    curriculum = level.startsWith("Tingkatan") ? "KSSM" : "KSSR Semakan";
+    domain = "";
+    subtopic = "";
+  }
+
+  const entry = officialTaxonomy.find(
+    i => (i.curriculum === curriculum || !curriculum) && i.level === level && i.subject === subject
+  );
+
+  let spList = [];
+  if (entry && entry.domains) {
+    entry.domains.forEach(d => {
+      if (!domain || d.name === domain) {
+        d.topics.forEach(t => {
+          if (!topic || t.topic_name === topic) {
+            t.subtopics.forEach(st => {
+              if (!subtopic || st.name === subtopic) {
+                st.standard_learning.forEach(sp => {
+                  if (!skCode || sp.sk_code === skCode) {
+                    spList.push({
+                      ...sp,
+                      curriculum,
+                      level,
+                      subject,
+                      domain: d.name,
+                      topic: t.topic_name,
+                      subtopic: st.name
+                    });
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+  }
+
+  if (spList.length > 0) return spList;
+
+  return [
+    {
+      sk_code: "1.1",
+      sk_title: "Standard Kandungan Utama",
+      sp_code: "1.1.1",
+      title: `Kemahiran Asas DSKP ${topic || subject}`,
+      curriculum,
+      level,
+      subject,
+      topic
+    }
+  ];
+}
+
+/**
+ * Legacy compatibility helpers
  */
 export function getTaxonomyYears(subject = "Matematik") {
-  const subObj = EXTENDED_DSKP_TAXONOMY[subject] || EXTENDED_DSKP_TAXONOMY["Matematik"];
-  return Object.keys(subObj);
+  return ["Tahun 1", "Tahun 2", "Tahun 3", "Tahun 4", "Tahun 5", "Tahun 6", "Tingkatan 1", "Tingkatan 2", "Tingkatan 3"];
 }
 
-/**
- * Returns all SP entries for a subject and year
- */
 export function getSPEntries(subject = "Matematik", year = "Tahun 1") {
-  const subObj = EXTENDED_DSKP_TAXONOMY[subject] || {};
-  return subObj[year] || [];
+  return getTaxonomySPs("KSSR Semakan", year, subject);
 }
 
-/**
- * Returns distinct topics for a subject and year
- */
-export function getTaxonomyTopics(subject = "Matematik", year = "Tahun 1") {
-  const entries = getSPEntries(subject, year);
-  const topics = Array.from(new Set(entries.map(e => e.topic).filter(Boolean)));
-  return topics.length > 0 ? topics : ["Nombor dan Operasi"];
-}
-
-/**
- * Returns distinct SKs for a topic
- */
 export function getTaxonomySKs(subject = "Matematik", year = "Tahun 1", topic = "") {
-  const entries = getSPEntries(subject, year);
-  const filtered = topic ? entries.filter(e => e.topic === topic) : entries;
-
+  const sps = getTaxonomySPs("KSSR Semakan", year, subject, "", topic);
   const skMap = new Map();
-  filtered.forEach(e => {
-    if (e.sk_code && !skMap.has(e.sk_code)) {
-      skMap.set(e.sk_code, { sk_code: e.sk_code, title: e.sk_title || `SK ${e.sk_code}` });
+  sps.forEach(sp => {
+    if (sp.sk_code && !skMap.has(sp.sk_code)) {
+      skMap.set(sp.sk_code, { sk_code: sp.sk_code, title: sp.sk_title || `SK ${sp.sk_code}` });
     }
   });
-
-  const result = Array.from(skMap.values());
-  return result.length > 0 ? result : [{ sk_code: "1.1", title: "Standard Kandungan Utama" }];
+  const res = Array.from(skMap.values());
+  return res.length > 0 ? res : [{ sk_code: "1.1", title: "Standard Kandungan Utama" }];
 }
 
-/**
- * Returns SP list for a specific SK code
- */
-export function getTaxonomySPs(subject = "Matematik", year = "Tahun 1", topic = "", skCode = "") {
-  const entries = getSPEntries(subject, year);
-  let filtered = entries;
-
-  if (topic) filtered = filtered.filter(e => e.topic === topic);
-  if (skCode) filtered = filtered.filter(e => e.sk_code === skCode);
-
-  return filtered.length > 0 ? filtered : [{ sp_code: "1.1.1", title: `Kemahiran Asas ${topic || subject}` }];
-}
-
-/**
- * Returns SP Detail Object for a given SP Code
- */
 export function getSPDetail(spCode = "1.1.1") {
-  for (const sub of Object.keys(EXTENDED_DSKP_TAXONOMY)) {
-    for (const yr of Object.keys(EXTENDED_DSKP_TAXONOMY[sub])) {
-      const found = EXTENDED_DSKP_TAXONOMY[sub][yr].find(e => e.sp_code === spCode);
-      if (found) return { ...found, subject: sub, year: yr };
+  for (const entry of officialTaxonomy) {
+    for (const d of entry.domains || []) {
+      for (const t of d.topics || []) {
+        for (const st of t.subtopics || []) {
+          for (const sp of st.standard_learning || []) {
+            if (sp.sp_code === spCode) {
+              return {
+                ...sp,
+                curriculum: entry.curriculum,
+                year: entry.level,
+                subject: entry.subject,
+                domain: d.name,
+                topic: t.topic_name,
+                subtopic: st.name
+              };
+            }
+          }
+        }
+      }
     }
   }
   return null;
 }
+
+export default OFFICIAL_TAXONOMY_TREE;

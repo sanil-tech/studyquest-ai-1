@@ -24,23 +24,30 @@ import {
 } from "lucide-react";
 
 import {
+  getTaxonomyCurriculums,
+  getTaxonomyLevels,
   getTaxonomySubjects,
-  getTaxonomyYears,
+  getTaxonomyDomains,
   getTaxonomyTopics,
-  getTaxonomySKs,
-  getTaxonomySPs
+  getTaxonomySubtopics,
+  getTaxonomySPs,
+  getTaxonomySKs
 } from "@/services/dskpRegistry";
 
 export default function AdminContentStudio() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // SECTION 1: CURRICULUM SELECTION STATE
-  const [subject, setSubject] = useState("Matematik");
+  // SECTION 1: CURRICULUM SELECTION STATE (7-STEP DSKP FLOW)
+  const [curriculum, setCurriculum] = useState("KSSR Semakan");
   const [yearLevel, setYearLevel] = useState("Tahun 1");
-  const [topic, setTopic] = useState("Nombor hingga 100");
+  const [subject, setSubject] = useState("Matematik");
+  const [domain, setDomain] = useState("Nombor dan Operasi");
+  const [topic, setTopic] = useState("Nombor Bulat hingga 100");
+  const [subtopic, setSubtopic] = useState("Kuantiti secara intuitif");
   const [skCode, setSkCode] = useState("1.1");
   const [spCode, setSpCode] = useState("1.1.1");
+  const [adventureTheme, setAdventureTheme] = useState("Misi Otan Menyelamatkan Dunia Nombor");
   const [assignedClass, setAssignedClass] = useState("class_4_cemerlang");
 
   // SECTION 2: PEDAGOGY CONFIGURATION STATE
@@ -58,36 +65,58 @@ export default function AdminContentStudio() {
   const [publishStatus, setPublishStatus] = useState("DRAFT"); // "DRAFT" | "PUBLISHED"
   const [, setPublishedLesson] = useState(null);
 
-  // Taxonomy Data Resolution via Centralized DSKP Registry
-  const availableSubjects = useMemo(() => getTaxonomySubjects(), []);
-  const availableYears = useMemo(() => getTaxonomyYears(subject), [subject]);
-  const availableTopics = useMemo(() => getTaxonomyTopics(subject, yearLevel), [subject, yearLevel]);
+  // Cascading Taxonomy Options via Centralized Official DSKP Registry
+  const availableCurriculums = useMemo(() => getTaxonomyCurriculums(), []);
+  const availableLevels = useMemo(() => getTaxonomyLevels(curriculum), [curriculum]);
+  const availableSubjects = useMemo(() => getTaxonomySubjects(curriculum, yearLevel), [curriculum, yearLevel]);
+  const availableDomains = useMemo(() => getTaxonomyDomains(curriculum, yearLevel, subject), [curriculum, yearLevel, subject]);
+  const availableTopics = useMemo(() => getTaxonomyTopics(curriculum, yearLevel, subject, domain), [curriculum, yearLevel, subject, domain]);
+  const availableSubtopics = useMemo(() => getTaxonomySubtopics(curriculum, yearLevel, subject, domain, topic), [curriculum, yearLevel, subject, domain, topic]);
+  const availableSPs = useMemo(() => getTaxonomySPs(curriculum, yearLevel, subject, domain, topic, subtopic), [curriculum, yearLevel, subject, domain, topic, subtopic]);
   const availableSKs = useMemo(() => getTaxonomySKs(subject, yearLevel, topic), [subject, yearLevel, topic]);
-  const availableSPs = useMemo(() => getTaxonomySPs(subject, yearLevel, topic, skCode), [subject, yearLevel, topic, skCode]);
 
   const currentSPData = useMemo(
     () => availableSPs.find(sp => sp.sp_code === spCode) || availableSPs[0] || {},
     [availableSPs, spCode]
   );
 
-  // Auto-populate topic defaults when Subject/Year changes
+  // Auto-sync Cascading Cascades
+  useEffect(() => {
+    if (availableLevels.length > 0 && !availableLevels.includes(yearLevel)) {
+      setYearLevel(availableLevels[0]);
+    }
+  }, [curriculum, availableLevels, yearLevel]);
+
+  useEffect(() => {
+    if (availableSubjects.length > 0 && !availableSubjects.includes(subject)) {
+      setSubject(availableSubjects[0]);
+    }
+  }, [curriculum, yearLevel, availableSubjects, subject]);
+
+  useEffect(() => {
+    if (availableDomains.length > 0 && !availableDomains.includes(domain)) {
+      setDomain(availableDomains[0]);
+    }
+  }, [curriculum, yearLevel, subject, availableDomains, domain]);
+
   useEffect(() => {
     if (availableTopics.length > 0 && !availableTopics.includes(topic)) {
       setTopic(availableTopics[0]);
     }
-  }, [subject, yearLevel, availableTopics, topic]);
+  }, [curriculum, yearLevel, subject, domain, availableTopics, topic]);
 
   useEffect(() => {
-    if (availableSKs.length > 0) {
-      setSkCode(availableSKs[0].sk_code);
+    if (availableSubtopics.length > 0 && !availableSubtopics.includes(subtopic)) {
+      setSubtopic(availableSubtopics[0]);
     }
-  }, [topic, availableSKs]);
+  }, [curriculum, yearLevel, subject, domain, topic, availableSubtopics, subtopic]);
 
   useEffect(() => {
     if (availableSPs.length > 0) {
       setSpCode(availableSPs[0].sp_code);
+      if (availableSPs[0].sk_code) setSkCode(availableSPs[0].sk_code);
     }
-  }, [skCode, availableSPs]);
+  }, [subtopic, availableSPs]);
 
   // Update Pedagogy Context when selection changes
   useEffect(() => {
@@ -107,13 +136,17 @@ export default function AdminContentStudio() {
       if (version === "v2") {
         const currentSKObj = availableSKs.find(sk => sk.sk_code === skCode) || {};
         const res = await generateLesson({
+          curriculum,
           subject,
           grade: yearLevel,
+          domain,
+          topic,
+          subtopic,
           sk_code: skCode,
           sk_title: currentSKObj.title || "",
           sp_code: spCode,
           sp_description: currentSPData.title || `Pelajaran SP ${spCode} bagi ${topic}`,
-          topic,
+          adventure_theme: adventureTheme,
           target_tp: targetTP
         });
 
@@ -122,6 +155,10 @@ export default function AdminContentStudio() {
             version: "2.0",
             lesson: res.lesson,
             admin_metadata: {
+              curriculum,
+              domain,
+              subtopic,
+              adventure_theme: adventureTheme,
               target_tp: targetTP,
               misconception_shield: misconceptionShield,
               widget_focus: selectedWidget
@@ -129,7 +166,7 @@ export default function AdminContentStudio() {
           });
           toast({
             title: "✨ Shell Pelajaran v2 Dijana!",
-            description: `Berjaya menjana modul ${subject} (${yearLevel}) menggunakan saluran baru.`
+            description: `Berjaya menjana modul ${subject} (${yearLevel}) [${curriculum}] - ${topic} > ${subtopic}.`
           });
         } else {
           console.error("Validation failed:", res.validation?.errors);
@@ -142,12 +179,16 @@ export default function AdminContentStudio() {
       } else {
         // Legacy v1.0 Generation
         const res = await generateKSSRMissionPackage({
+          curriculum,
           spCode,
           spDescription: currentSPData.title || `Pelajaran SP ${spCode} bagi ${topic}`,
           skCode,
           grade: yearLevel,
           subject,
+          domain,
           topic,
+          subtopic,
+          adventureTheme,
           pbdTarget: targetTP
         });
 
@@ -396,18 +437,62 @@ export default function AdminContentStudio() {
         {/* LEFT COLUMN: CONFIGURATOR & TRIGGER */}
         <div className="lg:col-span-5 space-y-6">
           
-          {/* SECTION 1: DSKP SELECTION HUB */}
+          {/* SECTION 1: DSKP SELECTION HUB (7-STEP DSKP FLOW) */}
           <Card className="bg-stone-900/90 border-stone-800 shadow-xl">
             <CardHeader className="border-b border-stone-800/60 pb-3">
-              <CardTitle className="text-sm font-black text-amber-400 flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-amber-400" /> 1. Hub Pemilih DSKP & Kelas
+              <CardTitle className="text-sm font-black text-amber-400 flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-amber-400" /> 1. Pemilih Kurikulum DSKP (7-Langkah)
+                </span>
+                <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold">
+                  DSKP Rasmi KPM
+                </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-4 text-xs font-sans">
+            <CardContent className="p-4 space-y-3 text-xs font-sans">
               
+              {/* STEP 1 & STEP 2 */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-stone-400 uppercase">Subjek</label>
+                  <label className="text-[10px] font-bold text-amber-300 uppercase flex items-center gap-1">
+                    <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-400 text-[9px] flex items-center justify-center font-black">1</span>
+                    Kurikulum
+                  </label>
+                  <select
+                    value={curriculum}
+                    onChange={(e) => setCurriculum(e.target.value)}
+                    className="w-full h-10 px-3 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 font-bold focus:border-amber-500 outline-none"
+                  >
+                    {availableCurriculums.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-amber-300 uppercase flex items-center gap-1">
+                    <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-400 text-[9px] flex items-center justify-center font-black">2</span>
+                    Tahap / Darjah
+                  </label>
+                  <select
+                    value={yearLevel}
+                    onChange={(e) => setYearLevel(e.target.value)}
+                    className="w-full h-10 px-3 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 font-bold focus:border-amber-500 outline-none"
+                  >
+                    {availableLevels.map(lvl => (
+                      <option key={lvl} value={lvl}>{lvl}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* STEP 3 & STEP 4 */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-amber-300 uppercase flex items-center gap-1">
+                    <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-400 text-[9px] flex items-center justify-center font-black">3</span>
+                    Mata Pelajaran
+                  </label>
                   <select
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
@@ -420,21 +505,28 @@ export default function AdminContentStudio() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-stone-400 uppercase">Tahun / Darjah</label>
+                  <label className="text-[10px] font-bold text-amber-300 uppercase flex items-center gap-1">
+                    <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-400 text-[9px] flex items-center justify-center font-black">4</span>
+                    Bidang / Domain
+                  </label>
                   <select
-                    value={yearLevel}
-                    onChange={(e) => setYearLevel(e.target.value)}
+                    value={domain}
+                    onChange={(e) => setDomain(e.target.value)}
                     className="w-full h-10 px-3 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 font-bold focus:border-amber-500 outline-none"
                   >
-                    {availableYears.map(yr => (
-                      <option key={yr} value={yr}>{yr}</option>
+                    {availableDomains.map(d => (
+                      <option key={d} value={d}>{d}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
+              {/* STEP 5: TOPIK UTAMA DSKP */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-stone-400 uppercase">Tajuk Utama DSKP</label>
+                <label className="text-[10px] font-bold text-amber-300 uppercase flex items-center gap-1">
+                  <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-400 text-[9px] flex items-center justify-center font-black">5</span>
+                  Topik Utama DSKP
+                </label>
                 <select
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
@@ -444,32 +536,59 @@ export default function AdminContentStudio() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-stone-400 uppercase">Standard Kandungan (SK)</label>
-                  <select
-                    value={skCode}
-                    onChange={(e) => setSkCode(e.target.value)}
-                    className="w-full h-10 px-3 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 font-bold focus:border-amber-500 outline-none"
-                  >
-                    {availableSKs.map(sk => <option key={sk.sk_code} value={sk.sk_code}>SK {sk.sk_code} - {sk.title}</option>)}
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-stone-400 uppercase">Standard Pembelajaran (SP)</label>
-                  <select
-                    value={spCode}
-                    onChange={(e) => setSpCode(e.target.value)}
-                    className="w-full h-10 px-3 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 font-bold focus:border-amber-500 outline-none"
-                  >
-                    {availableSPs.map(sp => <option key={sp.sp_code} value={sp.sp_code}>SP {sp.sp_code}</option>)}
-                  </select>
-                </div>
+              {/* STEP 6: SUBTOPIK DSKP */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-amber-300 uppercase flex items-center gap-1">
+                  <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-400 text-[9px] flex items-center justify-center font-black">6</span>
+                  Subtopik DSKP
+                </label>
+                <select
+                  value={subtopic}
+                  onChange={(e) => setSubtopic(e.target.value)}
+                  className="w-full h-10 px-3 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 font-bold focus:border-amber-500 outline-none"
+                >
+                  {availableSubtopics.map(st => <option key={st} value={st}>{st}</option>)}
+                </select>
               </div>
 
+              {/* STEP 7: STANDARD PEMBELAJARAN (SP & SK) */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-stone-400 uppercase">Sasaran Kelas Sasaran</label>
+                <label className="text-[10px] font-bold text-amber-300 uppercase flex items-center gap-1">
+                  <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-400 text-[9px] flex items-center justify-center font-black">7</span>
+                  Standard Pembelajaran (SP & SK)
+                </label>
+                <select
+                  value={spCode}
+                  onChange={(e) => setSpCode(e.target.value)}
+                  className="w-full h-10 px-3 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 font-bold focus:border-amber-500 outline-none"
+                >
+                  {availableSPs.map(sp => (
+                    <option key={sp.sp_code} value={sp.sp_code}>
+                      SP {sp.sp_code} ({sp.sk_code ? `SK ${sp.sk_code}` : ""}) - {sp.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* GAMIFICATION THEME SEPARATION (RULE 1) */}
+              <div className="pt-2 border-t border-stone-800/80 space-y-1">
+                <label className="text-[10px] font-bold text-purple-400 uppercase flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-purple-400" /> Tema Gamifikasi / Misi Adventure (Diasingkan daripada DSKP)
+                </label>
+                <input
+                  type="text"
+                  value={adventureTheme}
+                  onChange={(e) => setAdventureTheme(e.target.value)}
+                  placeholder="cth. Misi Otan Menyelamatkan Dunia Nombor"
+                  className="w-full h-10 px-3 bg-stone-950 border border-purple-900/50 rounded-xl text-purple-200 font-medium focus:border-purple-500 outline-none text-xs"
+                />
+                <p className="text-[10px] text-stone-500 italic">
+                  Tajuk kurikulum DSKP dan tema gamifikasi disimpan secara berasingan mengikut piawaian.
+                </p>
+              </div>
+
+              <div className="space-y-1 pt-1">
+                <label className="text-[10px] font-bold text-stone-400 uppercase">Sasaran Kelas</label>
                 <select
                   value={assignedClass}
                   onChange={(e) => setAssignedClass(e.target.value)}
