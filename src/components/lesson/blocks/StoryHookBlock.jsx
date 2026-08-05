@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
 import sukuPenyuMascotImg from "@/assets/images/suku_penyu_mascot_1785919182374.jpg";
 import { generateDynamicImagePrompt } from "@/utils/generateDynamicImagePrompt";
+import { getStaticFallbackImage } from "@/services/aiImageEngine";
 
 export default function StoryHookBlock({ content, mascot, studentName, onComplete, isCompleted }) {
   const storyText = personalize(content.story_text || "", studentName);
@@ -16,10 +17,10 @@ export default function StoryHookBlock({ content, mascot, studentName, onComplet
   const mascotEmoji = mascot?.includes("🦊") ? "🦊" : "🐢";
   const mascotName = mascot?.includes("Ejen") ? "Ejen Suku" : "Suku Penyu";
 
-  // Build high quality Pollinations image URL if content.image_url is missing or generic asset
+  // Build high quality Pollinations image URL matching exact story mission
   const computedStoryImageUrl = useMemo(() => {
     const rawUrl = content.image_url || content.visual_url || content.visual?.image_url;
-    if (rawUrl && !rawUrl.includes("unsplash.com") && !rawUrl.includes("suku_penyu_mascot")) {
+    if (rawUrl && !rawUrl.includes("suku_penyu_mascot")) {
       return rawUrl;
     }
 
@@ -36,7 +37,8 @@ export default function StoryHookBlock({ content, mascot, studentName, onComplet
     return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=450&nologo=true&seed=101`;
   }, [content, storyText]);
 
-  const storyVisual = computedStoryImageUrl || sukuPenyuMascotImg;
+  const fallbackSceneImg = getStaticFallbackImage(content.topic, storyText);
+  const storyVisual = computedStoryImageUrl || fallbackSceneImg;
 
   const handleSpeak = () => {
     if (!window.speechSynthesis) return;
@@ -71,7 +73,7 @@ export default function StoryHookBlock({ content, mascot, studentName, onComplet
             alt="Suku Penyu Mascot Story Visual"
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = sukuPenyuMascotImg;
+              e.currentTarget.src = fallbackSceneImg;
             }}
             className="w-full h-full object-cover object-center opacity-90 hover:scale-105 transition-transform duration-500"
           />

@@ -52,9 +52,12 @@ export function generateDynamicImagePrompt({
     }
   }
 
-  const prompt = `3D Pixar style digital render of Suku Penyu 🐢, a friendly cute green sea turtle mascot character wearing a cute school outfit, ${specificSceneDesc}. Vibrant colors, warm lighting, educational children's book illustration style, 8k resolution, volumetric lighting, high detail, highly engaging for primary school students aged 7-10.`;
+  const rawPrompt = `3D Pixar style digital render of Suku Penyu, a friendly cute green sea turtle mascot character wearing a cute blue school vest, ${specificSceneDesc}. Vibrant colors, warm lighting, educational children book illustration style, 8k resolution, volumetric lighting, high detail, highly engaging for primary school kids aged 7 to 10.`;
 
-  return prompt;
+  // Clean prompt: remove emojis, special symbols, and non-ASCII characters that break Pollinations API URLs
+  const cleanPrompt = rawPrompt.replace(/[^\x00-\x7F]/g, "").replace(/[\{\}\[\]\<\>]/g, "").trim();
+
+  return cleanPrompt;
 }
 
 export default generateDynamicImagePrompt;

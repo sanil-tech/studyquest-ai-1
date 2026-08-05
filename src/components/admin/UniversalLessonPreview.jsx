@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from "react";
 import sukuPenyuMascotImg from "@/assets/images/suku_penyu_mascot_1785919182374.jpg";
+import { generateDynamicImagePrompt } from "@/utils/generateDynamicImagePrompt";
+import { getStaticFallbackImage } from "@/services/aiImageEngine";
 import {
   Heart,
   Star,
@@ -39,17 +41,32 @@ function StoryScene({ data, mascotName = "Suku Penyu 🐢", studentName = "Kawan
     window.speechSynthesis.speak(utt);
   };
 
+  const storyText = payload.story_text || data.title || "";
+  const fallbackStorySceneImg = getStaticFallbackImage(payload.topic, storyText);
+  const storyImagePrompt = payload.image_prompt || payload.visual_prompt || storyText || payload.topic || "";
+  const dynamicStoryPrompt = generateDynamicImagePrompt({
+    subject: payload.subject || "Matematik",
+    grade: payload.grade || "Tahun 1",
+    topic: payload.topic || "Nombor hingga 100",
+    sceneType: "STORY",
+    visualDescription: payload.visual_description || "",
+    storyText: storyImagePrompt
+  });
+  const storyBannerUrl = (payload.image_url && !payload.image_url.includes("suku_penyu_mascot"))
+    ? payload.image_url
+    : `https://image.pollinations.ai/prompt/${encodeURIComponent(dynamicStoryPrompt)}?width=800&height=450&nologo=true&seed=101`;
+
   return (
     <div className="space-y-4 text-left font-sans">
       {/* Story Banner with Suku Penyu Visual & Text */}
       <div className="overflow-hidden bg-stone-900 border border-stone-800 rounded-2xl space-y-3 shadow-lg">
         <div className="relative w-full h-44 sm:h-52 bg-gradient-to-t from-stone-950 via-stone-900 to-amber-950/40 flex items-center justify-center overflow-hidden">
           <img
-            src={payload.image_url || payload.visual_url || payload.visual?.image_url || sukuPenyuMascotImg}
+            src={storyBannerUrl || fallbackStorySceneImg}
             alt="Suku Penyu Mascot Story Visual"
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = sukuPenyuMascotImg;
+              e.currentTarget.src = fallbackStorySceneImg;
             }}
             className="w-full h-full object-cover object-center opacity-90 hover:scale-105 transition-transform duration-500"
           />

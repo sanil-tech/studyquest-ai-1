@@ -1,6 +1,7 @@
 import React from "react";
 import { Sparkles, Compass, BookOpen, Layers, CheckCircle2 } from "lucide-react";
 import sukuPenyuMascotImg from "@/assets/suku_penyu_mascot.jpg";
+import { getStaticFallbackImage } from "@/services/aiImageEngine";
 
 /**
  * AdventurePreview Component
@@ -141,11 +142,11 @@ export function AdventurePreview({ adventurePackage }) {
                   <div className="space-y-3 text-xs text-stone-300">
                     <div className="overflow-hidden rounded-xl border border-stone-800 relative h-36 bg-stone-900">
                       <img
-                        src={st.payload?.image_url || st.payload?.visual?.image_url || sukuPenyuMascotImg}
+                        src={st.payload?.image_url || st.payload?.visual?.image_url || getStaticFallbackImage(st.title, st.payload?.story_hook)}
                         alt="Visual Story"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
-                          e.currentTarget.src = sukuPenyuMascotImg;
+                          e.currentTarget.src = getStaticFallbackImage(st.title, st.payload?.story_hook);
                         }}
                         className="w-full h-full object-cover opacity-90"
                       />
