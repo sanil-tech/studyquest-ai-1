@@ -169,7 +169,7 @@ export default function AdminContentStudio() {
       setDbAssets(assetGroupMap);
     } catch (err) {
       console.error("Failed to fetch Content Library state:", err);
-    } fontally {
+    } finally {
       setLoadingDb(false);
     }
   }, [spCode]);
