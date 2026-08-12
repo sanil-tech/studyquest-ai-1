@@ -321,3 +321,26 @@ test("11. SUBMIT ASSESSMENT: Duplicate submission returns idempotent result with
   assert.equal(res2.status, 200);
   assert.equal(res2.data.is_duplicate, true);
 });
+
+test("12. GENERATION REQUEST CONTRACT: Valid Admin Content Studio payload succeeds with 8 canonical blocks and lesson_id/version_id", async () => {
+  const payload = {
+    sp_code: "SP 1.2.1",
+    sk_code: "SK 1.2",
+    subject: "Matematik",
+    year_level: "Tahun 1",
+    topic: "Kenali 1 hingga 10",
+    curriculum_type: "KSSR_SEMAKAN",
+  };
+
+  const res = await invokeFunction(generateModularLessonContent, payload, { userToken: "admin_token" });
+  assert.equal(res.status, 200);
+  assert.equal(res.data.success, true);
+  assert.ok(res.data.lesson_id);
+  assert.ok(res.data.version_id);
+  assert.ok(Array.isArray(res.data.blocks));
+  assert.equal(res.data.blocks.length, 8);
+
+  const blockTypes = res.data.blocks.map((b) => b.block_type);
+  assert.deepEqual(blockTypes, CANONICAL_8_BLOCKS);
+});
+

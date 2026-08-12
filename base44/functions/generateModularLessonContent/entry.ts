@@ -206,33 +206,55 @@ export default async function (req: Request): Promise<Response> {
     const body: ModularGenInput = await req.json().catch(() => ({}));
 
     let version: any = null;
+    let createError: string | null = null;
+
     if (body.lesson_version_id) {
       version = await base44.asServiceRole.entities.LessonVersion.get(body.lesson_version_id).catch(() => null);
     }
 
     if (!version) {
       // Auto-create Lesson & LessonVersion if no lesson_version_id provided (or if not found)
-      const lesson = await base44.asServiceRole.entities.Lesson.create({
-        title: body.topic || "Pelajaran DSKP",
-        subject_name: body.subject || "Matematik",
-        content_status: "draft",
-      }).catch(() => null);
+      const topicId = body.topic_id || (body.sp_code ? `top_${body.sp_code.replace(/[^a-zA-Z0-9]/g, '_')}` : "top_dskp_default");
+      let lesson: any = null;
+      try {
+        lesson = await base44.asServiceRole.entities.Lesson.create({
+          topic_id: topicId,
+          topic_name: body.topic || "Pelajaran DSKP",
+          subject_name: body.subject || "Matematik",
+          content_status: "draft",
+        });
+      } catch (err: any) {
+        console.error("Lesson.create error:", err);
+        createError = `Failed to create Lesson: ${err?.message || String(err)}`;
+      }
 
       if (lesson) {
-        version = await base44.asServiceRole.entities.LessonVersion.create({
-          lesson_id: lesson.id,
-          version_number: 1,
-          status: "draft",
-          review_status: "draft",
-          sk_code: body.sk_code || "SK 1.1",
-          sp_code: body.sp_code || "SP 1.1.1",
-        }).catch(() => null);
+        try {
+          version = await base44.asServiceRole.entities.LessonVersion.create({
+            lesson_id: lesson.id,
+            version_number: 1,
+            status: "draft",
+            review_status: "draft",
+            sk_code: body.sk_code || "SK 1.1",
+            sp_code: body.sp_code || "SP 1.1.1",
+            year_level: body.year_level || "Tahun 1",
+            curriculum_type: body.curriculum_type || "KSSR_SEMAKAN",
+          });
+        } catch (err: any) {
+          console.error("LessonVersion.create error:", err);
+          createError = `Failed to create LessonVersion: ${err?.message || String(err)}`;
+        }
       }
     }
 
     if (!version) {
       return Response.json(
-        { success: false, error: "Versi pelajaran tidak dijumpai atau gagal dicipta." },
+        { 
+          success: false, 
+          error: "VALIDATION_ERROR", 
+          message: createError || "Versi pelajaran tidak dijumpai atau gagal dicipta.",
+          details: { body_received: body }
+        },
         { status: 400 }
       );
     }
