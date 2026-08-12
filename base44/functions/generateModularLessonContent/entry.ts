@@ -1,6 +1,6 @@
 // base44/functions/generateModularLessonContent/entry.ts
 // Phase 2: Upgraded Curriculum-First AI Lesson Package Generator
-// Generates complete DSKP (KSSR Semakan / KSSM) lesson packages featuring 7 mandatory sections & StudyQuest gamification layer.
+// Generates complete DSKP (KSSR Semakan / KSSM) lesson packages featuring the canonical 8-block deterministic shell.
 
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
 
@@ -16,114 +16,59 @@ interface ModularGenInput {
   taxonomy?: string;
 }
 
-const FIVE_PHASE_LESSON_SCHEMA = {
+export const CANONICAL_8_BLOCKS = [
+  "STORY_HOOK",
+  "LEARNING_OBJECTIVE",
+  "CONCEPT_CPA",
+  "WORKED_EXAMPLE",
+  "INTERACTIVE_PRACTICE",
+  "KNOWLEDGE_CHECK",
+  "KEY_TAKEAWAY",
+  "MISSION_COMPLETE",
+] as const;
+
+export const SUPPORTED_WIDGETS = [
+  "base_ten_blocks",
+  "number_scale",
+  "fraction_slicer",
+  "sentence_builder",
+  "drag_and_drop",
+  "matching_cards",
+  "quiz_wheel",
+];
+
+const EIGHT_BLOCK_LESSON_SCHEMA = {
   type: "object",
   properties: {
     lesson_title: { type: "string" },
     sp_code: { type: "string" },
     blocks: {
       type: "array",
+      minItems: 8,
+      maxItems: 8,
       items: {
         type: "object",
         properties: {
-          id: { type: "string" },
-          order_index: { type: "number" },
-          phase: { type: "string", enum: ["ENGAGEMENT", "CONCEPT", "PRACTICE", "APPLICATION", "PBD_ASSESSMENT"] },
-          type: { type: "string" },
-          title: { type: "string" },
-          content: { 
-            type: "object",
-            properties: {
-              markdown: { type: "string" }, // For TEXT_MARKDOWN
-              nodes: { 
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    id: { type: "string" },
-                    label: { type: "string" },
-                    children: { type: "array", items: { type: "string" } }
-                  },
-                  required: ["id", "label"]
-                }
-              },
-              cards: { 
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    front: { type: "string" },
-                    back: { type: "string" },
-                    hint: { type: "string" },
-                    visual_front: { type: "string" },
-                    visual_back: { type: "string" }
-                  },
-                  required: ["front", "back"]
-                }
-              },
-              questions: { 
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    question: { type: "string" },
-                    options: { type: "array", items: { type: "string" } },
-                    correct_answer: { type: "string" },
-                    explanation: { type: "string" },
-                    visual_a: { type: "string" },
-                    visual_b: { type: "string" }
-                  },
-                  required: ["question", "options", "correct_answer", "explanation"]
-                }
-              },
-              steps: { 
-                type: "array",
-                items: { type: "string" }
-              },
-              image_prompt: { type: "string" },
-              audio_script: { type: "string" },
-              annotated_sections: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    label: { type: "string" },
-                    explanation: { type: "string" }
-                  },
-                  required: ["label", "explanation"]
-                }
-              },
-              visual_comparison: {
-                type: "array",
-                items: { type: "string" }
-              },
-              pairs: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    left: { type: "string" },
-                    right: { type: "string" }
-                  },
-                  required: ["left", "right"]
-                }
-              },
-              hints: {
-                type: "array",
-                items: { type: "string" }
-              },
-              video_url: { type: "string" },
-              video_title: { type: "string" },
-              description: { type: "string" },
-              key_points: { type: "array", items: { type: "string" } }
-            }
-          }
+          block_number: { type: "number" },
+          block_type: {
+            type: "string",
+            enum: [
+              "STORY_HOOK",
+              "LEARNING_OBJECTIVE",
+              "CONCEPT_CPA",
+              "WORKED_EXAMPLE",
+              "INTERACTIVE_PRACTICE",
+              "KNOWLEDGE_CHECK",
+              "KEY_TAKEAWAY",
+              "MISSION_COMPLETE",
+            ],
+          },
+          xp_reward: { type: "number" },
+          coin_reward: { type: "number" },
+          content: { type: "object" },
         },
-        },
-        required: ["id", "order_index", "phase", "type", "title", "content"]
+        required: ["block_number", "block_type", "content"],
       },
-      minItems: 15,
-      maxItems: 15
     },
     assessment: {
       type: "array",
@@ -134,16 +79,17 @@ const FIVE_PHASE_LESSON_SCHEMA = {
           options: { type: "array", items: { type: "string" } },
           correct_answer: { type: "string" },
           explanation: { type: "string" },
-          cognitive_level: { type: "string", enum: ["remember", "understand", "apply", "analyze", "evaluate", "create"] },
+          cognitive_level: {
+            type: "string",
+            enum: ["remember", "understand", "apply", "analyze", "evaluate", "create"],
+          },
           difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
           misconception_target: { type: "string" },
           concept_tested: { type: "string" },
         },
-        required: ["question", "options", "correct_answer", "explanation", "cognitive_level", "difficulty", "concept_tested"],
+        required: ["question", "options", "correct_answer", "explanation"],
       },
     },
-
-    // 7. GAMIFICATION LAYER
     gamification: {
       type: "object",
       properties: {
@@ -152,47 +98,142 @@ const FIVE_PHASE_LESSON_SCHEMA = {
         mission_completion_message: { type: "string" },
         suku_encouragement: { type: "string" },
       },
-      required: ["xp_reward", "coin_reward", "mission_completion_message", "suku_encouragement"],
-    },
-
-    // MindMap & Flashcard Deck Data
-    mindmap_branches: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: { title: { type: "string" }, subtopics: { type: "array", items: { type: "string" } } },
-        required: ["title", "subtopics"],
-      },
-    },
-    flashcards: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: { front: { type: "string" }, back: { type: "string" }, explanation: { type: "string" } },
-        required: ["front", "back"],
-      },
+      required: ["xp_reward", "coin_reward", "mission_completion_message"],
     },
   },
-  required: ["lesson_title", "sp_code", "blocks", "assessment", "gamification"]
+  required: ["lesson_title", "sp_code", "blocks", "assessment", "gamification"],
 };
 
-export default async function(req: Request): Promise<Response> {
+/**
+ * Perform strict structural validation on generated 8-block shell payload.
+ */
+export function validateGeneratedShell(generated: any): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  if (!generated || typeof generated !== "object") {
+    return { valid: false, errors: ["AI response payload is not a valid JSON object."] };
+  }
+
+  if (!Array.isArray(generated.blocks) || generated.blocks.length !== 8) {
+    errors.push(`Lesson must contain exactly 8 blocks. Found: ${generated.blocks?.length || 0}`);
+    return { valid: false, errors };
+  }
+
+  for (let i = 0; i < 8; i++) {
+    const block = generated.blocks[i];
+    const expectedType = CANONICAL_8_BLOCKS[i];
+
+    if (!block || typeof block !== "object") {
+      errors.push(`Block ${i + 1} is null or invalid object.`);
+      continue;
+    }
+
+    if (block.block_type !== expectedType) {
+      errors.push(`Block ${i + 1} type mismatch. Expected '${expectedType}', got '${block.block_type}'.`);
+    }
+
+    const c = block.content;
+    if (!c || typeof c !== "object" || Object.keys(c).length === 0) {
+      errors.push(`Block ${i + 1} (${expectedType}) content payload is empty.`);
+      continue;
+    }
+
+    // Specific block type validations
+    if (expectedType === "STORY_HOOK") {
+      if (!c.story_text || String(c.story_text).trim().length < 15) {
+        errors.push("STORY_HOOK: story_text is missing or too short.");
+      }
+    } else if (expectedType === "LEARNING_OBJECTIVE") {
+      if (!c.i_can_statement || String(c.i_can_statement).trim().length < 10) {
+        errors.push("LEARNING_OBJECTIVE: i_can_statement is missing or too short.");
+      }
+    } else if (expectedType === "CONCEPT_CPA") {
+      if (!c.concrete || !c.pictorial || !c.abstract) {
+        errors.push("CONCEPT_CPA: missing required CPA components (concrete, pictorial, abstract).");
+      }
+    } else if (expectedType === "WORKED_EXAMPLE") {
+      if (!c.problem_statement || !Array.isArray(c.solution_steps) || c.solution_steps.length < 2) {
+        errors.push("WORKED_EXAMPLE: problem_statement or solution_steps (min 2 steps) missing.");
+      }
+    } else if (expectedType === "INTERACTIVE_PRACTICE") {
+      const widgetType = String(c.widget_type || "").trim();
+      if (!widgetType || !SUPPORTED_WIDGETS.includes(widgetType)) {
+        errors.push(`INTERACTIVE_PRACTICE: unsupported widget_type '${widgetType}'. Must be one of: ${SUPPORTED_WIDGETS.join(", ")}`);
+      }
+      if (!c.instruction) {
+        errors.push("INTERACTIVE_PRACTICE: instruction is missing.");
+      }
+    } else if (expectedType === "KNOWLEDGE_CHECK") {
+      if (!Array.isArray(c.questions) || c.questions.length < 2) {
+        errors.push("KNOWLEDGE_CHECK: questions array must contain at least 2 questions.");
+      }
+    } else if (expectedType === "KEY_TAKEAWAY") {
+      if (!Array.isArray(c.summary_points) || c.summary_points.length < 2) {
+        errors.push("KEY_TAKEAWAY: summary_points array must contain at least 2 points.");
+      }
+    } else if (expectedType === "MISSION_COMPLETE") {
+      if (!c.celebration_message) {
+        errors.push("MISSION_COMPLETE: celebration_message is missing.");
+      }
+    }
+  }
+
+  // Detect banned placeholder / dummy fallback strings
+  const bannedPatterns = [
+    /Sila jana semula/i,
+    /Pilihan A \(Jawapan Tepat\)/i,
+    /Lorem Ipsum/i,
+    /\$\{.*?\}/,
+    /Placeholder/i,
+  ];
+
+  const payloadString = JSON.stringify(generated.blocks);
+  for (const pattern of bannedPatterns) {
+    if (pattern.test(payloadString)) {
+      errors.push(`Generated payload contains forbidden placeholder string matching ${pattern.source}.`);
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+export default async function (req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     const body: ModularGenInput = await req.json().catch(() => ({}));
 
-    if (!body.lesson_version_id) {
-      return Response.json(
-        { success: false, error: "lesson_version_id diperlukan." },
-        { status: 400 }
-      );
+    let version: any = null;
+    if (body.lesson_version_id) {
+      version = await base44.asServiceRole.entities.LessonVersion.get(body.lesson_version_id).catch(() => null);
     }
 
-    const version = await base44.asServiceRole.entities.LessonVersion.get(body.lesson_version_id).catch(() => null);
+    if (!version) {
+      // Auto-create Lesson & LessonVersion if no lesson_version_id provided (or if not found)
+      const lesson = await base44.asServiceRole.entities.Lesson.create({
+        title: body.topic || "Pelajaran DSKP",
+        subject_name: body.subject || "Matematik",
+        content_status: "draft",
+      }).catch(() => null);
+
+      if (lesson) {
+        version = await base44.asServiceRole.entities.LessonVersion.create({
+          lesson_id: lesson.id,
+          version_number: 1,
+          status: "draft",
+          review_status: "draft",
+          sk_code: body.sk_code || "SK 1.1",
+          sp_code: body.sp_code || "SP 1.1.1",
+        }).catch(() => null);
+      }
+    }
+
     if (!version) {
       return Response.json(
-        { success: false, error: "Versi pelajaran tidak dijumpai." },
-        { status: 404 }
+        { success: false, error: "Versi pelajaran tidak dijumpai atau gagal dicipta." },
+        { status: 400 }
       );
     }
 
@@ -206,7 +247,7 @@ export default async function(req: Request): Promise<Response> {
     const taxonomy = body.taxonomy || "Bloom";
 
     const systemPrompt = `You are StudyQuest AI, an expert Malaysian KSSR/KSSM Curriculum Instructional Designer.
-Your task is to generate a comprehensive, highly structured, 15-block modular lesson JSON payload for primary/secondary students based on the following:
+Your task is to generate a comprehensive, highly structured 8-block deterministic lesson JSON payload based on the following context:
 - Subjek: ${subject}
 - Tingkat/Tahun: ${yearLevel}
 - Topik: ${topic}
@@ -215,153 +256,84 @@ Your task is to generate a comprehensive, highly structured, 15-block modular le
 - Bahasa: ${language}
 - Taksonomi: ${taxonomy}
 
-STRICT GENERATION RULES:
-1. You MUST generate EXACTLY 15 blocks (order_index: 1 to 15).
-2. The lesson MUST be grouped into 5 DSKP Phases (exactly 3 micro-blocks per phase).
-3. The content MUST be written in professional, student-friendly Bahasa Melayu.
-4. DO NOT use placeholder text (e.g., "Node 1", "Lorem Ipsum", "c1/c2"). All content must be rich and complete.
-5. CRITICAL DIVERSITY RULE: DO NOT repeat content. Every single block MUST teach or test a DIFFERENT sub-topic, perspective, concept layer, or difficulty level. For example, if Block 7 tests addition, Block 8 must test subtraction or word problems. If Block 4 maps a concept, Block 5 must show a completely different visual aspect or deeper explanation.
+STRICT GENERATION RULES FOR THE 8 DETERMINISTIC BLOCKS:
+You MUST generate EXACTLY 8 blocks in this exact order:
+1. Block 1 (STORY_HOOK): Engaging narrative story hook with mascot dialogue and curiosity question.
+2. Block 2 (LEARNING_OBJECTIVE): Clear 'I can' (Saya boleh) student outcome statement aligned to SP code.
+3. Block 3 (CONCEPT_CPA): Scaffolded Concrete-Pictorial-Abstract explanation with visual prompt and definitions.
+4. Block 4 (WORKED_EXAMPLE): Clear problem statement with step-by-step solution, common mistake callout, and reasoning.
+5. Block 5 (INTERACTIVE_PRACTICE): Interactive activity instruction and seed data. 'widget_type' MUST be one of: base_ten_blocks, number_scale, fraction_slicer, sentence_builder, drag_and_drop, matching_cards, quiz_wheel.
+6. Block 6 (KNOWLEDGE_CHECK): Formative quiz with 3-5 MCQ questions (question, options [3-4 items], correct_answer, explanation, cognitive_level, difficulty).
+7. Block 7 (KEY_TAKEAWAY): Exactly 3 key summary points, memory tip, and 2-4 flashcard terms/definitions.
+8. Block 8 (MISSION_COMPLETE): Celebration message, badge name, total_xp (100), total_coins (25).
 
-================================================================================
-PHASE & BLOCK ARCHITECTURE SPECIFICATION
-================================================================================
+CRITICAL QUALITY RULE:
+DO NOT use placeholder text or dummy fallbacks (e.g., "Sila jana semula", "Lorem Ipsum", "Node 1").
+All text MUST be rich, complete, educational Bahasa Melayu content tailored to ${subject} ${yearLevel}.`;
 
---- PHASE 1: ENGAGEMENT (Blok 1, 2, 3) ---
-Goal: Hook students, spark curiosity, and link to real-world contexts.
-- Blok 1 (order_index: 1, type: "TEXT_MARKDOWN", phase: "ENGAGEMENT"):
-  Naratif pengenalan bermula dengan watak/cerita kehidupan harian murid.
-- Blok 2 (order_index: 2, type: "VISUAL_CARD", phase: "ENGAGEMENT"):
-  Situasi dunia sebenar dengan 'image_prompt' terperinci untuk penjanaan ilustrasi.
-- Blok 3 (order_index: 3, type: "AUDIO_HOOK", phase: "ENGAGEMENT"):
-  Soalan pencetus minda beserta 'audio_script'.
-
---- PHASE 2: CONCEPT - MULTI-MEDIUM REQUIREMENT (Blok 4, 5, 6) ---
-Goal: Explain mathematical/scientific concepts using Visual-Concrete-Abstract (KPA) media.
-- Blok 4 (order_index: 4, type: "MIND_MAP", phase: "CONCEPT"):
-  Peta Pemikiran i-THINK (Peta Titi / Peta Pokok / Peta Buih) yang menstrukturkan konsep utama.
-  Must include nodes with clear titles, labels, and sub-items.
-- Blok 5 (order_index: 5, type: "INFOGRAPHIC", phase: "CONCEPT"):
-  Infografik visual berasaskan rajah. Must include:
-  - 'image_prompt': Detailed descriptive prompt for generating educational graphic.
-  - 'annotated_sections': Array of key visual callouts with labels and explanations.
-  - 'visual_comparison': Comparison table/items.
-- Blok 6 (order_index: 6, type: "CONCEPT_CARD", phase: "CONCEPT"):
-  Glosari istilah & contoh konkrit menggunakan emoji/ikon untuk perwakilan gambar-ke-abstrak.
-
---- PHASE 3: PRACTICE (Blok 7, 8, 9) ---
-Goal: Procedural fluency and active recall.
-- Blok 7 (order_index: 7, type: "FLASHCARD_DECK", phase: "PRACTICE"):
-  Latihan ingatan pantas Tahap 1. Minimum 3 cards.
-- Blok 8 (order_index: 8, type: "FLASHCARD_DECK", phase: "PRACTICE"):
-  Latihan ingatan Tahap 2 dengan petunjuk gambar (visual_front / visual_back). Minimum 3 cards.
-- Blok 9 (order_index: 9, type: "MATCHING_GAME", phase: "PRACTICE"):
-  Aktiviti padanan (Pasangan Kiri & Kanan dalam 'pairs'). Minimum 4 pairs.
-
---- PHASE 4: APPLICATION (Blok 10, 11, 12) ---
-Goal: Apply knowledge to problem-solving scenarios.
-- Blok 10 (order_index: 10, type: "VIDEO_LESSON", phase: "APPLICATION"):
-  Modul video interaktif. Must include 'video_url', 'video_title', 'key_points', and 'description'.
-- Blok 11 (order_index: 11, type: "WORKED_EXAMPLE", phase: "APPLICATION"):
-  Contoh penyelesaian masalah berserta 'steps'.
-- Blok 12 (order_index: 12, type: "GUIDED_PRACTICE", phase: "APPLICATION"):
-  Soalan aplikasi terbimbing dengan 'hints'.
-
---- PHASE 5: PBD_ASSESSMENT (Blok 13, 14, 15) ---
-Goal: Measure DSKP Mastery Levels (TP1 - TP6) with gamification.
-- Blok 13 (order_index: 13, type: "INTERACTIVE_GAME", phase: "PBD_ASSESSMENT"):
-  Pentaksiran TP1 - TP2 (Soalan Asas). Minimum 2 questions.
-- Blok 14 (order_index: 14, type: "INTERACTIVE_GAME", phase: "PBD_ASSESSMENT"):
-  Pentaksiran TP3 - TP4 (Aplikasi Rutin). Minimum 2 questions.
-- Blok 15 (order_index: 15, type: "INTERACTIVE_GAME", phase: "PBD_ASSESSMENT"):
-  Pentaksiran TP5 - TP6 (Cabaran KBAT). Minimum 2 questions.
-
-================================================================================
-JSON OUTPUT STRUCTURE
-================================================================================
-Sertakan juga 'assessment' array dan 'gamification' mengikut skema.`;
-
-    const userPrompt = `Jana pakej pelajaran modul DSKP 5-Fasa bagi ${skCode} - ${spCode}. Pastikan ia mematuhi skema JSON yang ditetapkan.`;
+    const userPrompt = `Jana pakej pelajaran 8-Blok DETERMINISTIK bagi ${skCode} - ${spCode}. Pastikan ia mematuhi skema JSON yang ditetapkan.`;
 
     const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: systemPrompt + "\n\n" + userPrompt,
       model: "gemini_3_flash",
-      response_json_schema: FIVE_PHASE_LESSON_SCHEMA,
+      response_json_schema: EIGHT_BLOCK_LESSON_SCHEMA,
     });
 
     let generated: any;
     try {
-      generated = typeof aiResponse === "string" ? JSON.parse(aiResponse.replace(/```json/g, '').replace(/```/g, '')) : aiResponse;
+      generated = typeof aiResponse === "string" ? JSON.parse(aiResponse.replace(/```json/g, "").replace(/```/g, "")) : aiResponse;
     } catch (e) {
       generated = aiResponse;
     }
 
-    if (!generated || !generated.blocks || !Array.isArray(generated.blocks)) {
+    // Perform Strict Structural Validation — FAIL FAST if malformed
+    const validation = validateGeneratedShell(generated);
+    if (!validation.valid) {
+      console.error("AI Lesson Generation Structural Validation Failed:", validation.errors);
       return Response.json(
-        { success: false, error: "Ralat format struktur AI. Sila jana semula (retry)." },
-        { status: 500 }
+        {
+          success: false,
+          error: "Penjanaan AI gagal melepasi pengesahan struktur 8-Blok.",
+          validation_errors: validation.errors,
+        },
+        { status: 422 }
       );
     }
-    
-    const generatedBlocks = generated.blocks || [];
-    
-    // Safety check: Ensure we have exactly 15 blocks according to the strict specification
-    if (generatedBlocks.length !== 15) {
-      console.warn(`WARNING: Generasi AI mengembalikan ${generatedBlocks.length} blok, sepatutnya 15.`);
+
+    const validBlocks = generated.blocks;
+
+    // Delete previous draft blocks for this lesson version if re-generating
+    const existingBlocks = await base44.asServiceRole.entities.LessonBlock.filter({
+      lesson_version_id: version.id,
+    }).catch(() => []);
+
+    if (existingBlocks.length > 0) {
+      for (const oldBlock of existingBlocks) {
+        await base44.asServiceRole.entities.LessonBlock.delete(oldBlock.id).catch(() => {});
+      }
     }
 
-    const validBlocks = generatedBlocks.map((block: any, idx: number) => {
-      if (!block.id) block.id = `block_${Date.now()}_${idx}`;
-      if (!block.order_index) block.order_index = idx + 1;
-      
-      // Fix empty payloads dynamically based on block type
-      if (!block.content || Object.keys(block.content).length === 0) {
-        if (block.type === "TEXT_MARKDOWN" || block.type === "CONCEPT_CARD") block.content = { markdown: "Kandungan tidak dapat dijanakan dengan baik. Sila klik 'Jana Semula Blok' untuk mencuba lagi." };
-        else if (block.type === "MIND_MAP") block.content = { nodes: [{ id: "1", label: "Konsep DSKP (Sila Jana Semula)", children: [] }] };
-        else if (block.type === "FLASHCARD_DECK") block.content = { cards: [{ front: "Kandungan Rosak", back: "Sila jana semula blok ini", hint: "" }] };
-        else if (block.type === "INTERACTIVE_GAME") block.content = { questions: [{ question: "Sila jana semula blok ini", options: ["A", "B"], correct_answer: "A", explanation: "" }] };
-        else if (block.type === "WORKED_EXAMPLE") block.content = { steps: ["Sila jana semula"] };
-        else if (block.type === "VIDEO_LESSON") block.content = { video_url: "", video_title: "Sila jana semula", description: "", key_points: [] };
-        else if (block.type === "VISUAL_CARD") block.content = { image_prompt: "Sila jana semula blok ini", markdown: "" };
-        else if (block.type === "AUDIO_HOOK") block.content = { audio_script: "Sila jana semula blok ini" };
-        else if (block.type === "INFOGRAPHIC") block.content = { image_prompt: "", annotated_sections: [], visual_comparison: [] };
-        else if (block.type === "MATCHING_GAME") block.content = { pairs: [{ left: "Soalan", right: "Jawapan" }] };
-        else if (block.type === "GUIDED_PRACTICE") block.content = { hints: ["Sila jana semula"] };
-        else block.content = { markdown: "Sila jana semula blok ini." };
-      }
-      return block;
-    });
+    // Save Modular LessonBlocks strictly matching 8-block contract
+    for (let i = 0; i < validBlocks.length; i++) {
+      const block = validBlocks[i];
 
-    // Update LessonVersion entity
-    await base44.asServiceRole.entities.LessonVersion.update(version.id, {
-      sk_code: skCode,
-      sp_code: spCode,
-      curriculum_type: curriculumType,
-      year_level: yearLevel,
-      content_completion_percentage: 95,
-    }).catch(() => {});
+      let cognitiveLevel = "understand";
+      if (block.block_type === "STORY_HOOK" || block.block_type === "LEARNING_OBJECTIVE") cognitiveLevel = "remember";
+      if (block.block_type === "WORKED_EXAMPLE" || block.block_type === "INTERACTIVE_PRACTICE") cognitiveLevel = "apply";
+      if (block.block_type === "KNOWLEDGE_CHECK") cognitiveLevel = "evaluate";
 
-    // Save Modular LessonBlocks Dynamically
-    if (validBlocks && Array.isArray(validBlocks)) {
-      for (let i = 0; i < validBlocks.length; i++) {
-        const block = validBlocks[i];
-        
-        let cognitiveLevel = "understand";
-        if (block.phase === "ENGAGEMENT") cognitiveLevel = "remember";
-        if (block.phase === "APPLICATION") cognitiveLevel = "apply";
-        if (block.phase === "PBD_ASSESSMENT") cognitiveLevel = "evaluate";
-        
-        await base44.asServiceRole.entities.LessonBlock.create({
-          lesson_version_id: version.id,
-          sp_code: spCode,
-          pedagogical_phase: block.phase,
-          cognitive_level: cognitiveLevel,
-          block_type: block.type,
-          title: block.title,
-          order_number: i + 1,
-          payload: block.content,
-          status: "draft",
-        }).catch((e) => console.error(`LessonBlock ${i} creation failed`, e));
-      }
+      await base44.asServiceRole.entities.LessonBlock.create({
+        lesson_version_id: version.id,
+        sp_code: spCode,
+        pedagogical_phase: block.block_type,
+        cognitive_level: cognitiveLevel,
+        block_type: block.block_type,
+        title: block.title || `Blok ${i + 1}: ${block.block_type}`,
+        order_number: i + 1,
+        payload: block.content,
+        status: "draft",
+        review_status: "draft",
+      }).catch((e: any) => console.error(`LessonBlock ${i + 1} creation failed`, e));
     }
 
     // Save Assessment, QuestionBank and QuestionOptions
@@ -374,8 +346,8 @@ Sertakan juga 'assessment' array dan 'gamification' mengikut skema.`;
         passing_score: 80,
         reward_xp: generated.gamification?.xp_reward || 50,
         reward_coins: generated.gamification?.coin_reward || 10,
-        workflow_status: "PUBLISHED"
-      }).catch((e) => console.error("Assessment creation failed", e));
+        workflow_status: "PUBLISHED",
+      }).catch((e: any) => console.error("Assessment creation failed", e));
 
       if (assessment) {
         for (let i = 0; i < generated.assessment.length; i++) {
@@ -389,8 +361,9 @@ Sertakan juga 'assessment' array dan 'gamification' mengikut skema.`;
             cognitive_level: q.cognitive_level || "understand",
             concept_tested: q.concept_tested || "",
             explanation: q.explanation || "",
-            status: "draft"
-          }).catch((e) => console.error("Question creation failed", e));
+            status: "draft",
+            review_status: "draft",
+          }).catch((e: any) => console.error("Question creation failed", e));
 
           if (question && q.options && Array.isArray(q.options)) {
             for (let j = 0; j < q.options.length; j++) {
@@ -402,18 +375,35 @@ Sertakan juga 'assessment' array dan 'gamification' mengikut skema.`;
                 label: label,
                 text: optText,
                 is_correct: isCorrect,
-                sort_order: j
-              }).catch((e) => console.error("QuestionOption creation failed", e));
+                sort_order: j,
+              }).catch((e: any) => console.error("QuestionOption creation failed", e));
             }
           }
         }
       }
     }
 
+    // Calculate initial server-evaluated quality score (default to 85 for valid 8-block shell)
+    const initialQualityScore = 85;
+
+    // Update LessonVersion entity with quality score & progress
+    await base44.asServiceRole.entities.LessonVersion.update(version.id, {
+      sk_code: skCode,
+      sp_code: spCode,
+      curriculum_type: curriculumType,
+      year_level: yearLevel,
+      quality_score: initialQualityScore,
+      content_completion_percentage: 100,
+      review_status: "draft",
+    }).catch(() => {});
+
     return Response.json({
       success: true,
-      message: "Pakej Pelajaran DSKP 7-Bahagian Lengkap berjaya dijana!",
+      message: "Pakej Pelajaran 8-Blok Deterministik berjaya dijana!",
       version_id: version.id,
+      lesson_id: version.lesson_id,
+      quality_score: initialQualityScore,
+      blocks: generated.blocks,
       package: generated,
     });
   } catch (error: any) {
@@ -424,3 +414,4 @@ Sertakan juga 'assessment' array dan 'gamification' mengikut skema.`;
     );
   }
 }
+

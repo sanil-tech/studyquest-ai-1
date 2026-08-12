@@ -118,7 +118,7 @@ export default async function(req: Request): Promise<Response> {
         xp_earned: prev.xp_earned ?? 0,
         coins_earned: prev.coins_earned ?? 0,
         attempt_number: prev.attempt_number ?? 1,
-        reward_settled: reSettled || prev.reward_settled ?? true,
+        reward_settled: reSettled || (prev.reward_settled ?? true),
       });
     }
 

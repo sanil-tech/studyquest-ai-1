@@ -61,8 +61,13 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // QUALITY SHIELD CHECK: Enforce Quality Score >= 80 (Good / Excellent tier) for DSKP publishing
-    const qualityScore = lessonVersion.quality_score || 0;
-    if (qualityScore > 0 && qualityScore < 80 && !body.force_publish) {
+    const qualityScore = typeof lessonVersion.quality_score === "number" ? lessonVersion.quality_score : 0;
+    
+    // Authorization check for force_publish: Only authenticated admin can use force_publish override
+    const isAdminUser = Boolean(user && (String(user.app_role || user.role || "").toLowerCase() === "admin" || user.is_admin === true));
+    const isForcePublishAllowed = Boolean(body.force_publish && isAdminUser);
+
+    if (qualityScore < 80 && !isForcePublishAllowed) {
       return Response.json(
         {
           success: false,
@@ -76,7 +81,7 @@ export default async function(req: Request): Promise<Response> {
 
     // PREVIEW APPROVAL SHIELD CHECK: Enforce preview approval (preview_status === APPROVED) before publishing
     const previewStatus = lessonVersion.preview_status || "NOT_VIEWED";
-    if (previewStatus !== "APPROVED" && !body.force_publish) {
+    if (previewStatus !== "APPROVED" && !isForcePublishAllowed) {
       return Response.json(
         {
           success: false,

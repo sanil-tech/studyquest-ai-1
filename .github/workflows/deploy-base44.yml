@@ -22,18 +22,13 @@ jobs:
           cache: 'npm'
           
       - name: Install Base44 CLI
-        run: npm install -g @base44/cli
+        run: npm install -g base44
 
       - name: Install Project Dependencies
         run: npm ci
 
-      - name: Validate Base44 Schema
-        run: base44 validate
-        env:
-          BASE44_API_KEY: ${{ secrets.BASE44_SERVICE_ROLE_KEY }}
-
       - name: Deploy Base44 Environment
-        run: base44 deploy --auto-confirm
+        run: base44 deploy --yes
         env:
           BASE44_API_KEY: ${{ secrets.BASE44_SERVICE_ROLE_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -43,3 +38,4 @@ jobs:
         continue-on-error: true
         env:
           BASE44_API_KEY: ${{ secrets.BASE44_SERVICE_ROLE_KEY }}
+

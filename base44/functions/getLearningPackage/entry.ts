@@ -19,6 +19,11 @@ Deno.serve(async (req) => {
     // ------------------------------------------------------------------
     // 1. INPUT PARSING & AUTHENTICATION RESOLUTION
     // ------------------------------------------------------------------
+    const body = await req.json().catch(() => ({}));
+    let lessonIdParam = body.lesson_id || body.lessonId;
+    const topicIdParam = body.topic_id || body.topicId;
+    const assessmentIdParam = body.assessment_id || body.assessmentId;
+    const studentIdParam = body.student_id || body.studentId;
     const lessonVersionIdParam = body.lesson_version_id || body.lessonVersionId;
     const isPreviewParam = body.preview === true || body.preview === "true";
 
@@ -115,9 +120,8 @@ Deno.serve(async (req) => {
         publishedVersion = publishedOnly.sort(
           (a: any, b: any) => (b.version_number || 0) - (a.version_number || 0)
         )[0];
-      } else {
-        // FALLBACK: No published version found — use most recently updated version regardless of status.
-        // This enables draft/generated lessons to load without requiring a publish step.
+      } else if (isPreviewParam) {
+        // FALLBACK: Only in explicitly authorized admin preview mode allow draft/generated lessons to load.
         publishedVersion = [...versions].sort(
           (a: any, b: any) =>
             new Date(b.updated_at || b.created_at || 0).getTime() -
@@ -191,12 +195,12 @@ Deno.serve(async (req) => {
     let questions: any[] = [];
     if (assessmentIds.length > 0) {
       const qByAsm = await db.entities.QuestionBank.filter({ assessment_id: { $in: assessmentIds } }).catch(() => []);
-      const qByVer = await db.entities.QuestionBank.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []);
+      const qByVer = await db.entities.QuestionBank.filter({ lesson_version_id: versionId }).catch(() => []);
       const qMap = new Map();
       [...qByAsm, ...qByVer].forEach((q: any) => { if (q && q.id) qMap.set(q.id, q); });
       questions = Array.from(qMap.values());
     } else {
-      questions = await db.entities.QuestionBank.filter({ lesson_version_id: versionId, status: "published" }).catch(() => []);
+      questions = await db.entities.QuestionBank.filter({ lesson_version_id: versionId }).catch(() => []);
     }
 
     const questionIds = questions.map((q: any) => q.question_id || q.id);
@@ -637,6 +641,9 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       package_type: 'COMPLETE_LEARNING_PACKAGE',
+      lesson_id: lessonId,
+      version_id: versionId,
+      blocks: formattedBlocks,
       curriculum_context: {
         curriculum_name: 'KSSR / KSSM',
         subject_id: subject?.id || '',
