@@ -42,10 +42,12 @@ import {
   getTaxonomySubjects,
   getTaxonomyYears,
   getTaxonomyTopics,
-  getTaxonomySKs,
+  getTaxonomySubtopics,
   getTaxonomySPs,
   getSPDetail
 } from "@/services/dskpRegistry";
+
+const slugify = (str) => String(str || "").toLowerCase().replace(/[^a-z0-9]/g, "_");
 
 // 7 CANONICAL GENERATABLE BLOCKS (aligned to LessonShellRenderer 8-stage shell)
 // MISSION_COMPLETE is auto-generated at assembly, not a production block.
@@ -71,52 +73,72 @@ export default function AdminContentStudio() {
   const [subject, setSubject] = useState("Matematik");
   const [yearLevel, setYearLevel] = useState("Tahun 1");
   const [topic, setTopic] = useState("Nombor hingga 100");
-  const [skCode, setSkCode] = useState("1.1");
+  const [subtopic, setSubtopic] = useState("Banyak dan Sedikit");
   const [spCode, setSpCode] = useState("1.1.1");
   const [showDashboard, setShowDashboard] = useState(true);
 
-  // Derive IDs for curriculum queries
-  const topicId = useMemo(
-    () => `top_${topic.toLowerCase().replace(/[^a-z0-9]/g, "_")}`,
-    [topic]
-  );
-  const subtopicId = useMemo(
-    () => `sub_${skCode.replace(/[^a-z0-9]/g, "_")}`,
-    [skCode]
+  const curriculum = useMemo(
+    () => (yearLevel.startsWith("Tingkatan") ? "KSSM" : "KSSR Semakan"),
+    [yearLevel]
   );
 
   // Taxonomy Data Resolution from Canonical dskpRegistry
   const availableSubjects = useMemo(() => getTaxonomySubjects(), []);
   const availableYears = useMemo(() => getTaxonomyYears(subject), [subject]);
-  const availableTopics = useMemo(() => getTaxonomyTopics(subject, yearLevel), [subject, yearLevel]);
-  const availableSKs = useMemo(() => getTaxonomySKs(subject, yearLevel, topic), [subject, yearLevel, topic]);
-  const availableSPs = useMemo(() => getTaxonomySPs(subject, yearLevel, topic, skCode), [subject, yearLevel, topic, skCode]);
-  
-  // All SPs across all topics for subject & year (Production Queue)
-  const allSubjectSPs = useMemo(() => {
-    return getTaxonomySPs(subject, yearLevel);
-  }, [subject, yearLevel]);
+  const availableTopics = useMemo(
+    () => getTaxonomyTopics(curriculum, yearLevel, subject),
+    [curriculum, yearLevel, subject]
+  );
+  const availableSubtopics = useMemo(
+    () => getTaxonomySubtopics(curriculum, yearLevel, subject, "", topic),
+    [curriculum, yearLevel, subject, topic]
+  );
+  const availableSPs = useMemo(
+    () => getTaxonomySPs(curriculum, yearLevel, subject, "", topic, subtopic),
+    [curriculum, yearLevel, subject, topic, subtopic]
+  );
 
-  const currentSPDetail = useMemo(() => getSPDetail(spCode), [spCode]);
+  // All SPs across all topics/subtopics for subject & year (Production Queue)
+  const allSubjectSPs = useMemo(
+    () => getTaxonomySPs(curriculum, yearLevel, subject),
+    [curriculum, yearLevel, subject]
+  );
+
+  // Active SP entry within the selected subtopic (SP codes repeat across subtopics,
+  // so subtopic + sp_code together form the production identity)
+  const activeSPEntry = useMemo(
+    () => availableSPs.find((s) => s.sp_code === spCode) || availableSPs[0] || null,
+    [availableSPs, spCode]
+  );
+  const skCode = activeSPEntry?.sk_code || "1.1";
+
+  // Derive IDs for curriculum queries — subtopic-scoped so each subtopic owns its assets
+  const topicId = useMemo(() => `top_${slugify(topic)}`, [topic]);
+  const subtopicId = useMemo(() => `sub_${slugify(subtopic)}`, [subtopic]);
+
+  const currentSPDetail = useMemo(
+    () => activeSPEntry || getSPDetail(spCode),
+    [activeSPEntry, spCode]
+  );
 
   // Prevent inconsistent curriculum combinations
   useEffect(() => {
     if (availableTopics.length > 0 && !availableTopics.includes(topic)) {
       setTopic(availableTopics[0]);
     }
-  }, [subject, yearLevel, availableTopics, topic]);
+  }, [availableTopics, topic]);
 
   useEffect(() => {
-    if (availableSKs.length > 0) {
-      setSkCode(availableSKs[0].sk_code);
+    if (availableSubtopics.length > 0 && !availableSubtopics.includes(subtopic)) {
+      setSubtopic(availableSubtopics[0]);
     }
-  }, [topic, availableSKs]);
+  }, [availableSubtopics, subtopic]);
 
   useEffect(() => {
-    if (availableSPs.length > 0 && !availableSPs.some(s => s.sp_code === spCode)) {
+    if (availableSPs.length > 0 && !availableSPs.some((s) => s.sp_code === spCode)) {
       setSpCode(availableSPs[0].sp_code);
     }
-  }, [skCode, availableSPs, spCode]);
+  }, [availableSPs, spCode]);
 
   // 2. CONTENT LIBRARY DATABASE ASSETS & WORKSPACE STATE
   const [selectedBlockKey, setSelectedBlockKey] = useState("LESSON_HOOK");
@@ -137,12 +159,13 @@ export default function AdminContentStudio() {
   const fetchContentLibraryState = useCallback(async () => {
     setLoadingDb(true);
     try {
+      const scope = { sp_code: spCode, subtopic_id: subtopicId };
       const [blocks, contents, activities, flashcards, questions] = await Promise.all([
-        base44.entities.LessonBlock.filter({ sp_code: spCode }).catch(() => []),
-        base44.entities.LessonContent.filter({ sp_code: spCode }).catch(() => []),
-        base44.entities.LearningActivity.filter({ sp_code: spCode }).catch(() => []),
+        base44.entities.LessonBlock.filter(scope).catch(() => []),
+        base44.entities.LessonContent.filter(scope).catch(() => []),
+        base44.entities.LearningActivity.filter(scope).catch(() => []),
         base44.entities.Flashcard.filter({ sp_code: spCode }).catch(() => []),
-        base44.entities.QuestionBank.filter({ sp_code: spCode }).catch(() => []),
+        base44.entities.QuestionBank.filter(scope).catch(() => []),
       ]);
 
       const assetGroupMap = {
@@ -161,7 +184,7 @@ export default function AdminContentStudio() {
     } finally {
       setLoadingDb(false);
     }
-  }, [spCode]);
+  }, [spCode, subtopicId]);
 
   useEffect(() => {
     fetchContentLibraryState();
@@ -332,14 +355,25 @@ export default function AdminContentStudio() {
     return null;
   }, [blockCoverageMap]);
 
-  // Next SP in canonical sequence
+  // Next SP entry in canonical sequence (topic + subtopic + sp_code)
   const nextCanonicalSP = useMemo(() => {
-    const currentIndex = allSubjectSPs.findIndex((s) => s.sp_code === spCode);
+    const currentIndex = allSubjectSPs.findIndex(
+      (s) => s.sp_code === spCode && s.subtopic === subtopic && s.topic === topic
+    );
     if (currentIndex >= 0 && currentIndex < allSubjectSPs.length - 1) {
-      return allSubjectSPs[currentIndex + 1].sp_code;
+      return allSubjectSPs[currentIndex + 1];
     }
     return null;
-  }, [allSubjectSPs, spCode]);
+  }, [allSubjectSPs, spCode, subtopic, topic]);
+
+  // Jump to any SP entry in the production queue (keeps topic/subtopic/SP in sync)
+  const selectSPEntry = useCallback((entry) => {
+    if (!entry) return;
+    if (entry.topic) setTopic(entry.topic);
+    if (entry.subtopic) setSubtopic(entry.subtopic);
+    setSpCode(entry.sp_code);
+    setSelectedBlockKey("LESSON_HOOK");
+  }, []);
 
   // 3. CANONICAL LESSON & ASSET GENERATION HANDLER (generateModularLessonContent)
   const handleGenerateSingleAsset = async (targetBlockKey = selectedBlockKey) => {
@@ -355,7 +389,7 @@ export default function AdminContentStudio() {
         subject_name: subject,
         year_level: yearLevel,
         topic_name: topic,
-        sp_description: currentSPDetail?.title || currentSPDetail?.description || "",
+        sp_description: `${subtopic} — ${currentSPDetail?.title || currentSPDetail?.description || ""}`,
       });
 
       if (res?.data?.success) {
@@ -417,7 +451,7 @@ export default function AdminContentStudio() {
             subject_name: subject,
             year_level: yearLevel,
             topic_name: topic,
-            sp_description: currentSPDetail?.title || currentSPDetail?.description || "",
+            sp_description: `${subtopic} — ${currentSPDetail?.title || currentSPDetail?.description || ""}`,
           });
 
           if (res?.data?.success) {
@@ -538,7 +572,7 @@ export default function AdminContentStudio() {
     setAssemblingLesson(true);
     try {
       const res = await base44.functions.invoke("assembleLessonFromApprovedAssets", {
-        lesson_id: `les_${topicId}`,
+        lesson_id: `les_${topicId}_${subtopicId}`,
         topic_id: topicId,
         subtopic_id: subtopicId,
         sp_code: spCode,
@@ -582,6 +616,8 @@ export default function AdminContentStudio() {
             <ChevronRight className="w-3.5 h-3.5 text-stone-600" />
             <span className="text-stone-300">{topic}</span>
             <ChevronRight className="w-3.5 h-3.5 text-stone-600" />
+            <span className="text-stone-300">{subtopic}</span>
+            <ChevronRight className="w-3.5 h-3.5 text-stone-600" />
             <span className="text-cyan-400 font-black">SK {skCode}</span>
             <ChevronRight className="w-3.5 h-3.5 text-stone-600" />
             <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-mono font-black">SP {spCode}</span>
@@ -608,11 +644,11 @@ export default function AdminContentStudio() {
 
           {nextCanonicalSP && (
             <Button
-              onClick={() => setSpCode(nextCanonicalSP)}
+              onClick={() => selectSPEntry(nextCanonicalSP)}
               variant="outline"
               className="h-9 bg-stone-900 border-stone-700 hover:bg-stone-800 text-stone-200 font-bold text-xs rounded-xl flex items-center gap-1.5"
             >
-              <span>SP Seterusnya ({nextCanonicalSP})</span>
+              <span>Subtopik Seterusnya ({nextCanonicalSP.subtopic})</span>
               <ArrowRight className="w-3.5 h-3.5 text-amber-400" />
             </Button>
           )}
@@ -634,10 +670,10 @@ export default function AdminContentStudio() {
               <CardTitle className="text-base font-black text-amber-400 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-amber-400" /> Papan Pemuka Pengeluaran Kurikulum (Controlled Engine Phase 8A)
               </CardTitle>
-              <p className="text-xs text-stone-400">Pengurusan kelompok & kemajuan pengeluaran bagi 25 Standard Pembelajaran {subject} {yearLevel}</p>
+              <p className="text-xs text-stone-400">Pengurusan kelompok & kemajuan pengeluaran bagi {allSubjectSPs.length} unit subtopik/SP {subject} {yearLevel}</p>
             </div>
             <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/40 text-amber-300 rounded-full text-xs font-mono font-bold">
-              25 SP × 7 Blok = 175 Aset Disasarkan
+              {allSubjectSPs.length} SP × 7 Blok = {allSubjectSPs.length * 7} Aset Disasarkan
             </span>
           </CardHeader>
           <CardContent className="p-4 space-y-4 font-sans">
@@ -664,7 +700,7 @@ export default function AdminContentStudio() {
               </div>
               <div className="p-3 bg-stone-950 rounded-xl border border-stone-800">
                 <p className="text-[10px] font-bold text-stone-400 uppercase">Sasaran Aset Keseluruhan</p>
-                <p className="text-xl font-black text-cyan-400">175 Aset</p>
+                <p className="text-xl font-black text-cyan-400">{allSubjectSPs.length * 7} Aset</p>
               </div>
             </div>
 
@@ -677,12 +713,13 @@ export default function AdminContentStudio() {
                 <span className="text-[10px] font-mono text-stone-400">Urutan DSKP Kanonikal</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
-                {allSubjectSPs.map((item) => {
-                  const isActive = item.sp_code === spCode;
+                {allSubjectSPs.map((item, idx) => {
+                  const isActive =
+                    item.sp_code === spCode && item.subtopic === subtopic && item.topic === topic;
                   return (
                     <button
-                      key={item.sp_code}
-                      onClick={() => setSpCode(item.sp_code)}
+                      key={`${item.topic}-${item.subtopic}-${item.sp_code}-${idx}`}
+                      onClick={() => selectSPEntry(item)}
                       className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between gap-2 ${
                         isActive
                           ? "bg-amber-500/20 border-amber-400 text-white font-bold"
@@ -690,7 +727,7 @@ export default function AdminContentStudio() {
                       }`}
                     >
                       <div className="truncate">
-                        <span className="text-[10px] font-mono text-amber-400 font-bold block">{item.topic_name || topic}</span>
+                        <span className="text-[10px] font-mono text-amber-400 font-bold block truncate">{item.subtopic || item.topic}</span>
                         <span className="text-xs font-black">SP {item.sp_code}</span>
                       </div>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full border font-mono ${
@@ -714,7 +751,7 @@ export default function AdminContentStudio() {
           <CardTitle className="text-sm font-black text-amber-400 flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-amber-400" /> Pengurus Pengeluaran Kurikulum Topik: {topic}
           </CardTitle>
-          <span className="text-xs text-stone-400 font-mono">Jumlah SP Dalam Topik Ini: {availableSPs.length}</span>
+          <span className="text-xs text-stone-400 font-mono">Subtopik: {availableSubtopics.length} | SP Dalam Subtopik Ini: {availableSPs.length}</span>
         </CardHeader>
         <CardContent className="p-4 space-y-4">
           
@@ -760,14 +797,17 @@ export default function AdminContentStudio() {
             </div>
 
             <div>
-              <label className="text-[10px] font-bold text-stone-400 uppercase">Standard Kandungan</label>
+              <label className="text-[10px] font-bold text-stone-400 uppercase">Subtopik (Unit Pelajaran)</label>
               <select
-                value={skCode}
-                onChange={(e) => setSkCode(e.target.value)}
+                value={subtopic}
+                onChange={(e) => {
+                  setSubtopic(e.target.value);
+                  setSelectedBlockKey("LESSON_HOOK");
+                }}
                 className="w-full h-9 px-2.5 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 font-bold focus:border-amber-500 outline-none"
               >
-                {availableSKs.map((sk) => (
-                  <option key={sk.sk_code} value={sk.sk_code}>SK {sk.sk_code} - {sk.title}</option>
+                {availableSubtopics.map((st) => (
+                  <option key={st} value={st}>{st}</option>
                 ))}
               </select>
             </div>
@@ -819,7 +859,7 @@ export default function AdminContentStudio() {
             <CardHeader className="border-b border-stone-800/60 pb-3 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-sm font-black text-cyan-400 flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-cyan-400" /> Papan Pengeluaran 7 Blok Kanonikal (SP {spCode})
+                  <Layers className="w-4 h-4 text-cyan-400" /> Papan Pengeluaran 7 Blok Kanonikal ({subtopic} • SP {spCode})
                 </CardTitle>
                 <p className="text-[11px] text-stone-400">Pilih mana-mana blok untuk menjana, melihat, atau mengesahkan</p>
               </div>
