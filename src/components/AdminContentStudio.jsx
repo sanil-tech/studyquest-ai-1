@@ -256,33 +256,15 @@ export default function AdminContentStudio() {
     const config = CANONICAL_15_BLOCKS.find((b) => b.key === targetBlockKey) || selectedBlockConfig;
     setGeneratingAsset(true);
     try {
-      let res;
-      try {
-        res = await base44.functions.invoke("generateModularLessonContent", {
-          sp_code: spCode,
-          sk_code: skCode,
-          subject: subject,
-          year_level: yearLevel,
-          topic: topic,
-          curriculum_type: "KSSR_SEMAKAN",
-          asset_type: config.backendAssetType,
-          block_type: config.key
-        });
-      } catch (invokeErr) {
-        if (invokeErr?.message?.includes("404")) {
-          res = await base44.functions.invoke("generateContentAsset", {
-            topic_id: topicId,
-            subtopic_id: subtopicId,
-            sp_code: spCode,
-            asset_type: config.backendAssetType,
-            block_type: config.key,
-            subject_name: subject,
-            year_level: yearLevel,
-          });
-        } else {
-          throw invokeErr;
-        }
-      }
+      const res = await base44.functions.invoke("generateContentAsset", {
+        topic_id: topicId,
+        subtopic_id: subtopicId,
+        sp_code: spCode,
+        asset_type: config.backendAssetType,
+        block_type: config.key,
+        subject_name: subject,
+        year_level: yearLevel,
+      });
 
       if (res?.data?.success) {
         toast({
@@ -334,33 +316,15 @@ export default function AdminContentStudio() {
             title: `⚡ Menjana Blok ${count + 1}...`,
             description: `Menjana ${block.name} (${block.key})`,
           });
-          let res;
-          try {
-            res = await base44.functions.invoke("generateModularLessonContent", {
-              sp_code: spCode,
-              sk_code: skCode,
-              subject: subject,
-              year_level: yearLevel,
-              topic: topic,
-              curriculum_type: "KSSR_SEMAKAN",
-              asset_type: block.backendAssetType,
-              block_type: block.key
-            });
-          } catch (invokeErr) {
-            if (invokeErr?.message?.includes("404")) {
-              res = await base44.functions.invoke("generateContentAsset", {
-                topic_id: topicId,
-                subtopic_id: subtopicId,
-                sp_code: spCode,
-                asset_type: block.backendAssetType,
-                block_type: block.key,
-                subject_name: subject,
-                year_level: yearLevel,
-              });
-            } else {
-              throw invokeErr;
-            }
-          }
+          const res = await base44.functions.invoke("generateContentAsset", {
+            topic_id: topicId,
+            subtopic_id: subtopicId,
+            sp_code: spCode,
+            asset_type: block.backendAssetType,
+            block_type: block.key,
+            subject_name: subject,
+            year_level: yearLevel,
+          });
 
           if (res?.data?.success) {
             count++;
