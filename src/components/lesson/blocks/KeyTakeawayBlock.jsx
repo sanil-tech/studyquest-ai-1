@@ -4,12 +4,15 @@
 
 import React, { useState } from "react";
 import { Brain, RotateCcw } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
 
-export default function KeyTakeawayBlock({ content, studentName, onComplete, isCompleted }) {
+export default function KeyTakeawayBlock({ content = {}, studentName, onComplete, isCompleted }) {
   const points = (content.summary_points || []).map((p) => personalize(p, studentName));
   const tip = personalize(content.memory_tip || "", studentName);
+  const commonMistakes = (content.common_mistakes || []).map((m) => personalize(m, studentName));
+  const reflectionPrompt = personalize(content.reflection_prompt || "", studentName);
   const flashcards = (content.flashcards || []).map((fc) => ({
     term: personalize(fc.term || "", studentName),
     definition: personalize(fc.definition || "", studentName)
@@ -38,17 +41,27 @@ export default function KeyTakeawayBlock({ content, studentName, onComplete, isC
         </span>
       </div>
 
-      {/* Summary points */}
-      <div className="space-y-2">
-        {points.map((pt, idx) => (
-          <div key={idx} className="p-3 bg-stone-950 rounded-2xl border border-stone-800 flex items-start gap-3">
-            <span className="w-6 h-6 rounded-xl bg-amber-500/20 text-amber-300 font-black text-xs flex items-center justify-center shrink-0 border border-amber-500/30">
-              {idx + 1}
-            </span>
-            <p className="text-xs font-bold text-stone-200 leading-relaxed pt-0.5">{pt}</p>
-          </div>
-        ))}
-      </div>
+      {/* Summary points (structured) — or markdown fallback when AI returns prose */}
+      {points.length > 0 ? (
+        <div className="space-y-2">
+          {points.map((pt, idx) => (
+            <div key={idx} className="p-3 bg-stone-950 rounded-2xl border border-stone-800 flex items-start gap-3">
+              <span className="w-6 h-6 rounded-xl bg-amber-500/20 text-amber-300 font-black text-xs flex items-center justify-center shrink-0 border border-amber-500/30">
+                {idx + 1}
+              </span>
+              <p className="text-xs font-bold text-stone-200 leading-relaxed pt-0.5">{pt}</p>
+            </div>
+          ))}
+        </div>
+      ) : content.markdown ? (
+        <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 prose prose-invert prose-sm max-w-none text-stone-200">
+          <ReactMarkdown>{personalize(content.markdown, studentName)}</ReactMarkdown>
+        </div>
+      ) : (
+        <p className="text-xs text-stone-400 italic p-3 bg-stone-950 rounded-xl border border-stone-800">
+          Rumusan kandungan sedang disediakan.
+        </p>
+      )}
 
       {/* Memory tip */}
       {tip && (
@@ -59,6 +72,36 @@ export default function KeyTakeawayBlock({ content, studentName, onComplete, isC
           <div className="space-y-0.5">
             <span className="text-[10px] font-black text-amber-400 uppercase block">Petua Ingatan:</span>
             <p className="text-xs font-bold text-amber-100 leading-relaxed">"{tip}"</p>
+          </div>
+        </div>
+      )}
+
+      {/* Common mistakes (Awas Kesilapan!) */}
+      {commonMistakes.length > 0 && (
+        <div className="p-3.5 bg-rose-950/50 border border-rose-500/40 rounded-2xl space-y-2">
+          <span className="text-[10px] font-black uppercase text-rose-400 tracking-wider flex items-center gap-1.5">
+            ⚠️ Awas Kesilapan!
+          </span>
+          <ul className="space-y-1.5">
+            {commonMistakes.map((m, idx) => (
+              <li key={idx} className="text-xs font-medium text-rose-100 leading-relaxed flex items-start gap-2">
+                <span className="text-rose-400 font-black shrink-0">✗</span>
+                <span>{m}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Reflection prompt (Refleksi Diri) */}
+      {reflectionPrompt && (
+        <div className="p-3.5 bg-indigo-950/50 border border-indigo-500/40 rounded-2xl flex items-start gap-3">
+          <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-base shrink-0 border border-indigo-500/40">
+            🌱
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-black text-indigo-400 uppercase block">Refleksi Diri:</span>
+            <p className="text-xs font-bold text-indigo-100 leading-relaxed">{reflectionPrompt}</p>
           </div>
         </div>
       )}

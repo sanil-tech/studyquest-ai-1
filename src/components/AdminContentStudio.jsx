@@ -204,30 +204,97 @@ export default function AdminContentStudio() {
 
   // Adapt selected asset for UniversalLessonPreview
   useEffect(() => {
-    if (currentSelectedAsset) {
-      const blockType = ASSET_ENTITY_MAP[selectedBlockConfig.backendAssetType]?.block_type || "CONCEPT_CPA";
-      const payload = currentSelectedAsset.payload || {
-        markdown: currentSelectedAsset.content_markdown || currentSelectedAsset.front || currentSelectedAsset.question || currentSelectedAsset.title || "Kandungan Aset",
-        voice_script: currentSelectedAsset.voice_script || "",
-        title: currentSelectedAsset.title || selectedBlockConfig.name
-      };
+    let cancelled = false;
 
+    const buildPreview = async () => {
+      if (!currentSelectedAsset) {
+        if (!cancelled) setActivePreviewPackage(null);
+        return;
+      }
+
+      // Canonical block key → LessonShellRenderer block_type for preview.
+      // QUIZ_QUESTION and REFLECTION don't have a direct block_type in ASSET_ENTITY_MAP
+      // (they map to QuestionBank / null), so we explicitly route them to the shell blocks
+      // that render them: KNOWLEDGE_CHECK and KEY_TAKEAWAY.
+      const PREVIEW_BLOCK_TYPE_MAP = {
+        QUIZ_QUESTION: "KNOWLEDGE_CHECK",
+        REFLECTION: "KEY_TAKEAWAY",
+      };
+      const blockType =
+        PREVIEW_BLOCK_TYPE_MAP[selectedBlockKey] ||
+        ASSET_ENTITY_MAP[selectedBlockConfig.backendAssetType]?.block_type ||
+        "CONCEPT_CPA";
+
+      let payload;
+      if (selectedBlockKey === "QUIZ_QUESTION") {
+        // Build a questions[] payload from all QuestionBank records for this SP,
+        // fetching their QuestionOption records to populate options + correct index.
+        const builtQuestions = [];
+        for (const qb of currentSelectedRecords) {
+          let opts = [];
+          try {
+            const optRecords = await base44.entities.QuestionOption.filter(
+              { question_id: qb.id },
+              "sort_order",
+              10
+            );
+            opts = (optRecords || []).map((o) => o.text || o.label || "");
+          } catch {
+            opts = [];
+          }
+          // correct_answer is stored as a label like "D. sembilan" or "C. 6"
+          const ca = String(qb.correct_answer || "").trim();
+          const labelMatch = ca.match(/^([A-Z])/i);
+          let correctIndex = 0;
+          if (labelMatch) {
+            const idx = labelMatch[1].toUpperCase().charCodeAt(0) - 65;
+            if (idx >= 0 && idx < opts.length) correctIndex = idx;
+          }
+          builtQuestions.push({
+            stem: qb.question || "Soalan",
+            options: opts,
+            correct_index: correctIndex,
+            explanation: qb.explanation || "",
+          });
+        }
+        payload = { questions: builtQuestions };
+      } else {
+        payload = currentSelectedAsset.payload || {
+          markdown:
+            currentSelectedAsset.content_markdown ||
+            currentSelectedAsset.front ||
+            currentSelectedAsset.question ||
+            currentSelectedAsset.title ||
+            "Kandungan Aset",
+          voice_script: currentSelectedAsset.voice_script || "",
+          title: currentSelectedAsset.title || selectedBlockConfig.name,
+        };
+      }
+
+      if (cancelled) return;
       setActivePreviewPackage({
         version: "2.0",
         lesson: {
           version: "2.0",
-          blocks: [{ block_type: blockType, payload }]
+          blocks: [{ block_type: blockType, payload }],
         },
         admin_metadata: {
-          subject, grade: yearLevel, sk_code: skCode, sp_code: spCode,
+          subject,
+          grade: yearLevel,
+          sk_code: skCode,
+          sp_code: spCode,
           asset_type: selectedBlockKey,
-          review_status: currentSelectedAsset.review_status || currentSelectedAsset.status || "draft"
-        }
+          review_status:
+            currentSelectedAsset.review_status || currentSelectedAsset.status || "draft",
+        },
       });
-    } else {
-      setActivePreviewPackage(null);
-    }
-  }, [currentSelectedAsset, selectedBlockConfig, subject, yearLevel, skCode, spCode, selectedBlockKey]);
+    };
+
+    buildPreview();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentSelectedAsset, currentSelectedRecords, selectedBlockConfig, subject, yearLevel, skCode, spCode, selectedBlockKey]);
 
   // Next required block type deterministically (prioritize required blocks first)
   const nextRequiredBlock = useMemo(() => {

@@ -242,11 +242,18 @@ export default async function (req: Request): Promise<Response> {
     let createdAsset: any = null;
 
     if (targetEntity === "LessonBlock") {
-      const blockPayload = aiRes.content || {
-        markdown: aiRes.markdown || aiRes.title || "",
-        voice_script: aiRes.voice_script || "",
-        title: aiRes.title,
-      };
+      // The LLM schema declares `content` as a generic object with no sub-properties,
+      // so the model typically returns pedagogical fields (summary_points, steps,
+      // concept_explanation, hook_text, etc.) at the TOP LEVEL rather than nested.
+      // Merge top-level fields into the payload to guarantee non-empty block content.
+      const aiContent = (aiRes.content && typeof aiRes.content === "object" && !Array.isArray(aiRes.content))
+        ? aiRes.content
+        : {};
+      const blockPayload: Record<string, any> = { ...aiContent, ...aiRes };
+      delete blockPayload.asset_type;
+      delete blockPayload.content;
+      delete blockPayload.questions;
+      delete blockPayload.cards;
 
       createdAsset = await db.entities.LessonBlock.create({
         lesson_version_id: null,
