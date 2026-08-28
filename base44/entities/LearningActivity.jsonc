@@ -4,7 +4,7 @@
   "properties": {
     "lesson_id": {
       "type": "string",
-      "description": "ID of the parent Lesson"
+      "description": "ID of the parent Lesson (optional for standalone assets)"
     },
     "activity_type": {
       "type": "string",
@@ -91,7 +91,6 @@
     }
   },
   "required": [
-    "lesson_id",
     "activity_type"
   ],
   "rls": {

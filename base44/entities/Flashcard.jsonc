@@ -4,7 +4,7 @@
   "properties": {
     "lesson_id": {
       "type": "string",
-      "description": "ID of the parent Lesson (kept for backward compatibility)"
+      "description": "ID of the parent Lesson (optional for standalone assets)"
     },
     "topic_id": {
       "type": "string",
@@ -77,7 +77,6 @@
     }
   },
   "required": [
-    "lesson_id",
     "front",
     "back"
   ],
