@@ -100,23 +100,23 @@ const ASSET_OUTPUT_SCHEMAS: Record<string, any> = {
       instruction: { type: "string", description: "Satu ayat pendek arahan kepada kanak-kanak (max 12 patah)" },
       seed_data: {
         type: "object",
-        description: "MESTI tidak kosong. Untuk matching: {pairs:[{image,label}]}. Untuk drag_and_drop: {items:[], categories:[]}. Untuk number_scale: {left_val, right_val, correct_relation}.",
+        description: "MESTI tidak kosong. matching: {pairs:[{image,label}]}. drag_and_drop: {items:[],categories:[]}. number_scale: {left_val,right_val,correct_relation}. sentence_builder: {target_sentence,word_bank}. base_ten_blocks: {target_number}. fraction_slicer: {target_fraction,total_parts,shaded_parts}. quiz_wheel: {question,options,correct_index}.",
         properties: {
-          pairs: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                image: { type: "string", description: "Emoji/string visual kanak-kanak lihat di skrin" },
-                label: { type: "string", description: "Perkataan seperti BANYAK/SEDIKIT" },
-              },
-            },
-          },
+          pairs: { type: "array", items: { type: "object", properties: { image: { type: "string" }, label: { type: "string" } } } },
           items: { type: "array", items: { type: "string" } },
           categories: { type: "array", items: { type: "string" } },
           left_val: { type: "number" },
           right_val: { type: "number" },
           correct_relation: { type: "string", description: "MORE_THAN, LESS_THAN, atau EQUAL" },
+          target_sentence: { type: "string" },
+          word_bank: { type: "array", items: { type: "string" } },
+          target_number: { type: "number" },
+          target_fraction: { type: "string" },
+          total_parts: { type: "number" },
+          shaded_parts: { type: "number" },
+          question: { type: "string" },
+          options: { type: "array", items: { type: "string" } },
+          correct_index: { type: "number" },
         },
       },
     },
@@ -438,7 +438,7 @@ export default async function (req: Request): Promise<Response> {
         );
       }
       const wt = String(aiRes.widget_type || "").toLowerCase();
-      const validWidgets = ["matching", "drag_and_drop", "number_scale"];
+      const validWidgets = ["matching", "drag_and_drop", "number_scale", "sentence_builder", "base_ten_blocks", "fraction_slicer", "quiz_wheel"];
       if (!validWidgets.includes(wt)) {
         return Response.json(
           {
@@ -465,6 +465,30 @@ export default async function (req: Request): Promise<Response> {
       if (wt === "number_scale" && (typeof sd.left_val !== "number" || typeof sd.right_val !== "number" || !sd.correct_relation)) {
         return Response.json(
           { success: false, error_code: "INVALID_AI_OUTPUT", error: "number_scale memerlukan seed_data.left_val, right_val, correct_relation." },
+          { status: 422 }
+        );
+      }
+      if (wt === "sentence_builder" && (!sd.target_sentence || !Array.isArray(sd.word_bank) || sd.word_bank.length < 2)) {
+        return Response.json(
+          { success: false, error_code: "INVALID_AI_OUTPUT", error: "sentence_builder memerlukan seed_data.target_sentence dan seed_data.word_bank (min 2 perkataan)." },
+          { status: 422 }
+        );
+      }
+      if (wt === "base_ten_blocks" && typeof sd.target_number !== "number") {
+        return Response.json(
+          { success: false, error_code: "INVALID_AI_OUTPUT", error: "base_ten_blocks memerlukan seed_data.target_number (nombor)." },
+          { status: 422 }
+        );
+      }
+      if (wt === "fraction_slicer" && (!sd.target_fraction || typeof sd.total_parts !== "number" || typeof sd.shaded_parts !== "number")) {
+        return Response.json(
+          { success: false, error_code: "INVALID_AI_OUTPUT", error: "fraction_slicer memerlukan seed_data.target_fraction, total_parts, shaded_parts." },
+          { status: 422 }
+        );
+      }
+      if (wt === "quiz_wheel" && (!sd.question || !Array.isArray(sd.options) || sd.options.length < 2 || typeof sd.correct_index !== "number")) {
+        return Response.json(
+          { success: false, error_code: "INVALID_AI_OUTPUT", error: "quiz_wheel memerlukan seed_data.question, options (min 2), correct_index." },
           { status: 422 }
         );
       }

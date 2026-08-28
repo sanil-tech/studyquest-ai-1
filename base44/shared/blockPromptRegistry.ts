@@ -208,18 +208,23 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
   GUIDED_PRACTICE: {
     macro_version: MACRO_VERSION,
     asset_type: "GUIDED_PRACTICE",
-    role: "You are a gamified-learning designer building an interactive practice WIDGET for a 7-year-old on a tablet — the child taps, drags, or matches pictures on screen, not reads text hints.",
+    role: "You are a gamified-learning designer building an interactive practice WIDGET for a 7-year-old on a tablet for ANY school subject (Matematik, Bahasa Melayu, English, Sains, Sejarah, etc.). The child taps, drags, or matches on screen — you MUST choose the widget that best fits the ACTUAL topic, never default to the same widget for every topic.",
     pedagogical_purpose: "Let the child PRACTICE the concept through a short on-screen game (tap-the-many, matching pairs, number scale) with real data, not a text worksheet.",
     prior_knowledge: "Has reviewed WORKED_EXAMPLE step-by-step procedure.",
     block_responsibility: "Choose one widget_type, write a short child instruction, and provide CONCRETE seed_data the widget can render immediately (pairs, items, or values) — NEVER empty.",
     content_rules: [
-      "widget_type: choose ONE of: 'matching', 'drag_and_drop', 'number_scale'.",
+      "widget_type: choose the ONE widget best suited to THIS topic from the registry: 'matching' (padankan pasangan gambar↔perkataan), 'drag_and_drop' (kategori/susun objek ke dalam kumpulan), 'number_scale' (banding dua nombor: > < =), 'sentence_builder' (bina ayat/perkataan daripada pilihan), 'base_ten_blocks' (nilai tempat nombor 1-99), 'fraction_slicer' (wakil pecahan), 'quiz_wheel' (pilih satu jawapan betul).",
+      "Pick the widget that matches the ACTUAL topic — Bahasa Melayu/English ejaan/ayat → sentence_builder or matching; Matematik nombor/banding → number_scale or base_ten_blocks; Sains pengelasan/ciri → drag_and_drop; Matematik pecah → fraction_slicer; sebarang semakan pantas → quiz_wheel. Do NOT default to 'matching' for every topic.",
       "instruction: ONE short child sentence telling the child what to do on screen (e.g. 'Tolong Suku Penyu — tekan gambar yang BANYAK!'). Max 12 words.",
-      "seed_data: MUST be a non-empty object containing concrete game data the widget renders. NEVER return {}.",
-      "For 'matching': seed_data MUST contain 'pairs' — an array of 3-6 objects, each with 'image' (emoji string like '🍎🍎🍎🍎🍎') and 'label' (a word like 'BANYAK' or 'SEDIKIT').",
-      "For 'drag_and_drop': seed_data MUST contain 'items' (array of emoji strings) and 'categories' (array of label strings).",
-      "For 'number_scale': seed_data MUST contain 'left_val' (number), 'right_val' (number), 'correct_relation' (one of 'MORE_THAN', 'LESS_THAN', 'EQUAL').",
-      "Use emoji to represent objects so the child can SEE and count them on screen.",
+      "seed_data: MUST be a non-empty object containing concrete data the chosen widget renders. NEVER return {}.",
+      "For 'matching': {pairs: [{image, label}, ...]} 3-6 pasangan, image = emoji string (e.g. '🍎🍎🍎'), label = perkataan (e.g. 'BANYAK').",
+      "For 'drag_and_drop': {items: [emoji,...], categories: [label,...]} setiap item disusun ke satu kategori.",
+      "For 'number_scale': {left_val: number, right_val: number, correct_relation: 'MORE_THAN'|'LESS_THAN'|'EQUAL'}.",
+      "For 'sentence_builder': {target_sentence: string, word_bank: [string,...]} word_bank mengandungi perkataan betul + 1-2 pencelah.",
+      "For 'base_ten_blocks': {target_number: number} nombor antara 1-99.",
+      "For 'fraction_slicer': {target_fraction: string (e.g. '1/2'), total_parts: number, shaded_parts: number}.",
+      "For 'quiz_wheel': {question: string, options: [string,...] (4 pilihan), correct_index: number (0-3)}.",
+      "Use emoji to represent objects so the child can SEE and interact on screen.",
       "Write DIRECTLY to the child, never as teacher instructions."
     ],
     language_rules: ["Playful, encouraging child-direct Bahasa Melayu."],
@@ -230,9 +235,11 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
       schema_description: "Object with title, widget_type (string), instruction (string), seed_data (non-empty object with pairs/items/values)."
     },
     validation_rules: [
+      "widget_type MUST be exactly one of: matching, drag_and_drop, number_scale, sentence_builder, base_ten_blocks, fraction_slicer, quiz_wheel. NEVER 'unknown' or empty.",
       "seed_data MUST NOT be empty {}.",
-      "seed_data MUST match the widget_type schema (pairs for matching, items+categories for drag_and_drop, left_val/right_val/correct_relation for number_scale).",
+      "seed_data MUST match the chosen widget_type schema (pairs for matching, items+categories for drag_and_drop, left_val/right_val/correct_relation for number_scale, target_sentence+word_bank for sentence_builder, target_number for base_ten_blocks, target_fraction+total_parts+shaded_parts for fraction_slicer, question+options+correct_index for quiz_wheel).",
       "instruction MUST be a child-direct action sentence under 12 words.",
+      "The widget MUST fit the actual topic — do not force 'matching' for non-matching topics.",
       "Must NOT contain teacher-only instructions."
     ],
     quality_criteria: {
