@@ -43,7 +43,7 @@ const CPA_PHASES = [
   }
 ];
 
-export default function ConceptCPABlock({ content, studentName, onComplete, isCompleted }) {
+export default function ConceptCPABlock({ content = {}, studentName, onComplete, isCompleted }) {
   const [activePhase, setActivePhase] = useState(0);
 
   return (
