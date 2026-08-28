@@ -540,6 +540,20 @@ export default async function (req: Request): Promise<Response> {
       } catch {
         // fallback: keep the AI's visual_prompt already in aiRes
       }
+
+      // Generate the ACTUAL story image via Core.GenerateImage (high-quality 3D real-life
+      // Pixar style) so the rendered visual matches the exact mission scene — two baskets
+      // of mangosteens, jars of marbles, etc. Store the URL as image_url; StoryHookBlock
+      // uses it directly when present, falling back to Pollinations from image_prompt.
+      try {
+        const fullImgPrompt = `3D real-life Pixar animation style digital render of Suku Penyu, a cute friendly green sea turtle mascot character wearing a blue school jacket, ${aiRes.image_prompt || aiRes.visual_prompt || aiRes.story_text}. Bright vivid colors, warm volumetric lighting, educational children book illustration, high detail, child friendly, cinematic Pixar render.`;
+        const genImgRes = await db.integrations.Core.GenerateImage({ prompt: fullImgPrompt });
+        if (genImgRes && genImgRes.url) {
+          aiRes.image_url = genImgRes.url;
+        }
+      } catch {
+        // fallback: StoryHookBlock builds Pollinations URL from image_prompt
+      }
     }
 
     // 10. Prepare Server-Authoritarian Asset Payload & Force DRAFT / UNDER_REVIEW Status
