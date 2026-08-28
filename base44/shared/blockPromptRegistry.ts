@@ -217,7 +217,7 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
       "Pick the widget that matches the ACTUAL topic — Bahasa Melayu/English ejaan/ayat → sentence_builder or matching; Matematik nombor/banding → number_scale or base_ten_blocks; Sains pengelasan/ciri → drag_and_drop; Matematik pecah → fraction_slicer; sebarang semakan pantas → quiz_wheel. Do NOT default to 'matching' for every topic.",
       "instruction: ONE short child sentence telling the child what to do on screen (e.g. 'Tolong Suku Penyu — tekan gambar yang BANYAK!'). Max 12 words.",
       "seed_data: MUST be a non-empty object containing concrete data the chosen widget renders. NEVER return {}.",
-      "For 'matching': {pairs: [{image, label}, ...]} 3-6 pasangan, image = emoji string (e.g. '🍎🍎🍎'), label = perkataan (e.g. 'BANYAK').",
+      "For 'matching': {pairs: [{image, label}, ...]} 3-6 pasangan, image = emoji string (e.g. '🍎🍎🍎'), label = perkataan (e.g. 'BANYAK'). Arahan MATCHING mesti guna 'Tekan kad untuk padankan' (TAP) — JANGAN sekali-kali 'Tarik garisan' (tiada widget lukis garisan; kanak-kanak tekan kad kiri kemudian kad kanan).",
       "For 'drag_and_drop': {items: [emoji,...], categories: [label,...]} setiap item disusun ke satu kategori.",
       "For 'number_scale': {left_val: number, right_val: number, correct_relation: 'MORE_THAN'|'LESS_THAN'|'EQUAL'}.",
       "For 'sentence_builder': {target_sentence: string, word_bank: [string,...]} word_bank mengandungi perkataan betul + 1-2 pencelah.",

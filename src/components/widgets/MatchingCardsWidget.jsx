@@ -13,11 +13,17 @@ export default function MatchingCardsWidget({
   isCompleted = false,
   onMistake = () => {}
 }) {
-  const pairs = payload.pairs || [
-    { left: "50 sen", right: "Duit syiling bernilai 50 sen" },
-    { left: "RM1", right: "Wang kertas berwarna biru" },
-    { left: "RM5", right: "Wang kertas berwarna hijau" }
+  // Normalise pair shapes the AI may emit: {image,label}, {left,right}, {front,back}
+  const rawPairs = payload.pairs || [
+    { image: "🍎🍎🍎", label: "BANYAK" },
+    { image: "🍪", label: "SEDIKIT" },
+    { image: "🌟🌟🌟🌟", label: "BANYAK" }
   ];
+  const usesImageLabel = rawPairs.some((p) => p && (p.image || p.label) && p.left === undefined && p.right === undefined);
+  const pairs = rawPairs.map((p) => ({
+    left: p.left ?? p.image ?? p.front ?? "",
+    right: p.right ?? p.label ?? p.back ?? ""
+  }));
 
   const [selectedLeftIdx, setSelectedLeftIdx] = useState(null);
   const [matchedIndices, setMatchedIndices] = useState([]);
@@ -76,13 +82,16 @@ export default function MatchingCardsWidget({
       <p className="text-xs font-bold text-stone-200">
         📌 {payload.instruction || instruction}
       </p>
+      <p className="text-[11px] font-bold text-indigo-300/80">
+        👆 Tekan satu kad di kiri, lepas tu tekan pasangannya di kanan!
+      </p>
 
       {/* TWO COLUMNS OF CARDS */}
       <div className="grid grid-cols-2 gap-4">
         {/* LEFT COLUMN */}
         <div className="space-y-2">
           <span className="text-[10px] font-black text-stone-400 uppercase tracking-wider block">
-            1. Kad Istilah / Soalan:
+            {usesImageLabel ? "1. Kad Gambar:" : "1. Kad Istilah / Soalan:"}
           </span>
           {pairs.map((p, idx) => {
             const isMatched = matchedIndices.includes(idx);
@@ -93,13 +102,13 @@ export default function MatchingCardsWidget({
                 key={`L-${idx}`}
                 onClick={() => handleLeftSelect(idx)}
                 disabled={isMatched}
-                className={`w-full p-3 text-xs font-bold rounded-2xl border-2 transition-all text-left ${
+                className={`w-full p-3 rounded-2xl border-2 transition-all text-left ${
                   isMatched
                     ? "bg-emerald-950/50 border-emerald-500/50 text-emerald-300 opacity-50 cursor-not-allowed"
                     : isSelected
                     ? "bg-indigo-600 border-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.6)] scale-102"
                     : "bg-stone-950 border-stone-800 text-stone-200 hover:border-indigo-500"
-                }`}
+                } ${usesImageLabel ? "text-2xl text-center" : "text-xs font-bold"}`}
               >
                 {p.left} {isMatched && "✓"}
               </button>
@@ -110,7 +119,7 @@ export default function MatchingCardsWidget({
         {/* RIGHT COLUMN */}
         <div className="space-y-2">
           <span className="text-[10px] font-black text-stone-400 uppercase tracking-wider block">
-            2. Kad Maksud / Rakan:
+            {usesImageLabel ? "2. Kad Perkataan:" : "2. Kad Maksud / Rakan:"}
           </span>
           {pairs.map((p, idx) => {
             const isMatched = matchedIndices.includes(idx);
