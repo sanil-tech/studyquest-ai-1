@@ -7,6 +7,7 @@ import { Brain, RotateCcw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
+import RevealSummaryVisual from "@/components/lesson/blocks/RevealSummaryVisual";
 
 export default function KeyTakeawayBlock({ content = {}, studentName, onComplete, isCompleted }) {
   const points = (content.summary_points || []).map((p) => personalize(p, studentName));
@@ -41,18 +42,9 @@ export default function KeyTakeawayBlock({ content = {}, studentName, onComplete
         </span>
       </div>
 
-      {/* Summary points (structured) — or markdown fallback when AI returns prose */}
+      {/* Interactive summary points (tap-to-reveal) — or markdown fallback */}
       {points.length > 0 ? (
-        <div className="space-y-2">
-          {points.map((pt, idx) => (
-            <div key={idx} className="p-3 bg-stone-950 rounded-2xl border border-stone-800 flex items-start gap-3">
-              <span className="w-6 h-6 rounded-xl bg-amber-500/20 text-amber-300 font-black text-xs flex items-center justify-center shrink-0 border border-amber-500/30">
-                {idx + 1}
-              </span>
-              <p className="text-xs font-bold text-stone-200 leading-relaxed pt-0.5">{pt}</p>
-            </div>
-          ))}
-        </div>
+        <RevealSummaryVisual points={points} studentName={studentName} personalizeFn={personalize} />
       ) : content.markdown ? (
         <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 prose prose-invert prose-sm max-w-none text-stone-200">
           <ReactMarkdown>{personalize(content.markdown, studentName)}</ReactMarkdown>

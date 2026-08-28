@@ -78,6 +78,21 @@ export default function KnowledgeCheckBlock({ content, studentName, onComplete, 
         </span>
       </div>
 
+      {/* Interactive answer-progress visual */}
+      <div className="flex items-center justify-center gap-1.5 py-1">
+        {questions.map((_, i) => (
+          <span
+            key={i}
+            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+              answers[i] !== undefined ? "bg-rose-400 scale-125" : "bg-stone-700"
+            }`}
+          />
+        ))}
+        <span className="text-[10px] font-black text-stone-400 ml-1.5">
+          {Object.keys(answers).length}/{questions.length} dijawab
+        </span>
+      </div>
+
       {/* Questions */}
       <div className="space-y-5">
         {questions.map((q, qIdx) => {

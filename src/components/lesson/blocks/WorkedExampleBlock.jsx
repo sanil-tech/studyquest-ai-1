@@ -6,6 +6,7 @@ import React, { useState } from "react";
 import { PenTool, AlertTriangle, CheckCircle2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
+import TapCountVisual from "@/components/lesson/blocks/TapCountVisual";
 
 export default function WorkedExampleBlock({ content, studentName, onComplete, isCompleted }) {
   const [revealedSteps, setRevealedSteps] = useState(0);
@@ -40,6 +41,14 @@ export default function WorkedExampleBlock({ content, studentName, onComplete, i
         <span className="text-[10px] font-black text-indigo-400 uppercase block mb-1.5">📌 Soalan</span>
         <p className="text-sm font-black text-white leading-relaxed">{problem}</p>
       </div>
+
+      {/* Interactive visual aid — tap along to count & compare */}
+      <TapCountVisual
+        emojisA={["🍎", "🍎", "🍎", "🍎", "🍎"]}
+        emojisB={["🍎", "🍎", "🍎"]}
+        labelA="Kumpulan A"
+        labelB="Kumpulan B"
+      />
 
       {/* Progressive step reveal */}
       <div className="space-y-2">

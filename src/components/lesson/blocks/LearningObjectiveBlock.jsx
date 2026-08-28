@@ -6,6 +6,7 @@ import React from "react";
 import { Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
+import JourneyGoalVisual from "@/components/lesson/blocks/JourneyGoalVisual";
 
 const TP_COLORS = {
   TP1: "bg-red-500/20 text-red-300 border-red-500/40",
@@ -52,6 +53,9 @@ export default function LearningObjectiveBlock({ content = {}, studentName, onCo
           {statement || "Menguasai kemahiran yang dipelajari dalam misi ini"}
         </p>
       </div>
+
+      {/* Interactive journey visual — child taps milestones to activate goal */}
+      <JourneyGoalVisual />
 
       {/* Continue button — awards 0 XP (informational block) */}
       <Button

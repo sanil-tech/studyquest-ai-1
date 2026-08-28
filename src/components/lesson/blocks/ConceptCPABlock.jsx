@@ -6,6 +6,7 @@ import React, { useState } from "react";
 import { BookOpen, Eye, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
+import TapCountVisual from "@/components/lesson/blocks/TapCountVisual";
 
 const CPA_PHASES = [
   {
@@ -102,6 +103,16 @@ export default function ConceptCPABlock({ content = {}, studentName, onComplete,
             <p className="text-xs sm:text-sm text-stone-200 font-semibold leading-relaxed">
               {personalize(phaseContent.explanation || "", studentName)}
             </p>
+
+            {/* Interactive tap-to-count visual (concrete stage only) */}
+            {phase.key === "concrete" && (
+              <TapCountVisual
+                emojisA={["🍎", "🍎", "🍎", "🍎", "🍎"]}
+                emojisB={["🍪", "🍪", "🍪"]}
+                labelA="Banyak"
+                labelB="Sedikit"
+              />
+            )}
 
             {/* Key term (abstract phase only) */}
             {phase.key === "abstract" && phaseContent.key_term && (
