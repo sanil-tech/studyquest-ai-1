@@ -166,7 +166,6 @@ export default async function (req: Request): Promise<Response> {
             content: { type: "object" },
             questions: { type: "array" },
             cards: { type: "array" },
-            extra_assets: { type: "array" }, // Used to check "one asset only" rule
           },
           required: ["asset_type", "title"],
         },
@@ -194,21 +193,9 @@ export default async function (req: Request): Promise<Response> {
       );
     }
 
-    // 7. Validate "One Asset Only" Invariant
-    if (
-      (Array.isArray(aiRes.extra_assets) && aiRes.extra_assets.length > 0) ||
-      (Array.isArray(aiRes.blocks) && aiRes.blocks.length > 1) ||
-      (aiRes.asset_type && aiRes.asset_type !== asset_type && aiRes.asset_type === "FULL_LESSON")
-    ) {
-      return Response.json(
-        {
-          success: false,
-          error_code: "INVALID_AI_OUTPUT",
-          error: "AI menjana berbilang aset melebihi skop satu aset.",
-        },
-        { status: 422 }
-      );
-    }
+    // 7. Strip multi-asset fields the AI may erroneously include
+    delete aiRes.extra_assets;
+    delete aiRes.blocks;
 
     // 8. Validate "No Placeholder Content" Invariant
     const aiTextSample = JSON.stringify(aiRes).toLowerCase();

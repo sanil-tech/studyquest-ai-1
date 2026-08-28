@@ -9,7 +9,15 @@
     },
     "lesson_version_id": {
       "type": "string",
-      "description": "Foreign key linking to LessonVersion entity"
+      "description": "Foreign key linking to LessonVersion entity (optional for standalone assets)"
+    },
+    "topic_id": {
+      "type": "string",
+      "description": "ID of the parent Topic (for standalone assets not tied to a lesson version)"
+    },
+    "subtopic_id": {
+      "type": "string",
+      "description": "ID of the parent Subtopic (for standalone assets)"
     },
     "learning_standard_id": {
       "type": "string",
@@ -70,9 +78,45 @@
     },
     "status": {
       "type": "string",
-      "enum": ["draft", "published", "archived"],
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
       "default": "draft"
+    },
+    "review_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "under_review",
+        "approved",
+        "published",
+        "archived"
+      ],
+      "default": "draft"
+    },
+    "created_source": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "ai_generated"
+      ],
+      "default": "manual"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "User ID of admin who approved this block"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this block was approved"
     }
   },
-  "required": ["lesson_version_id", "block_type", "order_number", "payload"]
+  "required": [
+    "block_type",
+    "order_number",
+    "payload"
+  ]
 }
