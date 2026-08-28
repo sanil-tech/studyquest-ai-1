@@ -21,6 +21,168 @@ const CANONICAL_ASSET_TYPES = [
   "ASSESSMENT_ITEM",
 ];
 
+// Per-asset LLM output schema — field names EXACTLY match what each block component reads.
+// This forces the AI to return structured content the renderer can consume directly.
+const ASSET_OUTPUT_SCHEMAS: Record<string, any> = {
+  LESSON_HOOK: {
+    type: "object",
+    properties: {
+      title: { type: "string" },
+      story_text: { type: "string", description: "Naratif cerita ringkas (2-4 ayat) dalam Bahasa Melayu" },
+      mascot_dialogue: { type: "string", description: "Dialog maskot Suku Penyu kepada murid" },
+      visual_prompt: { type: "string", description: "Deskripsi visual untuk gambar kisah" },
+      help_continuation: { type: "string", description: "Cara murid boleh membantu maskot" },
+    },
+    required: ["title", "story_text", "mascot_dialogue"],
+  },
+  LESSON_OBJECTIVE: {
+    type: "object",
+    properties: {
+      title: { type: "string" },
+      i_can_statement: { type: "string", description: "Pernyataan 'Saya boleh...' dalam Bahasa Melayu" },
+      tp_badge: { type: "string", description: "Tahap Penguasaan sasaran: TP1, TP2, atau TP3" },
+    },
+    required: ["title", "i_can_statement", "tp_badge"],
+  },
+  CONCEPT: {
+    type: "object",
+    properties: {
+      title: { type: "string" },
+      concrete: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          explanation: { type: "string", description: "Penerangan peringkat Konkrit dengan objek sebenar" },
+        },
+        required: ["title", "explanation"],
+      },
+      pictorial: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          explanation: { type: "string", description: "Penerangan peringkat Bergambar dengan rajah/lukisan" },
+        },
+        required: ["title", "explanation"],
+      },
+      abstract: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          explanation: { type: "string", description: "Penerangan peringkat Abstrak dengan simbol/aturan" },
+          key_term: { type: "string" },
+          key_definition: { type: "string" },
+        },
+        required: ["title", "explanation"],
+      },
+    },
+    required: ["title", "concrete", "pictorial", "abstract"],
+  },
+  WORKED_EXAMPLE: {
+    type: "object",
+    properties: {
+      title: { type: "string" },
+      problem_statement: { type: "string", description: "Penyataan soalan dalam konteks Malaysia" },
+      solution_steps: {
+        type: "array",
+        items: { type: "string" },
+        description: "Langkah-langkah penyelesaian berurutan (minimum 2)",
+      },
+      common_mistake: { type: "string", description: "Kesilapan lazim murid" },
+      correct_reasoning: { type: "string", description: "Penalaran betul mengapa jawapan itu benar" },
+    },
+    required: ["title", "problem_statement", "solution_steps", "correct_reasoning"],
+  },
+  GUIDED_PRACTICE: {
+    type: "object",
+    properties: {
+      title: { type: "string" },
+      widget_type: { type: "string", description: "Jenis widget: drag_and_drop, matching, atau number_scale" },
+      instruction: { type: "string", description: "Arahan aktiviti dalam Bahasa Melayu" },
+      seed_data: {
+        type: "object",
+        description: "Data khusus widget: pairs[], items[], left_val, right_val, correct_relation, word_bank, dll.",
+      },
+    },
+    required: ["title", "widget_type", "instruction", "seed_data"],
+  },
+  REFLECTION: {
+    type: "object",
+    properties: {
+      title: { type: "string" },
+      summary_points: {
+        type: "array",
+        items: { type: "string" },
+        description: "3-5 rumusan utama pelajaran (tentang topik sebenar, bukan topik lain)",
+      },
+      memory_tip: { type: "string", description: "Petua ingatan ringkas" },
+      common_mistakes: {
+        type: "array",
+        items: { type: "string" },
+        description: "1-2 kesilapan lazim berkaitan topik sebenar",
+      },
+      reflection_prompt: { type: "string", description: "Soalan refleksi diri" },
+      flashcards: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            term: { type: "string" },
+            definition: { type: "string" },
+          },
+          required: ["term", "definition"],
+        },
+        description: "2-4 kad kilat istilah penting",
+      },
+    },
+    required: ["title", "summary_points", "reflection_prompt"],
+  },
+  QUIZ_QUESTION: {
+    type: "object",
+    properties: {
+      title: { type: "string" },
+      questions: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            stem: { type: "string", description: "Teks soalan" },
+            options: {
+              type: "array",
+              items: { type: "string" },
+              description: "Tepat 4 pilihan jawapan",
+            },
+            correct_index: { type: "number", description: "Indeks pilihan betul (0-3)" },
+            explanation: { type: "string" },
+            tp_level: { type: "string" },
+            misconception_tag: { type: "string" },
+          },
+          required: ["stem", "options", "correct_index", "explanation"],
+        },
+      },
+    },
+    required: ["title", "questions"],
+  },
+  FLASHCARD: {
+    type: "object",
+    properties: {
+      title: { type: "string" },
+      cards: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            front: { type: "string" },
+            back: { type: "string" },
+            explanation: { type: "string" },
+          },
+          required: ["front", "back"],
+        },
+      },
+    },
+    required: ["title", "cards"],
+  },
+};
+
 // Asset Type -> DB Entity mapping table
 const ASSET_ENTITY_MAP: Record<string, { entity: string; block_type?: string; content_type?: string }> = {
   LESSON_HOOK: { entity: "LessonBlock", block_type: "STORY_HOOK" },
@@ -78,7 +240,7 @@ export default async function (req: Request): Promise<Response> {
 
     // 2. Parse Input & Validate Request Parameters
     const body = await req.json().catch(() => ({}));
-    const { topic_id, subtopic_id, sp_code, asset_type, subject_name, year_level } = body;
+    const { topic_id, subtopic_id, sp_code, asset_type, subject_name, year_level, topic_name, sp_description } = body;
 
     if (!topic_id || !subtopic_id || !sp_code || !asset_type) {
       return Response.json(
@@ -143,8 +305,10 @@ export default async function (req: Request): Promise<Response> {
       curriculum_context: {
         subject,
         topic_id,
-        subtopic_id,
+        topic: topic_name || topic_id,
         sp_code,
+        sp_description: sp_description || "Standard Pembelajaran",
+        learning_standard: sp_description || "Standard Pembelajaran",
       },
       learner_profile: {
         year_level: level,
@@ -157,17 +321,13 @@ export default async function (req: Request): Promise<Response> {
       aiRes = await db.integrations.Core.InvokeLLM({
         prompt: promptText,
         model: "gemini_3_flash",
-        response_json_schema: {
+        response_json_schema: ASSET_OUTPUT_SCHEMAS[asset_type] || {
           type: "object",
           properties: {
-            asset_type: { type: "string" },
             title: { type: "string" },
             markdown: { type: "string" },
-            content: { type: "object" },
-            questions: { type: "array" },
-            cards: { type: "array" },
           },
-          required: ["asset_type", "title"],
+          required: ["title"],
         },
       });
     } catch (llmErr: any) {
@@ -214,11 +374,16 @@ export default async function (req: Request): Promise<Response> {
 
     // 9. Execute Quality Shield Evaluation
     let qualityScore = 85; // Default baseline for valid output
+    // Count meaningful content fields beyond the generic title/asset_type wrappers
+    const meaningfulTopFields = Object.keys(aiRes).filter(
+      (k) => !["asset_type", "title", "content", "questions", "cards"].includes(k) && aiRes[k]
+    );
     const hasDetailedText =
       (aiRes.markdown && aiRes.markdown.length > 20) ||
       (aiRes.content && Object.keys(aiRes.content).length > 0) ||
       (Array.isArray(aiRes.questions) && aiRes.questions.length > 0) ||
-      (Array.isArray(aiRes.cards) && aiRes.cards.length > 0);
+      (Array.isArray(aiRes.cards) && aiRes.cards.length > 0) ||
+      meaningfulTopFields.length > 0;
 
     if (!hasDetailedText) {
       qualityScore = 40;
@@ -348,20 +513,25 @@ export default async function (req: Request): Promise<Response> {
           return { label, text, is_correct: !!opt.is_correct };
         });
 
-        // Resolve correct answer to a LABEL (A/B/C/D). AI may give a label, the
+        // Resolve correct answer to a LABEL (A/B/C/D). The per-asset schema uses
+        // correct_index (0-based number); legacy inputs may use a label string,
         // option text, or an is_correct flag on one option.
         let correctLabel = "";
-        const ca = String(q.correct_answer || "").trim();
-        const caLabelMatch = ca.match(/^([A-D])\b/i);
-        if (caLabelMatch) {
-          correctLabel = caLabelMatch[1].toUpperCase();
-        } else if (normalizedOptions.some((o) => o.is_correct)) {
-          correctLabel = normalizedOptions.find((o) => o.is_correct)!.label;
-        } else if (ca) {
-          const idx = normalizedOptions.findIndex(
-            (o) => o.text.toLowerCase() === ca.toLowerCase()
-          );
-          if (idx >= 0) correctLabel = normalizedOptions[idx].label;
+        if (typeof q.correct_index === "number" && q.correct_index >= 0 && q.correct_index < normalizedOptions.length) {
+          correctLabel = String.fromCharCode(65 + q.correct_index);
+        } else {
+          const ca = String(q.correct_answer || "").trim();
+          const caLabelMatch = ca.match(/^([A-D])\b/i);
+          if (caLabelMatch) {
+            correctLabel = caLabelMatch[1].toUpperCase();
+          } else if (normalizedOptions.some((o) => o.is_correct)) {
+            correctLabel = normalizedOptions.find((o) => o.is_correct)!.label;
+          } else if (ca) {
+            const idx = normalizedOptions.findIndex(
+              (o) => o.text.toLowerCase() === ca.toLowerCase()
+            );
+            if (idx >= 0) correctLabel = normalizedOptions[idx].label;
+          }
         }
         if (!correctLabel) correctLabel = normalizedOptions[0]?.label || "A";
 
@@ -379,7 +549,7 @@ export default async function (req: Request): Promise<Response> {
           topic_id,
           subtopic_id,
           sp_code,
-          question: q.question_text || q.question || aiRes.title,
+          question: q.question_text || q.question || q.stem || aiRes.title,
           question_type: q.question_type || "mcq",
           correct_answer: correctLabel,
           options_json: JSON.stringify(optionsForJson),

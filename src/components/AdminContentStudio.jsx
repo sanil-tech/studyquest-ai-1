@@ -354,6 +354,8 @@ export default function AdminContentStudio() {
         block_type: config.key,
         subject_name: subject,
         year_level: yearLevel,
+        topic_name: topic,
+        sp_description: currentSPDetail?.title || currentSPDetail?.description || "",
       });
 
       if (res?.data?.success) {
@@ -414,6 +416,8 @@ export default function AdminContentStudio() {
             block_type: block.key,
             subject_name: subject,
             year_level: yearLevel,
+            topic_name: topic,
+            sp_description: currentSPDetail?.title || currentSPDetail?.description || "",
           });
 
           if (res?.data?.success) {
