@@ -334,17 +334,56 @@ export default async function (req: Request): Promise<Response> {
       const createdQuestions = [];
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
-        const qId = `qb_asset_${Date.now()}_${i}`;
 
+        // Normalize options: AI may return strings, {label,text}, {option_text}, or {text,is_correct}
+        const rawOptions = Array.isArray(q.options) ? q.options : [];
+        const normalizedOptions = rawOptions.map((opt: any, optIdx: number) => {
+          const label = String.fromCharCode(65 + optIdx);
+          let text = "";
+          if (typeof opt === "string") {
+            text = opt;
+          } else {
+            text = String(opt.text || opt.option_text || opt.label || "").trim();
+          }
+          return { label, text, is_correct: !!opt.is_correct };
+        });
+
+        // Resolve correct answer to a LABEL (A/B/C/D). AI may give a label, the
+        // option text, or an is_correct flag on one option.
+        let correctLabel = "";
+        const ca = String(q.correct_answer || "").trim();
+        const caLabelMatch = ca.match(/^([A-D])\b/i);
+        if (caLabelMatch) {
+          correctLabel = caLabelMatch[1].toUpperCase();
+        } else if (normalizedOptions.some((o) => o.is_correct)) {
+          correctLabel = normalizedOptions.find((o) => o.is_correct)!.label;
+        } else if (ca) {
+          const idx = normalizedOptions.findIndex(
+            (o) => o.text.toLowerCase() === ca.toLowerCase()
+          );
+          if (idx >= 0) correctLabel = normalizedOptions[idx].label;
+        }
+        if (!correctLabel) correctLabel = normalizedOptions[0]?.label || "A";
+
+        // Store options inline so consumers (preview, runtime) don't depend on
+        // a separate QuestionOption fetch. Keep creating QuestionOption records
+        // for structured-query compatibility, keyed by the actual record id.
+        const optionsForJson = normalizedOptions.map((o) => ({
+          label: o.label,
+          text: o.text,
+        }));
+
+        const qId = `qb_asset_${Date.now()}_${i}`;
         const qRecord = await db.entities.QuestionBank.create({
-          id: qId,
+          question_id: qId,
           topic_id,
           subtopic_id,
           sp_code,
-          question_id: qId,
           question: q.question_text || q.question || aiRes.title,
-          correct_answer: q.correct_answer || "A",
-          explanation: q.explanation || "",
+          question_type: q.question_type || "mcq",
+          correct_answer: correctLabel,
+          options_json: JSON.stringify(optionsForJson),
+          explanation: q.explanation || q.reason || "",
           difficulty: q.difficulty || "medium",
           cognitive_level: q.cognitive_level || "understand",
           status: "draft",
@@ -352,12 +391,12 @@ export default async function (req: Request): Promise<Response> {
           approved_by: null,
         });
 
-        if (Array.isArray(q.options)) {
+        if (normalizedOptions.length > 0) {
           await db.entities.QuestionOption.bulkCreate(
-            q.options.map((opt: any, optIdx: number) => ({
-              question_id: qId,
-              label: opt.label || String.fromCharCode(65 + optIdx),
-              text: opt.text || opt.option_text || "",
+            normalizedOptions.map((o, optIdx) => ({
+              question_id: qRecord.id,
+              label: o.label,
+              text: o.text,
               sort_order: optIdx,
             }))
           );

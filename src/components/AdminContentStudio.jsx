@@ -227,28 +227,42 @@ export default function AdminContentStudio() {
 
       let payload;
       if (selectedBlockKey === "QUIZ_QUESTION") {
-        // Build a questions[] payload from all QuestionBank records for this SP,
-        // fetching their QuestionOption records to populate options + correct index.
+        // Build a questions[] payload from all QuestionBank records for this SP.
+        // Prefer the inline `options_json` stored on the question (authoritative,
+        // no extra fetch needed); fall back to a QuestionOption query keyed by
+        // the question's `question_id` field (NOT qb.id — they can differ).
         const builtQuestions = [];
         for (const qb of currentSelectedRecords) {
+          let optList = [];
           let opts = [];
           try {
-            const optRecords = await base44.entities.QuestionOption.filter(
-              { question_id: qb.id },
-              "sort_order",
-              10
-            );
-            opts = (optRecords || []).map((o) => o.text || o.label || "");
+            if (qb.options_json) {
+              optList = JSON.parse(qb.options_json);
+            } else if (qb.id) {
+              const optRecords = await base44.entities.QuestionOption.filter(
+                { question_id: qb.question_id || qb.id },
+                "sort_order",
+                10
+              );
+              optList = (optRecords || []).map((o) => ({ label: o.label, text: o.text }));
+            }
           } catch {
-            opts = [];
+            optList = [];
           }
-          // correct_answer is stored as a label like "D. sembilan" or "C. 6"
+          opts = (optList || []).map((o) => o.text || o.label || "");
+
+          // correct_answer is stored as a label (A/B/C/D). Match by label, else by text.
           const ca = String(qb.correct_answer || "").trim();
-          const labelMatch = ca.match(/^([A-Z])/i);
           let correctIndex = 0;
+          const labelMatch = ca.match(/^([A-Z])\b/i);
           if (labelMatch) {
             const idx = labelMatch[1].toUpperCase().charCodeAt(0) - 65;
             if (idx >= 0 && idx < opts.length) correctIndex = idx;
+          } else {
+            const idx = opts.findIndex(
+              (t) => String(t).toLowerCase() === ca.toLowerCase()
+            );
+            if (idx >= 0) correctIndex = idx;
           }
           builtQuestions.push({
             stem: qb.question || "Soalan",
