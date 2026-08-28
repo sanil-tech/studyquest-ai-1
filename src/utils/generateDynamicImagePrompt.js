@@ -25,7 +25,13 @@ export function generateDynamicImagePrompt({
   
   let specificSceneDesc = "";
 
-  // 1. Check for specific story scene elements in storyText, topic, or visualDescription
+  // 0. PRIORITY: AI-provided story-specific visual description (from LESSON_HOOK visual_prompt).
+  //    It depicts the EXACT narrative scene — use it directly so the image matches the story,
+  //    instead of the generic keyword-matched scene below.
+  if (visualDescription && visualDescription.trim().length > 15) {
+    specificSceneDesc = visualDescription.trim();
+  } else
+  // 1. Keyword-based scene matching (fallback when no AI visual description)
   if (fullContextText.includes("roti") || fullContextText.includes("donut") || fullContextText.includes("donat") || fullContextText.includes("talam") || fullContextText.includes("kak siti") || fullContextText.includes("bakery")) {
     specificSceneDesc = "in a warm cozy bakery shop helping Kak Siti. Showing two serving trays on a wooden counter, one tray full of delicious chocolate donuts and another tray with only a few strawberry donuts";
   } else if (fullContextText.includes("epal") || fullContextText.includes("buah") || fullContextText.includes("bakul") || fullContextText.includes("pak cik abu") || fullContextText.includes("kedai buah")) {
@@ -69,5 +75,3 @@ export function generateDynamicImagePrompt({
 }
 
 export default generateDynamicImagePrompt;
-
-

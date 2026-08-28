@@ -89,10 +89,10 @@ export default function KeyTakeawayBlock({ content = {}, studentName, onComplete
       {reflectionPrompt && (
         <div className="p-3.5 bg-indigo-950/50 border border-indigo-500/40 rounded-2xl flex items-start gap-3">
           <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-base shrink-0 border border-indigo-500/40">
-            🌱
+            🐢
           </div>
           <div className="space-y-0.5">
-            <span className="text-[10px] font-black text-indigo-400 uppercase block">Refleksi Diri:</span>
+            <span className="text-[10px] font-black text-indigo-400 uppercase block">Selesaikan Misi:</span>
             <p className="text-xs font-bold text-indigo-100 leading-relaxed">{reflectionPrompt}</p>
           </div>
         </div>

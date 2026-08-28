@@ -39,7 +39,7 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
       "Write DIRECTLY to the child ('Tengok!', 'Tolong saya!', 'Jom kita...') — never as instructions to a teacher.",
       "story_text: 2-4 short sentences (max 8 words each) describing a visual Malaysian scene the child can see on screen.",
       "mascot_dialogue: 1-2 friendly sentences from Suku Penyu addressing the child, ending with a request for help.",
-      "visual_prompt: a concrete image description for AI illustration (objects, colours, setting).",
+      "visual_prompt: Deskripsi visual 3D yang HIDUP dan TEPAT dengan cerita — nyatakan objek, warna, susunan, dan latar cerita sebenar (cth: 'dua balang guli berwarna-warni di atas meja kayu, satu balang penuh guli merah, satu balang sedikit guli biru, latar bilik cerah'). Jangan generik — mesti gambarkan situasi story_text dengan tepat supaya gambar AI sepadan dengan naratif.",
       "help_continuation: ONE simple sentence telling the child what they will DO on screen (e.g. 'Tolong Suku Penyu tekan gambar yang banyak!').",
       "Use {{nama}} placeholder where the child's name should appear.",
       "Do NOT explain the complete concept — only set up the curiosity."
@@ -303,7 +303,7 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
       "summary_points: 3-5 short bullets about the ACTUAL lesson topic, each max 10 words, child-direct ('Kita belajar...', 'Ingat: ...').",
       "memory_tip: ONE short catchy sentence using a child-friendly analogy (e.g. 'Lebih macam makan banyak, kurang macam makan sikit!').",
       "common_mistakes: 1-2 short child sentences about mistakes to avoid.",
-      "reflection_prompt: ONE short question for the child to reflect (e.g. 'Adakah buku kamu lebih banyak daripada pensel?').",
+      "reflection_prompt: ONE short question yang meminta murid MENYELESAIKAN kisah misi dari hook — kaitkan terus dengan situasi cerita sebenar (cth: '{{nama}}, balang mana satu lebih banyak guli?'). Ini menutup loop cerita dan mengajak murid selesaikan misi Suku Penyu.",
       "flashcards: 2-4 objects each with 'term' (one word) and 'definition' (one short child sentence).",
       "Write DIRECTLY to the child, encouraging and warm ('Syabas!', 'Tahniah!').",
       "Do NOT introduce brand-new un-taught concepts."

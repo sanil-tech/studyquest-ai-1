@@ -31,7 +31,7 @@ export default function StoryHookBlock({ content = {}, mascot, studentName, onCo
       grade: content.grade || "Tahun 1",
       topic: content.topic || "Nombor hingga 100",
       sceneType: "STORY",
-      visualDescription: content.visual_description || "",
+      visualDescription: content.visual_prompt || content.visual_description || "",
       storyText: storyPromptText
     });
 
