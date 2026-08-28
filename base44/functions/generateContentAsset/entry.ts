@@ -103,7 +103,7 @@ const ASSET_OUTPUT_SCHEMAS: Record<string, any> = {
         description: "MESTI tidak kosong. matching: {pairs:[{image,label}]}. drag_and_drop: {items:[],categories:[]}. number_scale: {left_val,right_val,correct_relation}. sentence_builder: {target_sentence,word_bank}. base_ten_blocks: {target_number}. fraction_slicer: {target_fraction,total_parts,shaded_parts}. quiz_wheel: {question,options,correct_index}.",
         properties: {
           pairs: { type: "array", items: { type: "object", properties: { image: { type: "string" }, label: { type: "string" } } } },
-          items: { type: "array", items: { type: "string" } },
+          items: { type: "array", items: { type: "object", properties: { label: { type: "string" }, category: { type: "string" } }, required: ["label", "category"] } },
           categories: { type: "array", items: { type: "string" } },
           left_val: { type: "number" },
           right_val: { type: "number" },
@@ -461,6 +461,16 @@ export default async function (req: Request): Promise<Response> {
           { success: false, error_code: "INVALID_AI_OUTPUT", error: "drag_and_drop memerlukan seed_data.items dan seed_data.categories." },
           { status: 422 }
         );
+      }
+      if (wt === "drag_and_drop") {
+        const validCats = sd.categories.map((c) => String(c));
+        const badItem = sd.items.find((it) => !it || typeof it !== "object" || !it.label || !it.category || !validCats.includes(String(it.category)));
+        if (badItem) {
+          return Response.json(
+            { success: false, error_code: "INVALID_AI_OUTPUT", error: "drag_and_drop: setiap item mesti {label, category} dan category mesti ada dalam categories." },
+            { status: 422 }
+          );
+        }
       }
       if (wt === "number_scale" && (typeof sd.left_val !== "number" || typeof sd.right_val !== "number" || !sd.correct_relation)) {
         return Response.json(

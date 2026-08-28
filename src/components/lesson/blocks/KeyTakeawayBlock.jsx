@@ -85,19 +85,6 @@ export default function KeyTakeawayBlock({ content = {}, studentName, onComplete
         </div>
       )}
 
-      {/* Reflection prompt (Refleksi Diri) */}
-      {reflectionPrompt && (
-        <div className="p-3.5 bg-indigo-950/50 border border-indigo-500/40 rounded-2xl flex items-start gap-3">
-          <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-base shrink-0 border border-indigo-500/40">
-            🐢
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-[10px] font-black text-indigo-400 uppercase block">Selesaikan Misi:</span>
-            <p className="text-xs font-bold text-indigo-100 leading-relaxed">{reflectionPrompt}</p>
-          </div>
-        </div>
-      )}
-
       {/* Mini flashcard deck */}
       {flashcards.length > 0 && (
         <div className="space-y-2 pt-1">
@@ -131,6 +118,20 @@ export default function KeyTakeawayBlock({ content = {}, studentName, onComplete
                 </button>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Reflection prompt (Selesaikan Misi) — passive, tiada respon diperlukan */}
+      {reflectionPrompt && (
+        <div className="p-3.5 bg-indigo-950/50 border border-indigo-500/40 rounded-2xl flex items-start gap-3">
+          <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-base shrink-0 border border-indigo-500/40">
+            🐢
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-black text-indigo-400 uppercase block">Selesaikan Misi (Renungkan Sahaja):</span>
+            <p className="text-xs font-bold text-indigo-100 leading-relaxed">{reflectionPrompt}</p>
+            <span className="text-[10px] text-indigo-400/70 italic block mt-1">Tiada jawapan diperlukan — cuma fikir sejenak 😊</span>
           </div>
         </div>
       )}

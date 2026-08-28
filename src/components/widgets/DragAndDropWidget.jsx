@@ -13,17 +13,31 @@ export default function DragAndDropWidget({
   isCompleted = false,
   onMistake = () => {}
 }) {
-  const itemsList = payload.items || [
-    { id: "1", label: "50 sen", category: "emas" },
-    { id: "2", label: "10 sen", category: "perak" },
-    { id: "3", label: "20 sen", category: "perak" },
-    { id: "4", label: "RM1", category: "emas" }
-  ];
+  // Normalize categories → targets (accept payload.targets OR payload.categories array)
+  const categoriesList =
+    Array.isArray(payload.categories) && payload.categories.length > 0
+      ? payload.categories
+      : Array.isArray(payload.targets)
+      ? payload.targets.map((t) => t.category).filter(Boolean)
+      : [];
 
-  const targetsList = payload.targets || [
-    { category: "emas", title: "Tabung Emas 🪙" },
-    { category: "perak", title: "Tabung Perak ⚪" }
-  ];
+  const targetsList =
+    Array.isArray(payload.targets) && payload.targets.length > 0
+      ? payload.targets
+      : categoriesList.map((c) => ({ category: c, title: c }));
+
+  // Normalize items: accept [{id,label,category}] or legacy [string]
+  const rawItems = Array.isArray(payload.items) && payload.items.length > 0 ? payload.items : [];
+  const itemsList = rawItems.map((it, idx) => {
+    if (typeof it === "string") {
+      return { id: String(idx + 1), label: it, category: null };
+    }
+    return {
+      id: String(it.id ?? idx + 1),
+      label: it.label || it.text || String(it),
+      category: it.category || null,
+    };
+  });
 
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [placedItems, setPlacedItems] = useState({}); // { [itemId]: targetCategory }
