@@ -6,6 +6,27 @@ export const MIN_FLASHCARDS = 5;
 export const MIN_QUESTIONS = 10;
 export const MIN_ACTIVITIES = 1;
 
+// Canonical 7-block lesson model (v2.0). Versions assembled from the Content
+// Library are validated against these blocks instead of the legacy package
+// (notes + 5 flashcards + 10 questions + activity + teacher guide).
+export const CANONICAL_BLOCK_TYPES = [
+  "STORY_HOOK",
+  "LEARNING_OBJECTIVE",
+  "CONCEPT_CPA",
+  "WORKED_EXAMPLE",
+  "INTERACTIVE_PRACTICE",
+  "KEY_TAKEAWAY",
+];
+
+const CANONICAL_BLOCK_LABELS: Record<string, string> = {
+  STORY_HOOK: "Kisah Pembuka",
+  LEARNING_OBJECTIVE: "Objektif Pembelajaran",
+  CONCEPT_CPA: "Konsep (CPA)",
+  WORKED_EXAMPLE: "Contoh Berpandu",
+  INTERACTIVE_PRACTICE: "Latihan Interaktif",
+  KEY_TAKEAWAY: "Rumusan & Ingatan",
+};
+
 export interface CompletenessEvaluationResult {
   lessonVersion: any;
   lessonId: string;
@@ -260,13 +281,31 @@ export async function evaluateLessonCompleteness(
   const completedCount = Object.values(checks).filter(Boolean).length;
   const completionPercentage = Math.round((completedCount / 10) * 100);
 
-  // 4. Publishing Readiness Validation (Minimum Mandatory Criteria)
+  // 4. Publishing Readiness Validation
+  // Canonical v2.0 lessons (assembled from the Content Library) are validated on
+  // their 7 canonical blocks; legacy lessons keep the original package criteria.
+  const presentBlockTypes = new Set(
+    lessonBlocks.map((b: any) => String(b.block_type || "").toUpperCase())
+  );
+  const isCanonicalVersion =
+    lessonVersion?.assembled_from_library === true ||
+    CANONICAL_BLOCK_TYPES.every((t) => presentBlockTypes.has(t));
+
   const missingRequirements: string[] = [];
-  if (!hasNotes) missingRequirements.push("Nota Pelajaran");
-  if (!hasFlashcards) missingRequirements.push(`Flashcards (minimum ${MIN_FLASHCARDS}, kini ${flashcardCount})`);
-  if (!hasQuestions) missingRequirements.push(`Soalan (minimum ${MIN_QUESTIONS}, kini ${questionCount})`);
-  if (!hasActivities) missingRequirements.push(`Aktiviti (minimum ${MIN_ACTIVITIES}, kini ${activityCount})`);
-  if (!hasTeacherGuide) missingRequirements.push("Panduan Guru");
+
+  if (isCanonicalVersion) {
+    for (const blockType of CANONICAL_BLOCK_TYPES) {
+      if (!presentBlockTypes.has(blockType)) {
+        missingRequirements.push(`Blok ${CANONICAL_BLOCK_LABELS[blockType] || blockType}`);
+      }
+    }
+  } else {
+    if (!hasNotes) missingRequirements.push("Nota Pelajaran");
+    if (!hasFlashcards) missingRequirements.push(`Flashcards (minimum ${MIN_FLASHCARDS}, kini ${flashcardCount})`);
+    if (!hasQuestions) missingRequirements.push(`Soalan (minimum ${MIN_QUESTIONS}, kini ${questionCount})`);
+    if (!hasActivities) missingRequirements.push(`Aktiviti (minimum ${MIN_ACTIVITIES}, kini ${activityCount})`);
+    if (!hasTeacherGuide) missingRequirements.push("Panduan Guru");
+  }
 
   const isReadyToPublish = missingRequirements.length === 0;
 
@@ -275,10 +314,19 @@ export async function evaluateLessonCompleteness(
   const approved = aiRequests.filter((r: any) => r.status === "approved");
   const rejected = aiRequests.filter((r: any) => r.status === "rejected");
 
+  // Canonical versions report completeness based on their canonical blocks.
+  const finalCompletionPercentage = isCanonicalVersion
+    ? Math.round(
+        (CANONICAL_BLOCK_TYPES.filter((t) => presentBlockTypes.has(t)).length /
+          CANONICAL_BLOCK_TYPES.length) *
+          100
+      )
+    : completionPercentage;
+
   return {
     lessonVersion,
     lessonId,
-    completionPercentage,
+    completionPercentage: finalCompletionPercentage,
     checks,
     counts,
     publishingReadiness: {
