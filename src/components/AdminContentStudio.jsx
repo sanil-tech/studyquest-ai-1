@@ -1,6 +1,6 @@
 // src/components/AdminContentStudio.jsx
 // Canonical Content Production Manager Workspace (Phase 8A Controlled Production Engine)
-// Manages progressive 15-Block topic-first curriculum asset production, live preview, quality evaluation, approval, batch scaling, and 15/15 assembly.
+// Manages progressive 7-Block canonical curriculum asset production, live preview, quality evaluation, approval, batch scaling, and 3-core assembly gate.
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -47,24 +47,21 @@ import {
   getSPDetail
 } from "@/services/dskpRegistry";
 
-// 15 CANONICAL BLOCK TYPES DEFINITION & PEDAGOGICAL CONTRACTS
-export const CANONICAL_15_BLOCKS = [
-  { key: "LESSON_HOOK", name: "Set Induksi & Penyerapan", icon: "🎬", category: "Pengenalan", backendAssetType: "LESSON_HOOK", purpose: "Capture student attention and spark curiosity without revealing the full concept" },
-  { key: "STORY_HOOK", name: "Naratif & Penceritaan", icon: "📖", category: "Pengenalan", backendAssetType: "LESSON_HOOK", purpose: "Create meaningful Malaysian narrative context for the learning goal" },
-  { key: "REAL_WORLD_CONTEXT", name: "Konteks Dunia Sebenar", icon: "🌍", category: "Kefahaman", backendAssetType: "CONCEPT", purpose: "Connect mathematical concept to everyday Malaysian student experiences" },
-  { key: "CONCEPT", name: "Penerangan Konsep Utama (CPA)", icon: "💡", category: "Kefahaman", backendAssetType: "CONCEPT", purpose: "Explain core concept moving from concrete to abstract representations" },
-  { key: "WORKED_EXAMPLE", name: "Contoh Penyelesaian Langkah-demi-Langkah", icon: "📝", category: "Kefahaman", backendAssetType: "WORKED_EXAMPLE", purpose: "Demonstrate problem-solving steps clearly" },
-  { key: "GUIDED_PRACTICE", name: "Latihan Terbimbing", icon: "🤝", category: "Latihan", backendAssetType: "GUIDED_PRACTICE", purpose: "Guide student through practice with scaffolding" },
-  { key: "CONCEPT_CARD", name: "Kad Konsep Asas", icon: "📌", category: "Pengukuhan", backendAssetType: "REFLECTION", purpose: "Summarize key definition concisely" },
-  { key: "MIND_MAP", name: "Peta Minda i-THINK", icon: "🧠", category: "Pengukuhan", backendAssetType: "INTERACTIVE", purpose: "Organize relationships between concepts visually" },
-  { key: "INFOGRAPHIC", name: "Infografik Pembelajaran", icon: "🖼️", category: "Pengukuhan", backendAssetType: "CONCEPT", purpose: "Communicate visual knowledge clearly" },
-  { key: "FLASHCARD_DECK", name: "Kad Imbasan Ingatan Pantas", icon: "🎴", category: "Pengukuhan", backendAssetType: "FLASHCARD", purpose: "Reinforce recall of essential terms and facts" },
-  { key: "MATCHING_GAME", name: "Permainan Padanan", icon: "🧩", category: "Interaktif", backendAssetType: "INTERACTIVE", purpose: "Interactive matching activity using supported widget" },
-  { key: "INTERACTIVE_GAME", name: "Permainan EduGame Interaktif", icon: "🎮", category: "Interaktif", backendAssetType: "INTERACTIVE", purpose: "Gamified practice using widgetRegistry specification" },
-  { key: "VIDEO_LESSON", name: "Skrip / Video Pembelajaran", icon: "🎥", category: "Media", backendAssetType: "VIDEO", purpose: "Interactive video narrative and script" },
-  { key: "AUDIO_HOOK", name: "Audio Narasi Pembelajaran", icon: "🎧", category: "Media", backendAssetType: "LESSON_HOOK", purpose: "Auditory engagement and pronunciation" },
-  { key: "QUIZ_QUESTION", name: "Soalan Pentaksiran & Kuiz Formatif", icon: "❓", category: "Pentaksiran", backendAssetType: "QUIZ_QUESTION", purpose: "Assess standard learning objective with valid distractors" },
+// 7 CANONICAL GENERATABLE BLOCKS (aligned to LessonShellRenderer 8-stage shell)
+// MISSION_COMPLETE is auto-generated at assembly, not a production block.
+// PBD/Summative assessment is a SEPARATE system (Assessment entity) — not part of lesson assembly.
+export const CANONICAL_BLOCKS = [
+  { key: "LESSON_HOOK", name: "Set Induksi & Naratif", icon: "🎬", category: "Pengenalan", backendAssetType: "LESSON_HOOK", purpose: "Tangkap perhatian pelajar & nyalakan rasa ingin tahu tanpa dedahkan konsep penuh", required: true },
+  { key: "LESSON_OBJECTIVE", name: "Objektif Pembelajaran", icon: "🎯", category: "Pengenalan", backendAssetType: "LESSON_OBJECTIVE", purpose: "Nyatakan dengan jelas apa yang pelajar akan kuasai di akhir pelajaran", required: true },
+  { key: "CONCEPT", name: "Konsep Utama (CPA)", icon: "💡", category: "Kefahaman", backendAssetType: "CONCEPT", purpose: "Terangkan konsep teras dari konkrit → bergambar → abstrak", required: true },
+  { key: "WORKED_EXAMPLE", name: "Contoh Penyelesaian Langkah", icon: "📝", category: "Kefahaman", backendAssetType: "WORKED_EXAMPLE", purpose: "Demonstrasi langkah penyelesaian dengan reasoning eksplisit", required: false },
+  { key: "GUIDED_PRACTICE", name: "Latihan Terbimbing", icon: "🤝", category: "Latihan", backendAssetType: "GUIDED_PRACTICE", purpose: "Latihan dengan scaffolding & petunjuk progresif", required: false },
+  { key: "QUIZ_QUESTION", name: "Semakan Pengetahuan", icon: "❓", category: "Pentaksiran Formatif", backendAssetType: "QUIZ_QUESTION", purpose: "2-3 soalan formatif dengan distractor & penjelasan", required: false },
+  { key: "REFLECTION", name: "Ringkasan Kunci & Refleksi", icon: "🔑", category: "Pengukuhan", backendAssetType: "REFLECTION", purpose: "Rumus 3-5 point kunci & promote metakognisi", required: false },
 ];
+
+// Backend assembly hard-requires these 3 core asset types (assembleLessonFromApprovedAssets REQUIRED_ASSET_TYPES)
+const REQUIRED_BLOCK_KEYS = ["LESSON_HOOK", "LESSON_OBJECTIVE", "CONCEPT"];
 
 export default function AdminContentStudio() {
   const navigate = useNavigate();
@@ -133,7 +130,7 @@ export default function AdminContentStudio() {
   const [assembledSnapshot, setAssembledSnapshot] = useState(null);
 
   const selectedBlockConfig = useMemo(() => {
-    return CANONICAL_15_BLOCKS.find((b) => b.key === selectedBlockKey) || CANONICAL_15_BLOCKS[0];
+    return CANONICAL_BLOCKS.find((b) => b.key === selectedBlockKey) || CANONICAL_BLOCKS[0];
   }, [selectedBlockKey]);
 
   // Fetch real-time DB assets matching selected curriculum
@@ -150,20 +147,12 @@ export default function AdminContentStudio() {
 
       const assetGroupMap = {
         LESSON_HOOK: blocks.filter((b) => b.block_type === "STORY_HOOK" || b.block_type === "LESSON_HOOK"),
-        STORY_HOOK: blocks.filter((b) => b.block_type === "STORY_HOOK"),
-        REAL_WORLD_CONTEXT: blocks.filter((b) => b.block_type === "REAL_WORLD_CONTEXT" || b.block_type === "CONCEPT_CPA"),
+        LESSON_OBJECTIVE: blocks.filter((b) => b.block_type === "LEARNING_OBJECTIVE"),
         CONCEPT: blocks.filter((b) => b.block_type === "CONCEPT_CPA" || b.block_type === "CONCEPT"),
         WORKED_EXAMPLE: blocks.filter((b) => b.block_type === "WORKED_EXAMPLE"),
         GUIDED_PRACTICE: blocks.filter((b) => b.block_type === "INTERACTIVE_PRACTICE" || b.block_type === "GUIDED_PRACTICE"),
-        CONCEPT_CARD: blocks.filter((b) => b.block_type === "KEY_TAKEAWAY" || b.block_type === "CONCEPT_CARD"),
-        MIND_MAP: activities.filter((a) => a.activity_type === "mind_map" || a.title?.includes("Peta")),
-        INFOGRAPHIC: contents.filter((c) => c.content_type === "infographic" || c.content_type === "article"),
-        FLASHCARD_DECK: flashcards,
-        MATCHING_GAME: activities.filter((a) => a.activity_type === "matching"),
-        INTERACTIVE_GAME: activities,
-        VIDEO_LESSON: contents.filter((c) => c.content_type === "video"),
-        AUDIO_HOOK: blocks.filter((b) => b.block_type === "AUDIO_HOOK" || b.voice_script),
         QUIZ_QUESTION: questions,
+        REFLECTION: blocks.filter((b) => b.block_type === "KEY_TAKEAWAY" || b.block_type === "REFLECTION"),
       };
 
       setDbAssets(assetGroupMap);
@@ -178,27 +167,36 @@ export default function AdminContentStudio() {
     fetchContentLibraryState();
   }, [fetchContentLibraryState]);
 
-  // Compute Coverage State for each of the 15 canonical blocks
+  // Compute Coverage State for each of the 7 canonical blocks
   const blockCoverageMap = useMemo(() => {
     const map = {};
-    for (const block of CANONICAL_15_BLOCKS) {
+    for (const block of CANONICAL_BLOCKS) {
       const records = dbAssets[block.key] || [];
       map[block.key] = getAssetCoverageState(records);
     }
     return map;
   }, [dbAssets]);
 
-  // Total Approved Count across 15 Canonical Blocks
+  // Total Approved Count across 7 Canonical Blocks
   const approvedCount = useMemo(() => {
     return Object.values(blockCoverageMap).filter(
       (st) => st === COVERAGE_STATES.APPROVED || st === COVERAGE_STATES.PUBLISHED
     ).length;
   }, [blockCoverageMap]);
 
-  // STRICT 15/15 ASSEMBLY GATE REQUIREMENT
-  const is15BlocksApproved = useMemo(() => {
-    return approvedCount >= 15;
-  }, [approvedCount]);
+  // Required Approved Count (3 hard-required core blocks)
+  const requiredApprovedCount = useMemo(() => {
+    return REQUIRED_BLOCK_KEYS.filter(
+      (key) =>
+        blockCoverageMap[key] === COVERAGE_STATES.APPROVED ||
+        blockCoverageMap[key] === COVERAGE_STATES.PUBLISHED
+    ).length;
+  }, [blockCoverageMap]);
+
+  // ASSEMBLY GATE: backend requires 3 core asset types (STORY_HOOK, LEARNING_OBJECTIVE, CONCEPT_CPA)
+  const isAssemblyReady = useMemo(() => {
+    return requiredApprovedCount >= REQUIRED_BLOCK_KEYS.length;
+  }, [requiredApprovedCount]);
 
   const currentSelectedRecords = dbAssets[selectedBlockKey] || [];
   const currentSelectedState = blockCoverageMap[selectedBlockKey] || COVERAGE_STATES.MISSING;
@@ -231,9 +229,20 @@ export default function AdminContentStudio() {
     }
   }, [currentSelectedAsset, selectedBlockConfig, subject, yearLevel, skCode, spCode, selectedBlockKey]);
 
-  // Next required block type deterministically
+  // Next required block type deterministically (prioritize required blocks first)
   const nextRequiredBlock = useMemo(() => {
-    for (const b of CANONICAL_15_BLOCKS) {
+    // First, find any missing required block
+    for (const key of REQUIRED_BLOCK_KEYS) {
+      const b = CANONICAL_BLOCKS.find((bl) => bl.key === key);
+      if (b) {
+        const st = blockCoverageMap[b.key];
+        if (!st || st === COVERAGE_STATES.MISSING || st === COVERAGE_STATES.REJECTED || st === COVERAGE_STATES.DRAFT) {
+          return b;
+        }
+      }
+    }
+    // Then, find any missing optional block
+    for (const b of CANONICAL_BLOCKS) {
       const st = blockCoverageMap[b.key];
       if (!st || st === COVERAGE_STATES.MISSING || st === COVERAGE_STATES.REJECTED || st === COVERAGE_STATES.DRAFT) {
         return b;
@@ -253,7 +262,7 @@ export default function AdminContentStudio() {
 
   // 3. CANONICAL LESSON & ASSET GENERATION HANDLER (generateModularLessonContent)
   const handleGenerateSingleAsset = async (targetBlockKey = selectedBlockKey) => {
-    const config = CANONICAL_15_BLOCKS.find((b) => b.key === targetBlockKey) || selectedBlockConfig;
+    const config = CANONICAL_BLOCKS.find((b) => b.key === targetBlockKey) || selectedBlockConfig;
     setGeneratingAsset(true);
     try {
       const res = await base44.functions.invoke("generateContentAsset", {
@@ -296,8 +305,8 @@ export default function AdminContentStudio() {
   const handleGenerateNextBlock = async () => {
     if (!nextRequiredBlock) {
       toast({
-        title: "✅ Semua 15 Blok Telah Diluluskan!",
-        description: "Semua 15 blok kandungan bagi SP ini telah diluluskan dan sedia untuk penumpunan.",
+        title: "✅ Semua 7 Blok Telah Diluluskan!",
+        description: "Semua 7 blok kandungan bagi SP ini telah diluluskan dan sedia untuk penumpunan.",
       });
       return;
     }
@@ -309,7 +318,7 @@ export default function AdminContentStudio() {
     setBatchGenerating(true);
     let count = 0;
     try {
-      for (const block of CANONICAL_15_BLOCKS) {
+      for (const block of CANONICAL_BLOCKS) {
         const st = blockCoverageMap[block.key];
         if (!st || st === COVERAGE_STATES.MISSING || st === COVERAGE_STATES.REJECTED) {
           toast({
@@ -432,11 +441,11 @@ export default function AdminContentStudio() {
 
   // 6. CONTENT ASSEMBLER HANDLER (assembleLessonFromApprovedAssets)
   const handleAssembleLesson = async () => {
-    if (!is15BlocksApproved) {
+    if (!isAssemblyReady) {
       toast({
         variant: "destructive",
         title: "Penumpunan Dikunci (Locked)",
-        description: `Penumpunan memerlukan kesemua 15 blok diluluskan (Semasa: ${approvedCount}/15).`,
+        description: `Penumpunan memerlukan 3 blok teras diluluskan (Semasa: ${requiredApprovedCount}/${REQUIRED_BLOCK_KEYS.length}).`,
       });
       return;
     }
@@ -509,7 +518,7 @@ export default function AdminContentStudio() {
 
           <div className="px-3.5 py-1.5 bg-stone-950 border border-stone-800 rounded-xl text-xs font-black text-amber-400 flex items-center gap-2">
             <Layers className="w-4 h-4 text-amber-400" />
-            <span>{approvedCount} / 15 Diluluskan ({Math.round((approvedCount / 15) * 100)}%)</span>
+            <span>{approvedCount} / 7 Blok ({requiredApprovedCount}/3 Teras)</span>
           </div>
 
           {nextCanonicalSP && (
@@ -543,7 +552,7 @@ export default function AdminContentStudio() {
               <p className="text-xs text-stone-400">Pengurusan kelompok & kemajuan pengeluaran bagi 25 Standard Pembelajaran {subject} {yearLevel}</p>
             </div>
             <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/40 text-amber-300 rounded-full text-xs font-mono font-bold">
-              25 SP × 15 Blok = 375 Aset Disasarkan
+              25 SP × 7 Blok = 175 Aset Disasarkan
             </span>
           </CardHeader>
           <CardContent className="p-4 space-y-4 font-sans">
@@ -560,17 +569,17 @@ export default function AdminContentStudio() {
               </div>
               <div className="p-3 bg-stone-950 rounded-xl border border-stone-800">
                 <p className="text-[10px] font-bold text-stone-400 uppercase">Blok Diluluskan (SP Ini)</p>
-                <p className="text-xl font-black text-emerald-400">{approvedCount} / 15</p>
+                <p className="text-xl font-black text-emerald-400">{approvedCount} / 7</p>
               </div>
               <div className="p-3 bg-stone-950 rounded-xl border border-stone-800">
                 <p className="text-[10px] font-bold text-stone-400 uppercase">Status Penumpunan</p>
-                <p className={`text-sm font-black ${is15BlocksApproved ? "text-emerald-400" : "text-amber-400"}`}>
-                  {is15BlocksApproved ? "READY (15/15)" : `LOCKED (${15 - approvedCount} baki)`}
+                <p className={`text-sm font-black ${isAssemblyReady ? "text-emerald-400" : "text-amber-400"}`}>
+                  {isAssemblyReady ? "READY (3/3 Teras)" : `LOCKED (${REQUIRED_BLOCK_KEYS.length - requiredApprovedCount} teras baki)`}
                 </p>
               </div>
               <div className="p-3 bg-stone-950 rounded-xl border border-stone-800">
                 <p className="text-[10px] font-bold text-stone-400 uppercase">Sasaran Aset Keseluruhan</p>
-                <p className="text-xl font-black text-cyan-400">375 Aset</p>
+                <p className="text-xl font-black text-cyan-400">175 Aset</p>
               </div>
             </div>
 
@@ -602,7 +611,7 @@ export default function AdminContentStudio() {
                       <span className={`text-[10px] px-2 py-0.5 rounded-full border font-mono ${
                         isActive ? "bg-amber-500 text-stone-950 font-black border-amber-300" : "bg-stone-900 text-stone-400 border-stone-700"
                       }`}>
-                        {isActive ? `${approvedCount}/15` : "Pilih"}
+                        {isActive ? `${approvedCount}/7` : "Pilih"}
                       </span>
                     </button>
                   );
@@ -707,7 +716,7 @@ export default function AdminContentStudio() {
                   }`}
                 >
                   <span>SP {sp.sp_code}</span>
-                  {isCurrent && <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-950 text-amber-400 font-mono">{approvedCount}/15</span>}
+                  {isCurrent && <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-950 text-amber-400 font-mono">{approvedCount}/7</span>}
                 </button>
               );
             })}
@@ -725,14 +734,14 @@ export default function AdminContentStudio() {
             <CardHeader className="border-b border-stone-800/60 pb-3 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-sm font-black text-cyan-400 flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-cyan-400" /> Papan Pengeluaran 15 Blok (SP {spCode})
+                  <Layers className="w-4 h-4 text-cyan-400" /> Papan Pengeluaran 7 Blok Kanonikal (SP {spCode})
                 </CardTitle>
                 <p className="text-[11px] text-stone-400">Pilih mana-mana blok untuk menjana, melihat, atau mengesahkan</p>
               </div>
               {loadingDb && <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />}
             </CardHeader>
             <CardContent className="p-3 space-y-2 max-h-[640px] overflow-y-auto font-sans">
-              {CANONICAL_15_BLOCKS.map((block, idx) => {
+              {CANONICAL_BLOCKS.map((block, idx) => {
                 const state = blockCoverageMap[block.key] || COVERAGE_STATES.MISSING;
                 const isSelected = selectedBlockKey === block.key;
                 const num = String(idx + 1).padStart(2, '0');
@@ -804,7 +813,7 @@ export default function AdminContentStudio() {
 
             <Button
               onClick={handleGenerateRemainingBlocks}
-              disabled={generatingAsset || batchGenerating || approvedCount >= 15}
+              disabled={generatingAsset || batchGenerating || approvedCount >= 7}
               variant="outline"
               className="w-full h-11 bg-stone-900 border-stone-700 hover:bg-stone-800 text-amber-300 font-bold text-xs rounded-xl shadow-lg flex items-center justify-center gap-2"
             >
@@ -823,7 +832,7 @@ export default function AdminContentStudio() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: SINGLE ASSET WORKSPACE, APPROVAL & STRICT 15/15 ASSEMBLY GATE */}
+        {/* RIGHT COLUMN: SINGLE ASSET WORKSPACE, APPROVAL & STRICT 3-CORE ASSEMBLY GATE */}
         <div className="lg:col-span-7 space-y-6">
           
           {/* WORKSPACE CARD FOR SELECTED BLOCK */}
@@ -986,36 +995,36 @@ export default function AdminContentStudio() {
             )}
           </div>
 
-          {/* STRICT 15/15 ASSEMBLY GATE CARD */}
+          {/* STRICT 3/3 CORE ASSEMBLY GATE CARD */}
           <Card className={`border shadow-xl transition-all ${
-            is15BlocksApproved
+            isAssemblyReady
               ? "bg-amber-950/20 border-amber-500/60"
               : "bg-stone-900/60 border-stone-800 opacity-90"
           }`}>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-black text-white flex items-center gap-2">
-                {is15BlocksApproved ? (
+                {isAssemblyReady ? (
                   <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                 ) : (
                   <Lock className="w-5 h-5 text-stone-500" />
                 )}
-                <span>Gate Penumpunan Pelajaran (15/15 Approved Required)</span>
+                <span>Gate Penumpunan Pelajaran (3 Blok Teras Wajib)</span>
               </CardTitle>
 
               <span className={`text-xs font-black px-3 py-1 rounded-full border ${
-                is15BlocksApproved
+                isAssemblyReady
                   ? "bg-emerald-950 text-emerald-300 border-emerald-500/40"
                   : "bg-stone-950 text-stone-400 border-stone-800"
               }`}>
-                {approvedCount} / 15 DILULUSKAN
+                {requiredApprovedCount} / {REQUIRED_BLOCK_KEYS.length} TERAS | {approvedCount}/7 BLOK
               </span>
             </CardHeader>
 
             <CardContent className="p-4 space-y-3 text-xs">
-              {is15BlocksApproved ? (
+              {isAssemblyReady ? (
                 <div className="space-y-3">
                   <p className="text-emerald-300 text-xs font-medium">
-                    🎉 Tahniah! Kesemua 15 blok kandungan telah diluluskan. Anda kini boleh membina snapshot LessonVersion kebal yang sedia untuk disemak.
+                    🎉 Tahniah! 3 blok teras (Set Induksi, Objektif, Konsep) telah diluluskan. Anda kini boleh membina snapshot LessonVersion. Blok tambahan (Contoh, Latihan, Semakan, Ringkasan) akan dimasukkan jika tersedia.
                   </p>
 
                   <Button
@@ -1026,7 +1035,7 @@ export default function AdminContentStudio() {
                     {assemblingLesson ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin text-stone-950" />
-                        <span>Menumpunkan 15 Blok (assembleLessonFromApprovedAssets)...</span>
+                        <span>Menumpunkan Blok Teras (assembleLessonFromApprovedAssets)...</span>
                       </>
                     ) : (
                       <>
@@ -1039,11 +1048,11 @@ export default function AdminContentStudio() {
               ) : (
                 <div className="space-y-2">
                   <p className="text-stone-400 text-xs">
-                    🔒 <strong>PENUMPUNAN DIKUNCI:</strong> Gate Seni Bina StudyQuest memerlukan kesemua <strong>15 daripada 15 blok kandungan</strong> diluluskan (APPROVED) sebelum penumpunan boleh dilakukan.
+                    🔒 <strong>PENUMPUNAN DIKUNCI:</strong> Backend <code className="text-amber-400">assembleLessonFromApprovedAssets</code> memerlukan 3 blok teras diluluskan (APPROVED): <strong>Set Induksi, Objektif, Konsep</strong>. Blok tambahan dimasukkan jika tersedia.
                   </p>
                   <div className="p-2.5 bg-stone-950 rounded-xl border border-stone-800 text-[11px] font-mono text-stone-400 flex items-center justify-between">
-                    <span>Baki Blok Memerlukan Kelulusan:</span>
-                    <strong className="text-amber-400">{15 - approvedCount} Blok Lagi</strong>
+                    <span>Baki Blok Teras Memerlukan Kelulusan:</span>
+                    <strong className="text-amber-400">{REQUIRED_BLOCK_KEYS.length - requiredApprovedCount} Blok Teras Lagi</strong>
                   </div>
                 </div>
               )}
