@@ -107,24 +107,40 @@ export default function ConceptCPABlock({ content = {}, studentName, onComplete,
             </p>
 
             {/* Interactive tap-to-count visual (concrete stage only) */}
-            {phase.key === "concrete" && (
-              <TapCountVisual
-                emojisA={["🍎", "🍎", "🍎", "🍎", "🍎"]}
-                emojisB={["🍪", "🍪", "🍪"]}
-                labelA="Banyak"
-                labelB="Sedikit"
-              />
-            )}
+            {phase.key === "concrete" && (() => {
+              const c = content.concrete || {};
+              const emoji = content.object_emoji || "🔵";
+              const ea = c.object_emoji_a || emoji;
+              const eb = c.object_emoji_b || emoji;
+              const na = Math.max(1, Number(c.count_a) || 5);
+              const nb = Math.max(1, Number(c.count_b) || 3);
+              return (
+                <TapCountVisual
+                  emojisA={Array.from({ length: na }, () => ea)}
+                  emojisB={Array.from({ length: nb }, () => eb)}
+                  labelA={c.label_a || "Banyak"}
+                  labelB={c.label_b || "Sedikit"}
+                />
+              );
+            })()}
 
             {/* Interactive one-to-one matching visual (pictorial stage only) */}
-            {phase.key === "pictorial" && (
-              <MatchPairsVisual
-                topItems={["🔴", "🔴", "🔴", "🔴", "🔴"]}
-                bottomItems={["🔵", "🔵", "🔵"]}
-                topLabel="Guli Merah"
-                bottomLabel="Guli Biru"
-              />
-            )}
+            {phase.key === "pictorial" && (() => {
+              const p = content.pictorial || {};
+              const emoji = content.object_emoji || "🔵";
+              const et = p.object_emoji_top || emoji;
+              const eb = p.object_emoji_bottom || emoji;
+              const nt = Math.max(1, Number(p.count_top) || 5);
+              const nb = Math.max(1, Number(p.count_bottom) || 3);
+              return (
+                <MatchPairsVisual
+                  topItems={Array.from({ length: nt }, () => et)}
+                  bottomItems={Array.from({ length: nb }, () => eb)}
+                  topLabel={p.label_top || "Guli Merah"}
+                  bottomLabel={p.label_bottom || "Guli Biru"}
+                />
+              );
+            })()}
 
             {/* Interactive comparison-symbol reveal (abstract stage only) */}
             {phase.key === "abstract" && (

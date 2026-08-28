@@ -48,11 +48,18 @@ const ASSET_OUTPUT_SCHEMAS: Record<string, any> = {
     type: "object",
     properties: {
       title: { type: "string" },
+      object_emoji: { type: "string", description: "SATU emoji yang mewakili objek utama topik ini (cth '🔵' untuk guli, '🍎' untuk epal). MESTI sepadan dengan objek yang disebut dalam penerangan supaya gambar sama dengan soalan." },
       concrete: {
         type: "object",
         properties: {
           title: { type: "string" },
           explanation: { type: "string", description: "Penerangan peringkat Konkrit dengan objek sebenar" },
+          object_emoji_a: { type: "string", description: "Emoji kumpulan A (lalai = object_emoji)" },
+          object_emoji_b: { type: "string", description: "Emoji kumpulan B (lalai = object_emoji)" },
+          count_a: { type: "number", description: "Bilangan objek kumpulan A" },
+          count_b: { type: "number", description: "Bilangan objek kumpulan B" },
+          label_a: { type: "string", description: "Label kumpulan A (cth 'Banyak' atau 'Merah')" },
+          label_b: { type: "string", description: "Label kumpulan B (cth 'Sedikit' atau 'Biru')" },
         },
         required: ["title", "explanation"],
       },
@@ -60,7 +67,13 @@ const ASSET_OUTPUT_SCHEMAS: Record<string, any> = {
         type: "object",
         properties: {
           title: { type: "string" },
-          explanation: { type: "string", description: "Penerangan peringkat Bergambar dengan rajah/lukisan" },
+          explanation: { type: "string", description: "Penerangan peringkat Bergambar dengan rajah/lukisan. BOLEH rujuk 'garisan kuning' kerana ia dipaparkan pada skrin." },
+          object_emoji_top: { type: "string", description: "Emoji baris atas (lalai = object_emoji)" },
+          object_emoji_bottom: { type: "string", description: "Emoji baris bawah (lalai = object_emoji)" },
+          count_top: { type: "number", description: "Bilangan objek baris atas" },
+          count_bottom: { type: "number", description: "Bilangan objek baris bawah" },
+          label_top: { type: "string", description: "Label baris atas (cth 'Guli Merah')" },
+          label_bottom: { type: "string", description: "Label baris bawah (cth 'Guli Biru')" },
         },
         required: ["title", "explanation"],
       },
@@ -75,7 +88,7 @@ const ASSET_OUTPUT_SCHEMAS: Record<string, any> = {
         required: ["title", "explanation"],
       },
     },
-    required: ["title", "concrete", "pictorial", "abstract"],
+    required: ["title", "object_emoji", "concrete", "pictorial", "abstract"],
   },
   WORKED_EXAMPLE: {
     type: "object",

@@ -126,9 +126,10 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
     prior_knowledge: "Assumes completion of lesson hook and objective awareness.",
     block_responsibility: "Produce three CPA stage objects (concrete, pictorial, abstract) each with a title and a child-facing explanation describing what the child SEES and DOES on screen.",
     content_rules: [
+      "object_emoji: SATU emoji yang mewakili objek utama topik ini (cth '🔵' untuk guli, '🍎' untuk epal, '🍪' untuk biskut, '🐚' untuk kulit kerang). MESTI sepadan dengan objek yang disebut dalam penerangan supaya gambar pada skrin sama dengan soalan cerita.",
       "Each stage explanation describes what the child SEES on screen and what they DO (tap, count, watch), NOT what a teacher does in a classroom.",
-      "concrete: Describe on-screen pictures of real Malaysian objects (guli, batu, epal, kereta mainan) that the child can TAP to count. Write to the child: 'Tengok... Tekan satu-satu... Kira sama-sama!'",
-      "pictorial: Describe an animated visual on screen (e.g. garisan tarik antara dua kumpulan gambar) the child WATCHES. Write to the child: 'Tengok garisan ini... Ada yang tinggal!'",
+      "concrete: Sediakan count_a, count_b (nombor, cth 5 dan 3), label_a, label_b (label pendek cth 'Banyak'/'Sedikit' atau 'Merah'/'Biru'). Visual tekan-kira akan paparkan object_emoji diulang count_a dan count_b kali. Penerangan kepada kanak-kanak: 'Tengok guli ini. Tekan satu-satu. Kira sama-sama!' (gantikan 'guli' dengan objek topik sebenar).",
+      "pictorial: Sediakan count_top, count_bottom (nombor), label_top, label_bottom (cth 'Guli Merah'/'Guli Biru'). Visual padanan memaparkan object_emoji dalam dua baris; GARISAN KUNING dipaparkan automatik antara pasangan yang dipadankan — anda BOLEH rujuk 'garisan kuning' dalam penerangan kerana ia kelihatan pada skrin. Tulis kepada kanak-kanak: 'Tengok garisan kuning ini. Satu objek ada kawan. Ada objek tiada kawan!'",
       "abstract: Give the short word/symbol (e.g. 'Lebih', 'Kurang', '7 > 4') with key_term and key_definition. Write in child words.",
       "Each explanation max 3 short sentences (max 10 words each). Address the child directly ('Tengok', 'Tekan', 'Cuba').",
       "NEVER write teacher instructions ('Gunakan objek sebenar', 'Murid memegang', 'Lukiskan di kertas', 'Guru menunjukkan'). The child has ONLY a screen.",
