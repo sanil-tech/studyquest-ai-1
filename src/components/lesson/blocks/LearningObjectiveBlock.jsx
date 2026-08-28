@@ -25,7 +25,7 @@ const TP_LABELS = {
   TP6: "Mencipta"
 };
 
-export default function LearningObjectiveBlock({ content, studentName, onComplete, isCompleted }) {
+export default function LearningObjectiveBlock({ content = {}, studentName, onComplete, isCompleted }) {
   const statement = personalize(content.i_can_statement || "", studentName);
   const tp = content.tp_badge || "TP3";
   const tpColor = TP_COLORS[tp] || TP_COLORS.TP3;

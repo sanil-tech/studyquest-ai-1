@@ -291,7 +291,7 @@ export default function LessonShellRenderer({
         >
           {BlockComponent ? (
             <BlockComponent
-              content={currentBlock.content}
+              content={currentBlock.payload || currentBlock.content || {}}
               mascot={metadata.mascot}
               studentName={studentName}
               onComplete={() => handleBlockComplete(currentBlockIndex)}
