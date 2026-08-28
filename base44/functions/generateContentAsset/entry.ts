@@ -96,11 +96,28 @@ const ASSET_OUTPUT_SCHEMAS: Record<string, any> = {
     type: "object",
     properties: {
       title: { type: "string" },
-      widget_type: { type: "string", description: "Jenis widget: drag_and_drop, matching, atau number_scale" },
-      instruction: { type: "string", description: "Arahan aktiviti dalam Bahasa Melayu" },
+      widget_type: { type: "string", description: "Jenis widget: matching, drag_and_drop, atau number_scale" },
+      instruction: { type: "string", description: "Satu ayat pendek arahan kepada kanak-kanak (max 12 patah)" },
       seed_data: {
         type: "object",
-        description: "Data khusus widget: pairs[], items[], left_val, right_val, correct_relation, word_bank, dll.",
+        description: "MESTI tidak kosong. Untuk matching: {pairs:[{image,label}]}. Untuk drag_and_drop: {items:[], categories:[]}. Untuk number_scale: {left_val, right_val, correct_relation}.",
+        properties: {
+          pairs: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                image: { type: "string", description: "Emoji/string visual kanak-kanak lihat di skrin" },
+                label: { type: "string", description: "Perkataan seperti BANYAK/SEDIKIT" },
+              },
+            },
+          },
+          items: { type: "array", items: { type: "string" } },
+          categories: { type: "array", items: { type: "string" } },
+          left_val: { type: "number" },
+          right_val: { type: "number" },
+          correct_relation: { type: "string", description: "MORE_THAN, LESS_THAN, atau EQUAL" },
+        },
       },
     },
     required: ["title", "widget_type", "instruction", "seed_data"],
@@ -399,6 +416,87 @@ export default async function (req: Request): Promise<Response> {
         },
         { status: 422 }
       );
+    }
+
+    // 9B. Device-first structural validation for GUIDED_PRACTICE:
+    // seed_data MUST be a non-empty object the widget can render.
+    if (asset_type === "GUIDED_PRACTICE") {
+      const sd = aiRes.seed_data;
+      const isEmptySeed =
+        !sd ||
+        typeof sd !== "object" ||
+        Array.isArray(sd) ||
+        Object.keys(sd).length === 0;
+      if (isEmptySeed) {
+        return Response.json(
+          {
+            success: false,
+            error_code: "INVALID_AI_OUTPUT",
+            error: "seed_data kosong — widget permainan tidak boleh dipaparkan. AI mesti berisi pasulan/items/values.",
+          },
+          { status: 422 }
+        );
+      }
+      const wt = String(aiRes.widget_type || "").toLowerCase();
+      const validWidgets = ["matching", "drag_and_drop", "number_scale"];
+      if (!validWidgets.includes(wt)) {
+        return Response.json(
+          {
+            success: false,
+            error_code: "INVALID_AI_OUTPUT",
+            error: `widget_type '${aiRes.widget_type}' tidak sah. Pilih: ${validWidgets.join(", ")}.`,
+          },
+          { status: 422 }
+        );
+      }
+      // Widget-specific structural check
+      if (wt === "matching" && (!Array.isArray(sd.pairs) || sd.pairs.length < 2)) {
+        return Response.json(
+          { success: false, error_code: "INVALID_AI_OUTPUT", error: "matching memerlukan seed_data.pairs (min 2 pasangan)." },
+          { status: 422 }
+        );
+      }
+      if (wt === "drag_and_drop" && (!Array.isArray(sd.items) || !Array.isArray(sd.categories))) {
+        return Response.json(
+          { success: false, error_code: "INVALID_AI_OUTPUT", error: "drag_and_drop memerlukan seed_data.items dan seed_data.categories." },
+          { status: 422 }
+        );
+      }
+      if (wt === "number_scale" && (typeof sd.left_val !== "number" || typeof sd.right_val !== "number" || !sd.correct_relation)) {
+        return Response.json(
+          { success: false, error_code: "INVALID_AI_OUTPUT", error: "number_scale memerlukan seed_data.left_val, right_val, correct_relation." },
+          { status: 422 }
+        );
+      }
+    }
+
+    // 9C. Device-first validation: reject teacher-voice content in child-facing blocks
+    if (["LESSON_HOOK", "LESSON_OBJECTIVE", "CONCEPT", "WORKED_EXAMPLE", "GUIDED_PRACTICE"].includes(asset_type)) {
+      const sample = JSON.stringify(aiRes).toLowerCase();
+      const teacherPhrases = [
+        "guru menunjukkan",
+        "guru menyuruh",
+        "murid memegang",
+        "murid akan",
+        "gunakan objek sebenar",
+        "lukiskan di kertas",
+        "lukis gambar",
+        "di dalam kelas",
+        "setiap murid",
+        "pelajar diharap",
+      ];
+      for (const phrase of teacherPhrases) {
+        if (sample.includes(phrase)) {
+          return Response.json(
+            {
+              success: false,
+              error_code: "INVALID_AI_OUTPUT",
+              error: `Kandungan mengandungi arahan guru ('${phrase}') — mesti dialamatkan terus kepada kanak-kanak untuk skrin peranti.`,
+            },
+            { status: 422 }
+          );
+        }
+      }
     }
 
     // 10. Prepare Server-Authoritative Asset Payload & Force DRAFT / UNDER_REVIEW Status

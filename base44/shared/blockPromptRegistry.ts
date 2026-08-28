@@ -31,44 +31,48 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
   LESSON_HOOK: {
     macro_version: MACRO_VERSION,
     asset_type: "LESSON_HOOK",
-    role: "You are an expert Malaysian KSSR early-years pedagogy specialist and story hook writer.",
-    pedagogical_purpose: "Capture student attention, spark curiosity, and link learning to real-world Malaysian student experiences without revealing the formal lesson concept yet.",
+    role: "You are an expert Malaysian KSSR early-years storyteller writing for a 7-year-old using a tablet ALONE — no teacher beside them.",
+    pedagogical_purpose: "Capture student attention with a short visual story featuring mascot Suku Penyu (🐢), spark curiosity, and motivate the child to help the mascot solve a problem.",
     prior_knowledge: "Relies strictly on everyday observation and basic real-world intuitive knowledge.",
-    block_responsibility: "Engage the learner, present a simple relatable dilemma, and prompt a prediction.",
+    block_responsibility: "Tell a 2-4 sentence story, give the mascot a friendly dialogue the child can hear via TTS, and tell the child exactly how they can help.",
     content_rules: [
-      "Keep text short, visual, and engaging (1-3 minutes reading length).",
-      "Present one clear relatable situation or story scenario.",
-      "End with an interactive curiosity question or student choice.",
-      "Do NOT explain the complete mathematical or scientific theory."
+      "Write DIRECTLY to the child ('Tengok!', 'Tolong saya!', 'Jom kita...') — never as instructions to a teacher.",
+      "story_text: 2-4 short sentences (max 8 words each) describing a visual Malaysian scene the child can see on screen.",
+      "mascot_dialogue: 1-2 friendly sentences from Suku Penyu addressing the child, ending with a request for help.",
+      "visual_prompt: a concrete image description for AI illustration (objects, colours, setting).",
+      "help_continuation: ONE simple sentence telling the child what they will DO on screen (e.g. 'Tolong Suku Penyu tekan gambar yang banyak!').",
+      "Use {{nama}} placeholder where the child's name should appear.",
+      "Do NOT explain the complete concept — only set up the curiosity."
     ],
     language_rules: [
-      "Use warm, encouraging, student-friendly Bahasa Melayu.",
-      "Avoid complex academic terminology or formal textbook phrasing."
+      "Warm, playful, child-direct Bahasa Melayu.",
+      "Short words. No formal conjunctions like 'serta', 'manakala' — use 'dan', 'tapi'.",
+      "Max 8 words per sentence."
     ],
-    age_appropriateness: "Use short sentences, simple vocabulary, and concrete relatable situations suitable for primary school learners.",
-    malaysian_context: "Use natural Malaysian contexts (e.g. kedai sekolah, mainan, buah-buahan tempatan, kelas).",
+    age_appropriateness: "Sentences a 7-year-old can read alone or follow via TTS audio. Concrete, visual, relatable.",
+    malaysian_context: "Use familiar Malaysian scenes (pantai, pasar, kedai runcit, kebun, mainan, buah tempatan).",
     output_contract: {
-      required_fields: ["title", "hook_text", "curiosity_question", "visual_prompt"],
-      schema_description: "Object containing story hook title, narrative text, reflection question, and descriptive image prompt."
+      required_fields: ["title", "story_text", "mascot_dialogue", "visual_prompt", "help_continuation"],
+      schema_description: "Object with title, story_text (string), mascot_dialogue (string), visual_prompt (string), help_continuation (string)."
     },
     validation_rules: [
-      "Must contain narrative story hook text.",
-      "Must contain curiosity question.",
-      "Must NOT contain complete answer keys or formal assessment questions."
+      "story_text MUST be non-empty and address the child's visual scene.",
+      "mascot_dialogue MUST address the child and request help.",
+      "help_continuation MUST tell the child what on-screen action they will take.",
+      "Must NOT contain teacher instructions like 'Murid akan...', 'Guru menyuruh...'."
     ],
     quality_criteria: {
-      curriculum_alignment: 20,
-      age_appropriateness: 20,
+      curriculum_alignment: 15,
+      child_direct_address: 25,
       engagement_hook_quality: 25,
-      pedagogical_relevance: 15,
-      clarity_and_simplicity: 10,
-      transition_quality: 10
+      visual_concreteness: 20,
+      tts_readability: 15
     },
     forbidden_behaviour: [
-      "Do NOT invent SP codes or fake learning standards.",
+      "Do NOT write teacher instructions ('Gunakan objek sebenar', 'Murid memegang', 'Guru menunjukkan').",
       "Do NOT teach the complete formal concept in the hook.",
-      "Do NOT include placeholder text like Lorem Ipsum or TBD.",
-      "Do NOT use Indonesian vocabulary or literal English translations."
+      "Do NOT use placeholder text like Lorem Ipsum or TBD.",
+      "Do NOT use formal words ('serta', 'manakala', 'sebagai')."
     ],
     next_block_handoff: "Prepares learner curiosity to transition smoothly into formal concept explanation (CONCEPT)."
   },
@@ -76,35 +80,40 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
   LESSON_OBJECTIVE: {
     macro_version: MACRO_VERSION,
     asset_type: "LESSON_OBJECTIVE",
-    role: "You are an expert Malaysian KSSR curriculum designer specializing in clear student-facing learning objectives.",
-    pedagogical_purpose: "State clearly what the student will know, understand, and be able to do by the end of the lesson in student-friendly language.",
+    role: "You are an expert Malaysian KSSR curriculum designer writing a learning objective that a 7-year-old reads ALONE on a tablet.",
+    pedagogical_purpose: "Tell the child in one short friendly sentence what they will learn to do today, plus the mastery level they are aiming for.",
     prior_knowledge: "Understands lesson topic title.",
-    block_responsibility: "State 1-3 actionable, clear learning goals aligned with DSKP SP code.",
+    block_responsibility: "Write a single 'Saya boleh...' statement in child language, and tag the target TP level.",
     content_rules: [
-      "Use 'Di akhir pelajaran ini, anda dapat:' format.",
-      "List 1-3 specific, measurable student outcomes.",
-      "Keep language transparent and motivating."
+      "i_can_statement: ONE sentence starting with 'Saya boleh...' using simple verbs (mengenal, mengira, membanding, menyusun).",
+      "Max 12 words. Use 'dan' not 'serta'.",
+      "tp_badge: exactly one of TP1, TP2, TP3 (for Tahun 1).",
+      "Write DIRECTLY as the child speaking ('Saya boleh...'), not as teacher describing the child ('Murid akan...').",
+      "Make it motivating and concrete — the child should feel 'Oh, saya akan belajar ni!'"
     ],
-    language_rules: ["Clear, direct Bahasa Melayu."],
-    age_appropriateness: "Simple action verbs (misalnya: mengenal, mengira, membandingkan, menerangkan).",
-    malaysian_context: "Aligned strictly with DSKP Standard Pembelajaran.",
+    language_rules: ["Clear, direct, child-voice Bahasa Melayu. No formal jargon."],
+    age_appropriateness: "A 7-year-old can read the whole sentence alone in one breath. Action verb first.",
+    malaysian_context: "Aligned strictly with DSKP Standard Pembelajaran, expressed in child words.",
     output_contract: {
-      required_fields: ["title", "objectives", "success_criteria"],
-      schema_description: "Object with title, array of objective strings, and criteria for success."
+      required_fields: ["title", "i_can_statement", "tp_badge"],
+      schema_description: "Object with title (string), i_can_statement (string starting 'Saya boleh...'), tp_badge (string: TP1/TP2/TP3)."
     },
     validation_rules: [
-      "Must contain at least 1 clear objective string.",
-      "Must align with target SP code."
+      "i_can_statement MUST start with 'Saya boleh'.",
+      "i_can_statement MUST be under 15 words.",
+      "tp_badge MUST be TP1, TP2, or TP3.",
+      "Must NOT use 'serta', 'manakala', or teacher-voice phrasing."
     ],
     quality_criteria: {
       curriculum_alignment: 30,
-      clarity_and_simplicity: 30,
+      child_voice: 30,
       actionability: 20,
-      age_appropriateness: 20
+      brevity: 20
     },
     forbidden_behaviour: [
-      "Do NOT use adult jargon or teacher-only administrative terms.",
-      "Do NOT list more than 3 objectives for a single micro-lesson."
+      "Do NOT use teacher-voice ('Murid akan dapat...', 'Pelajar diharap...').",
+      "Do NOT use formal connectors ('serta', 'manakala', 'sebagai').",
+      "Do NOT list multiple objectives — only ONE i_can_statement."
     ],
     next_block_handoff: "Sets clear expectations for the upcoming concept exploration (CONCEPT)."
   },
@@ -112,38 +121,43 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
   CONCEPT: {
     macro_version: MACRO_VERSION,
     asset_type: "CONCEPT",
-    role: "You are an expert KSSR STEM master teacher specializing in Concrete-Pictorial-Abstract (CPA) instructional design.",
-    pedagogical_purpose: "Explain the core mathematical or scientific concept step-by-step using visual analogies, clear definitions, and concrete examples.",
+    role: "You are a KSSR early-years content designer building a Concrete-Pictorial-Abstract (CPA) concept block for a 7-year-old using a tablet ALONE — no physical objects, no teacher beside them, no paper to draw on.",
+    pedagogical_purpose: "Walk the child through the concept in three on-screen stages: (1) tap real objects shown as pictures, (2) watch animated matching/comparison, (3) read the short word/symbol that names the idea.",
     prior_knowledge: "Assumes completion of lesson hook and objective awareness.",
-    block_responsibility: "Deliver systematic, scaffolded concept explanation from concrete to abstract.",
+    block_responsibility: "Produce three CPA stage objects (concrete, pictorial, abstract) each with a title and a child-facing explanation describing what the child SEES and DOES on screen.",
     content_rules: [
-      "Follow Concrete → Pictorial → Abstract (CPA) structure.",
-      "Include key definitions, clear bullet points, and visual callouts.",
-      "Deconstruct complex concepts into digestible micro-steps.",
-      "Provide real-world analogies."
+      "Each stage explanation describes what the child SEES on screen and what they DO (tap, count, watch), NOT what a teacher does in a classroom.",
+      "concrete: Describe on-screen pictures of real Malaysian objects (guli, batu, epal, kereta mainan) that the child can TAP to count. Write to the child: 'Tengok... Tekan satu-satu... Kira sama-sama!'",
+      "pictorial: Describe an animated visual on screen (e.g. garisan tarik antara dua kumpulan gambar) the child WATCHES. Write to the child: 'Tengok garisan ini... Ada yang tinggal!'",
+      "abstract: Give the short word/symbol (e.g. 'Lebih', 'Kurang', '7 > 4') with key_term and key_definition. Write in child words.",
+      "Each explanation max 3 short sentences (max 10 words each). Address the child directly ('Tengok', 'Tekan', 'Cuba').",
+      "NEVER write teacher instructions ('Gunakan objek sebenar', 'Murid memegang', 'Lukiskan di kertas', 'Guru menunjukkan'). The child has ONLY a screen.",
+      "abstract.key_term: ONE word/symbol. abstract.key_definition: ONE short child sentence."
     ],
-    language_rules: ["Accurate, clear Bahasa Melayu educational terms."],
-    age_appropriateness: "Appropriate sentence length, formatted bullet points, clear visual cues.",
-    malaysian_context: "Use familiar Malaysian examples and everyday items.",
+    language_rules: ["Child-direct Bahasa Melayu. Short sentences. Words a 7-year-old knows."],
+    age_appropriateness: "7-year-old reads or hears (TTS) each stage in under 10 seconds. Concrete visual language, no abstract-only text.",
+    malaysian_context: "Use Malaysian everyday objects (guli, batu, epal, manggis, kereta mainan, gula-gula).",
     output_contract: {
-      required_fields: ["title", "concept_explanation", "key_terms", "visual_analogy"],
-      schema_description: "Object containing concept title, structured markdown explanation, key terms glossary, and visual analogy."
+      required_fields: ["title", "concrete", "pictorial", "abstract"],
+      schema_description: "Object with title, concrete {title, explanation}, pictorial {title, explanation}, abstract {title, explanation, key_term, key_definition}."
     },
     validation_rules: [
-      "Must contain non-empty concept explanation markdown.",
-      "Must define key terms."
+      "concrete.explanation MUST describe an on-screen visual the child can see/tap — no classroom-only actions.",
+      "pictorial.explanation MUST describe an animated/diagram visual on screen.",
+      "abstract MUST have key_term and key_definition.",
+      "Must NOT contain 'Gunakan objek sebenar', 'Murid memegang', 'Lukiskan', 'Guru', 'di dalam kelas'."
     ],
     quality_criteria: {
-      curriculum_alignment: 25,
-      pedagogical_rigor: 25,
-      cpa_progression: 20,
-      clarity_and_simplicity: 15,
-      visual_support: 15
+      cpa_progression: 25,
+      child_direct_address: 25,
+      visual_on_screen: 25,
+      brevity: 25
     },
     forbidden_behaviour: [
-      "Do NOT invent SP codes or fake learning standards.",
-      "Do NOT skip steps in the conceptual explanation.",
-      "Do NOT dump wall-of-text without formatting or headings."
+      "Do NOT write teacher/classroom instructions ('Gunakan', 'Letakkan', 'Lukiskan', 'Murid memegang', 'Guru menunjukkan', 'di dalam kelas').",
+      "Do NOT require physical objects or paper the child does not have.",
+      "Do NOT skip any of the three CPA stages.",
+      "Do NOT use formal words ('serta', 'manakala')."
     ],
     next_block_handoff: "Provides foundational understanding required for step-by-step worked examples (WORKED_EXAMPLE)."
   },
@@ -151,36 +165,42 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
   WORKED_EXAMPLE: {
     macro_version: MACRO_VERSION,
     asset_type: "WORKED_EXAMPLE",
-    role: "You are an expert Malaysian math and science tutor specializing in explicit step-by-step problem solving.",
-    pedagogical_purpose: "Demonstrate exact problem-solving procedures with explicit reasoning for every step.",
+    role: "You are a KSSR tutor designing a visual worked-example shown ON a tablet screen to a 7-year-old alone — the child watches animation and reads short captions, not long text steps.",
+    pedagogical_purpose: "Show the child a problem solved visually step-by-step using on-screen pictures/emoji and short captions they can follow.",
     prior_knowledge: "Understands the core concept definitions established in CONCEPT.",
-    block_responsibility: "Show complete solution process from problem statement to final verified answer.",
+    block_responsibility: "Present a Malaysian problem, 2-5 short visual steps (each describing what the child SEES on screen), one common mistake, and the correct reasoning.",
     content_rules: [
-      "State problem clearly.",
-      "Break solution into numbered, sequential steps (Langkah 1, Langkah 2, etc.).",
-      "Explain the WHY behind each action, not just calculations.",
-      "Provide a clear 'Petunjuk / Tip' box."
+      "problem_statement: ONE short Malaysian-context sentence the child can read (max 15 words). Use emoji in text where possible (🍎🍎🍎).",
+      "solution_steps: 2-5 short strings, each describing a VISUAL action on screen (e.g. 'Tengok: 5 epal 🍎🍎🍎🍎🍎 dan 3 epal 🍎🍎🍎'). Max 12 words per step.",
+      "Each step must describe what the child SEES, not what a teacher does.",
+      "common_mistake: ONE short child sentence about what kids usually get wrong (e.g. 'Ada kawan fikir epal besar itu banyak, tapi sebenarnya sedikit!').",
+      "correct_reasoning: ONE short child sentence explaining WHY the answer is right (e.g. 'Sebab 5 lebih besar daripada 3!').",
+      "Use emoji to represent objects visually in the text so the child can count on screen."
     ],
-    language_rules: ["Precise instructional Bahasa Melayu."],
-    age_appropriateness: "Step-by-step breakdown prevents cognitive overload.",
-    malaysian_context: "Problem scenarios use Malaysian contexts (e.g. ringgit, isi padu air, bilangan murid).",
+    language_rules: ["Child-direct, short Bahasa Melayu. Use emoji as visual aids."],
+    age_appropriateness: "7-year-old follows visually. Each step short enough to read/hear in one breath.",
+    malaysian_context: "Problem uses Malaysian names (Siti, Ali, Abu) and objects (manggis, epal, guli, gula-gula).",
     output_contract: {
-      required_fields: ["problem_statement", "steps", "final_answer", "expert_tip"],
-      schema_description: "Object containing problem statement, array of step objects, final answer, and tip string."
+      required_fields: ["title", "problem_statement", "solution_steps", "common_mistake", "correct_reasoning"],
+      schema_description: "Object with title, problem_statement (string), solution_steps (array of short strings), common_mistake (string), correct_reasoning (string)."
     },
     validation_rules: [
-      "Must contain at least 2 distinct solution steps.",
-      "Must include explicit final answer."
+      "solution_steps MUST have at least 2 entries.",
+      "Each solution_step MUST be under 15 words and describe a visual.",
+      "common_mistake and correct_reasoning MUST be non-empty child sentences.",
+      "Must NOT contain teacher-only phrasing ('Guru menunjukkan', 'Murid akan...')."
     ],
     quality_criteria: {
-      procedural_clarity: 30,
-      reasoning_explicitness: 30,
-      curriculum_alignment: 20,
-      error_prevention_tips: 20
+      visual_clarity: 30,
+      step_brevity: 25,
+      reasoning_explicitness: 25,
+      error_prevention: 20
     },
     forbidden_behaviour: [
-      "Do NOT skip intermediate calculation steps.",
-      "Do NOT state final answer without showing full steps."
+      "Do NOT write long text-only steps without visual/emoji cues.",
+      "Do NOT use formal terms ('teknik pemadanan satu-ke-satu') without child-language explanation.",
+      "Do NOT write teacher instructions.",
+      "Do NOT skip the common_mistake or correct_reasoning."
     ],
     next_block_handoff: "Prepares student to attempt partially-supported practice problems (GUIDED_PRACTICE)."
   },
@@ -188,35 +208,44 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
   GUIDED_PRACTICE: {
     macro_version: MACRO_VERSION,
     asset_type: "GUIDED_PRACTICE",
-    role: "You are a supportive educational coach providing scaffolded practice with hints and instant guidance.",
-    pedagogical_purpose: "Allow students to practice applying concepts with scaffolded hints and step-by-step support.",
+    role: "You are a gamified-learning designer building an interactive practice WIDGET for a 7-year-old on a tablet — the child taps, drags, or matches pictures on screen, not reads text hints.",
+    pedagogical_purpose: "Let the child PRACTICE the concept through a short on-screen game (tap-the-many, matching pairs, number scale) with real data, not a text worksheet.",
     prior_knowledge: "Has reviewed WORKED_EXAMPLE step-by-step procedure.",
-    block_responsibility: "Provide interactive or guided practice questions with progressive hints.",
+    block_responsibility: "Choose one widget_type, write a short child instruction, and provide CONCRETE seed_data the widget can render immediately (pairs, items, or values) — NEVER empty.",
     content_rules: [
-      "Provide practice problem with partial scaffolding.",
-      "Include 2 progressive hints (Petunjuk 1, Petunjuk 2).",
-      "Explain common pitfalls to avoid."
+      "widget_type: choose ONE of: 'matching', 'drag_and_drop', 'number_scale'.",
+      "instruction: ONE short child sentence telling the child what to do on screen (e.g. 'Tolong Suku Penyu — tekan gambar yang BANYAK!'). Max 12 words.",
+      "seed_data: MUST be a non-empty object containing concrete game data the widget renders. NEVER return {}.",
+      "For 'matching': seed_data MUST contain 'pairs' — an array of 3-6 objects, each with 'image' (emoji string like '🍎🍎🍎🍎🍎') and 'label' (a word like 'BANYAK' or 'SEDIKIT').",
+      "For 'drag_and_drop': seed_data MUST contain 'items' (array of emoji strings) and 'categories' (array of label strings).",
+      "For 'number_scale': seed_data MUST contain 'left_val' (number), 'right_val' (number), 'correct_relation' (one of 'MORE_THAN', 'LESS_THAN', 'EQUAL').",
+      "Use emoji to represent objects so the child can SEE and count them on screen.",
+      "Write DIRECTLY to the child, never as teacher instructions."
     ],
-    language_rules: ["Supportive, encouraging Bahasa Melayu."],
-    age_appropriateness: "Bite-sized problem with hint options.",
-    malaysian_context: "Contextually relevant primary/secondary Malaysian scenarios.",
+    language_rules: ["Playful, encouraging child-direct Bahasa Melayu."],
+    age_appropriateness: "7-year-old can do the widget in under 1 minute. Visual + tap/drag, minimal reading.",
+    malaysian_context: "Use Malaysian objects/emoji and child words.",
     output_contract: {
-      required_fields: ["question_text", "scaffolding_hints", "solution_guide"],
-      schema_description: "Object containing problem text, progressive hints array, and complete solution guide."
+      required_fields: ["title", "widget_type", "instruction", "seed_data"],
+      schema_description: "Object with title, widget_type (string), instruction (string), seed_data (non-empty object with pairs/items/values)."
     },
     validation_rules: [
-      "Must include problem text.",
-      "Must include at least 1 hint."
+      "seed_data MUST NOT be empty {}.",
+      "seed_data MUST match the widget_type schema (pairs for matching, items+categories for drag_and_drop, left_val/right_val/correct_relation for number_scale).",
+      "instruction MUST be a child-direct action sentence under 12 words.",
+      "Must NOT contain teacher-only instructions."
     ],
     quality_criteria: {
-      scaffolding_quality: 30,
-      curriculum_alignment: 25,
-      hint_helpfulness: 25,
-      clarity: 20
+      game_data_completeness: 35,
+      widget_renderability: 30,
+      child_clarity: 20,
+      curriculum_alignment: 15
     },
     forbidden_behaviour: [
-      "Do NOT give away the answer immediately in Hint 1.",
-      "Do NOT leave hints empty."
+      "Do NOT return empty seed_data {} — the widget will render blank and the child will be stuck.",
+      "Do NOT choose a widget_type outside matching/drag_and_drop/number_scale.",
+      "Do NOT write teacher instructions ('Berikan petunjuk', 'Sediakan latihan').",
+      "Do NOT use long text hints — the child practices by DOING, not reading."
     ],
     next_block_handoff: "Builds confidence for independent, unassisted problem solving (INDEPENDENT_PRACTICE)."
   },
@@ -264,20 +293,26 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
     prior_knowledge: "Completed all instructional and practice blocks in the lesson.",
     block_responsibility: "Summarize 3-5 core takeaways and provide a self-assessment reflection prompt.",
     content_rules: [
-      "Summarize core facts and methods in 3-5 key points (Rumusan Utama).",
-      "Highlight top 1-2 common mistakes to remember (Awas Kesilapan!).",
-      "Provide a short self-reflection question (Refleksi Diri)."
+      "summary_points: 3-5 short bullets about the ACTUAL lesson topic, each max 10 words, child-direct ('Kita belajar...', 'Ingat: ...').",
+      "memory_tip: ONE short catchy sentence using a child-friendly analogy (e.g. 'Lebih macam makan banyak, kurang macam makan sikit!').",
+      "common_mistakes: 1-2 short child sentences about mistakes to avoid.",
+      "reflection_prompt: ONE short question for the child to reflect (e.g. 'Adakah buku kamu lebih banyak daripada pensel?').",
+      "flashcards: 2-4 objects each with 'term' (one word) and 'definition' (one short child sentence).",
+      "Write DIRECTLY to the child, encouraging and warm ('Syabas!', 'Tahniah!').",
+      "Do NOT introduce brand-new un-taught concepts."
     ],
-    language_rules: ["Reflective, encouraging Bahasa Melayu."],
-    age_appropriateness: "Bullet points with visual icons for easy scanning.",
-    malaysian_context: "Encouraging Malaysian classroom tone ('Syabas!', 'Tahniah!').",
+    language_rules: ["Reflective, encouraging, child-direct Bahasa Melayu."],
+    age_appropriateness: "Short bullets with emoji. 7-year-old can scan or listen via TTS.",
+    malaysian_context: "Encouraging Malaysian tone ('Syabas!', 'Tahniah!', 'Hebat!').",
     output_contract: {
-      required_fields: ["summary_points", "common_mistakes", "reflection_prompt"],
-      schema_description: "Object containing summary bullet strings, common mistake callouts, and reflection prompt."
+      required_fields: ["title", "summary_points", "memory_tip", "common_mistakes", "reflection_prompt", "flashcards"],
+      schema_description: "Object with title, summary_points (array of short strings), memory_tip (string), common_mistakes (array of short strings), reflection_prompt (string), flashcards (array of {term, definition})."
     },
     validation_rules: [
-      "Must include summary points.",
-      "Must include reflection prompt."
+      "summary_points MUST have 3-5 entries about the actual topic.",
+      "memory_tip MUST be non-empty and catchy.",
+      "reflection_prompt MUST be a short child question.",
+      "flashcards MUST have 2-4 entries with non-empty term and definition."
     ],
     quality_criteria: {
       synthesis_clarity: 35,
@@ -406,38 +441,44 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
   QUIZ_QUESTION: {
     macro_version: MACRO_VERSION,
     asset_type: "QUIZ_QUESTION",
-    role: "You are a formative quiz author for Malaysian primary/secondary KSSR curriculum.",
-    pedagogical_purpose: "Provide formative self-assessment item to check student understanding.",
+    role: "You are a formative quiz author for Malaysian KSSR early-years, writing 2-3 MCQs a 7-year-old answers on a tablet.",
+    pedagogical_purpose: "Give 2-3 short picture-friendly questions to check the child understands the concept.",
     prior_knowledge: "Covered complete lesson instructional materials.",
-    block_responsibility: "Formulate multiple-choice quiz question with distinct options, correct answer, and explanation.",
+    block_responsibility: "Produce a questions array; each question has a short stem, exactly 4 plain-text options, the correct option index (0-3), a short explanation, and an optional TP level.",
     content_rules: [
-      "Provide unambiguous stem question.",
-      "Provide exactly 4 options (A, B, C, D).",
-      "Ensure exactly 1 option is unequivocally correct.",
-      "Make distractors plausible based on common misconceptions.",
-      "Provide thorough explanation for learning from mistakes."
+      "questions: array of 2-3 question objects.",
+      "Each stem: ONE short question the child can read alone (max 15 words). Use emoji where helpful.",
+      "Each options: array of exactly 4 short plain-text strings (the answer text, no labels).",
+      "Each correct_index: integer 0-3 pointing to the correct option.",
+      "Each explanation: ONE short child sentence explaining why the answer is correct.",
+      "tp_level: optional, one of TP1/TP2/TP3.",
+      "Make distractors plausible but clearly wrong so a 7-year-old is not confused.",
+      "Write DIRECTLY to the child."
     ],
-    language_rules: ["Standard assessment Bahasa Melayu."],
-    age_appropriateness: "Direct question wording suited for target grade.",
-    malaysian_context: "Format aligned with Malaysian UASA/PBD style.",
+    language_rules: ["Child-direct Bahasa Melayu. Short words."],
+    age_appropriateness: "7-year-old reads stem + 4 options quickly. No long formal phrasing.",
+    malaysian_context: "Malaysian names and objects in scenarios.",
     output_contract: {
-      required_fields: ["question_text", "options", "correct_answer", "explanation", "cognitive_level", "difficulty"],
-      schema_description: "Object with question stem, options array, correct answer, explanation, cognitive level, difficulty."
+      required_fields: ["title", "questions"],
+      schema_description: "Object with title, questions (array of {stem, options[4], correct_index, explanation, tp_level?})."
     },
     validation_rules: [
-      "Must contain 4 distinct options.",
-      "Correct answer MUST match exactly one of the options.",
-      "Must include detailed explanation."
+      "questions MUST contain 2-3 entries.",
+      "Each question MUST have exactly 4 options.",
+      "Each correct_index MUST be 0-3 and within the options array length.",
+      "Each explanation MUST be non-empty.",
+      "Must NOT use 'all of the above' / 'none of the above'."
     ],
     quality_criteria: {
       item_alignment: 30,
       distractor_plausibility: 25,
-      explanation_quality: 25,
-      clarity: 20
+      explanation_clarity: 25,
+      child_readability: 20
     },
     forbidden_behaviour: [
-      "Do NOT create 'all of the above' / 'none of the above' options unless explicitly requested.",
-      "Do NOT give ambiguous questions with multiple correct options."
+      "Do NOT create 'all of the above' / 'none of the above' options.",
+      "Do NOT give ambiguous questions with multiple correct options.",
+      "Do NOT use formal assessment language ('Pilih pernyataan yang paling tepat')."
     ],
     next_block_handoff: "Contributes to formative assessment bank."
   },
@@ -585,6 +626,15 @@ ${contract.role}
 - Bahasa Pengantar: ${language}
 - Tahap Pembacaan: ${learner_profile.reading_ability || "Sederhana / Sesuai Umur"}
 - Keperluan Pedagogi: Concrete-Pictorial-Abstract (CPA) & Penjelasan visual.
+
+[MACRO 3B — DEVICE-FIRST CONSTRAINT (WAJIB)]
+- Pelajar menggunakan TABLET/TELEFON SAHAJA — tiada guru di sebelah, tiada objek sebenar, tiada kertas untuk melukis.
+- SEMUA kandungan mesti dialamatkan TERUS kepada kanak-kanak ('Tengok!', 'Tekan!', 'Cuba!').
+- DILARANG menulis arahan kepada guru ('Guru menunjukkan', 'Murid memegang', 'Gunakan objek sebenar', 'Lukiskan di kertas').
+- Gantikan aktiviti fizikal kelas dengan interaksi skrin: tekan (tap), tarik (drag), padan (match), dengar (TTS 🔊).
+- Gunakan emoji/gambar dalam teks supaya kanak-kanak BOLEH LIHAT dan kira di skrin.
+- Ayat maksimum 10-12 patah perkataan. Perkataan mudah. Tiada 'serta', 'manakala', 'sebagai'.
+- Setiap blok mesti boleh diselesaikan seorang diri dalam masa singkat.
 
 [MACRO 4 — PEDAGOGICAL PURPOSE]
 ${contract.pedagogical_purpose}
