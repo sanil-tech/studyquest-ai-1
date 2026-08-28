@@ -1,6 +1,8 @@
 {
+  "type": "object",
   "name": "Student",
   "description": "Student profile and curriculum mapping",
+  "properties": {},
   "attributes": [
     {
       "name": "name",
@@ -27,5 +29,6 @@
       "type": "json",
       "required": false
     }
-  ]
+  ],
+  "required": []
 }

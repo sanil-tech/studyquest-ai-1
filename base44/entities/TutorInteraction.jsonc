@@ -1,6 +1,8 @@
 {
+  "type": "object",
   "name": "TutorInteraction",
   "description": "Log of student interactions with the AI Tutor",
+  "properties": {},
   "attributes": [
     {
       "name": "student_id",
@@ -37,5 +39,6 @@
       "type": "string",
       "required": true
     }
-  ]
+  ],
+  "required": []
 }

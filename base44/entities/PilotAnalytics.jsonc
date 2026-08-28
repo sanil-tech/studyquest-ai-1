@@ -1,5 +1,7 @@
 {
+  "type": "object",
   "name": "PilotAnalytics",
+  "properties": {},
   "fields": [
     {
       "name": "student_id",
@@ -46,5 +48,6 @@
       "type": "timestamp",
       "required": true
     }
-  ]
+  ],
+  "required": []
 }

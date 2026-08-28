@@ -1,6 +1,8 @@
 {
+  "type": "object",
   "name": "StudentMastery",
   "description": "Student mastery level for specific curriculum standards",
+  "properties": {},
   "attributes": [
     {
       "name": "student_id",
@@ -37,5 +39,6 @@
       "type": "string",
       "required": false
     }
-  ]
+  ],
+  "required": []
 }

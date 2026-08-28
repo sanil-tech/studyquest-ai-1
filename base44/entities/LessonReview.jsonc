@@ -1,6 +1,8 @@
 {
+  "type": "object",
   "name": "LessonReview",
   "description": "AI quality review for generated lessons",
+  "properties": {},
   "attributes": [
     {
       "name": "lesson_id",
@@ -37,5 +39,6 @@
       "type": "string",
       "required": true
     }
-  ]
+  ],
+  "required": []
 }

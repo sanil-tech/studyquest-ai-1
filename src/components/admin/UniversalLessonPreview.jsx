@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from "react";
-import sukuPenyuMascotImg from "@/assets/images/suku_penyu_mascot_1785919182374.jpg";
 import { generateDynamicImagePrompt, getPromptSeed } from "@/utils/generateDynamicImagePrompt";
 import { getStaticFallbackImage } from "@/services/aiImageEngine";
 import StoryHookMedia from "@/components/lesson/StoryHookMedia";
@@ -108,15 +107,7 @@ function StoryScene({ data, mascotName = "Suku Penyu 🐢", studentName = "Kawan
       {/* Mascot Dialogue Bubble with Profile Picture */}
       <div className="p-4 bg-stone-900 border border-stone-800 rounded-2xl flex items-start gap-3 shadow-md">
         <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center shrink-0 overflow-hidden shadow-md">
-          <img
-            src={sukuPenyuMascotImg}
-            alt={mascotName}
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = sukuPenyuMascotImg;
-            }}
-            className="w-full h-full object-cover"
-          />
+          <span className="text-2xl" role="img" aria-label={mascotName}>🐢</span>
         </div>
         <div className="space-y-2 flex-1">
           <div className="flex items-center justify-between">

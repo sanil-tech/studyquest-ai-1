@@ -1,6 +1,8 @@
 {
+  "type": "object",
   "name": "AssessmentAttempt",
   "description": "Log of student answers to assessment questions",
+  "properties": {},
   "attributes": [
     {
       "name": "student_id",
@@ -42,5 +44,6 @@
       "type": "string",
       "required": true
     }
-  ]
+  ],
+  "required": []
 }
