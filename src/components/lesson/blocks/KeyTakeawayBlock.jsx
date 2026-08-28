@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
 import RevealSummaryVisual from "@/components/lesson/blocks/RevealSummaryVisual";
 
-export default function KeyTakeawayBlock({ content = {}, studentName, onComplete, isCompleted }) {
+export default function KeyTakeawayBlock({ content = {}, studentName, onComplete, isCompleted, hookImageUrl }) {
   const points = (content.summary_points || []).map((p) => personalize(p, studentName));
   const tip = personalize(content.memory_tip || "", studentName);
   const commonMistakes = (content.common_mistakes || []).map((m) => personalize(m, studentName));
@@ -122,13 +122,27 @@ export default function KeyTakeawayBlock({ content = {}, studentName, onComplete
         </div>
       )}
 
-      {/* Reflection prompt (Selesaikan Misi) — passive, tiada respon diperlukan */}
+      {/* Reflection prompt (Selesaikan Misi) — passive, tiada respon diperlukan.
+          Shows the hook scene thumbnail to close the narrative loop. */}
       {reflectionPrompt && (
         <div className="p-3.5 bg-indigo-950/50 border border-indigo-500/40 rounded-2xl flex items-start gap-3">
-          <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-base shrink-0 border border-indigo-500/40">
-            🐢
-          </div>
-          <div className="space-y-0.5">
+          {hookImageUrl ? (
+            <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-indigo-500/40 bg-indigo-950">
+              <img
+                src={hookImageUrl}
+                alt="Kisah misi Suku Penyu"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            </div>
+          ) : (
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-base shrink-0 border border-indigo-500/40">
+              🐢
+            </div>
+          )}
+          <div className="space-y-0.5 flex-1">
             <span className="text-[10px] font-black text-indigo-400 uppercase block">Selesaikan Misi (Renungkan Sahaja):</span>
             <p className="text-xs font-bold text-indigo-100 leading-relaxed">{reflectionPrompt}</p>
             <span className="text-[10px] text-indigo-400/70 italic block mt-1">Tiada jawapan diperlukan — cuma fikir sejenak 😊</span>

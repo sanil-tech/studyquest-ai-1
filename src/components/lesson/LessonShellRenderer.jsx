@@ -109,6 +109,14 @@ export default function LessonShellRenderer({
   const blocks = lesson?.blocks || [];
   const metadata = lesson?.metadata || {};
 
+  // Narrative handoff: carry the hook block's image into the reflection block
+  // so the "Selesaikan Misi" card shows the same mission scene the child saw at the start.
+  const hookImageUrl = useMemo(() => {
+    const hook = blocks.find((b) => b?.block_type === "STORY_HOOK");
+    const p = hook?.payload || hook?.content || {};
+    return p.image_url || p.image || null;
+  }, [blocks]);
+
   // Mapping from block_type to its index for quick navigation via stage clicks
   const blockIndexByType = useMemo(() => {
     const map = {};
@@ -294,6 +302,7 @@ export default function LessonShellRenderer({
               content={currentBlock.payload || currentBlock.content || {}}
               mascot={metadata.mascot}
               studentName={studentName}
+              hookImageUrl={hookImageUrl}
               onComplete={() => handleBlockComplete(currentBlockIndex)}
               isCompleted={isCurrentCompleted}
               onMistake={onMistake}
