@@ -122,15 +122,18 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
     macro_version: MACRO_VERSION,
     asset_type: "CONCEPT",
     role: "You are a KSSR early-years content designer building a Concrete-Pictorial-Abstract (CPA) concept block for a 7-year-old using a tablet ALONE — no physical objects, no teacher beside them, no paper to draw on.",
-    pedagogical_purpose: "Walk the child through the concept in three on-screen stages: (1) tap real objects shown as pictures, (2) watch animated matching/comparison, (3) read the short word/symbol that names the idea.",
+    pedagogical_purpose: "Walk the child through the SELECTED Standard Pembelajaran in three on-screen Concrete-Pictorial-Abstract (CPA) stages. Select the visual interaction that fits that skill; do not assume every lesson is a quantity comparison.",
     prior_knowledge: "Assumes completion of lesson hook and objective awareness.",
     block_responsibility: "Produce three CPA stage objects (concrete, pictorial, abstract) each with a title and a child-facing explanation describing what the child SEES and DOES on screen.",
     content_rules: [
-      "object_emoji: SATU emoji yang mewakili objek utama topik ini (cth '🔵' untuk guli, '🍎' untuk epal, '🍪' untuk biskut, '🐚' untuk kulit kerang). MESTI sepadan dengan objek yang disebut dalam penerangan supaya gambar pada skrin sama dengan soalan cerita.",
+      "concept_model: Pilih SATU model yang paling tepat untuk Standard Pembelajaran yang dipilih: 'count_and_name', 'compare_quantities', 'compare_numbers', 'write_numerals', 'place_value', 'sequence', atau 'general'. Jangan pilih 'compare_quantities' atau 'compare_numbers' melainkan SP benar-benar meminta perbandingan.",
+      "Setiap fasa mesti mempunyai visual_type yang sesuai dengan concept_model. Gunakan 'single_count' untuk mengenal/mengira/menamai nombor; 'comparison' hanya untuk membanding; 'number_sequence' untuk tertib nombor; 'place_value' untuk puluh dan sa; atau 'symbol_card' untuk aturan/istilah.",
+      "object_emoji: SATU emoji yang mewakili objek utama jika konsep menggunakan objek (cth '🔵' untuk guli, '🍎' untuk epal). MESTI sepadan dengan objek dalam penerangan. Untuk konsep yang tidak memerlukan objek, gunakan emoji yang membantu, bukan dua kumpulan perbandingan.",
       "Each stage explanation describes what the child SEES on screen and what they DO (tap, count, watch), NOT what a teacher does in a classroom.",
-      "concrete: Sediakan count_a, count_b (nombor, cth 5 dan 3), label_a, label_b (label pendek cth 'Banyak'/'Sedikit' atau 'Merah'/'Biru'). Visual tekan-kira akan paparkan object_emoji diulang count_a dan count_b kali. Penerangan kepada kanak-kanak: 'Tengok guli ini. Tekan satu-satu. Kira sama-sama!' (gantikan 'guli' dengan objek topik sebenar).",
-      "pictorial: Sediakan count_top, count_bottom (nombor), label_top, label_bottom (cth 'Guli Merah'/'Guli Biru'). Visual padanan memaparkan object_emoji dalam dua baris; GARISAN KUNING dipaparkan automatik antara pasangan yang dipadankan — anda BOLEH rujuk 'garisan kuning' dalam penerangan kerana ia kelihatan pada skrin. Tulis kepada kanak-kanak: 'Tengok garisan kuning ini. Satu objek ada kawan. Ada objek tiada kawan!'",
-      "abstract: Give the short word/symbol (e.g. 'Lebih', 'Kurang', '7 > 4') with key_term and key_definition. Write in child words.",
+      "Untuk visual_type 'single_count', concrete/pictorial mesti beri count, label, numeral (jika relevan), dan object_emoji. Contoh SP menamai nombor: satu kumpulan 7 epal → angka 7 → perkataan 'tujuh'.",
+      "Untuk visual_type 'comparison' SAHAJA, beri count_a, count_b, label_a, label_b (dan count_top/count_bottom untuk bergambar). Jangan guna label 'Banyak'/'Sedikit' sebagai lalai bagi model lain.",
+      "Untuk visual_type 'number_sequence', beri sequence_values (array nombor) dan missing_value jika ada. Untuk 'place_value', beri tens dan ones. Untuk 'symbol_card', beri display_value.",
+      "abstract: Give the short word, numeral, symbol, or rule that names THIS selected idea with key_term and key_definition. Contoh '7', 'tujuh', atau 'lebih daripada' hanya apabila sepadan dengan SP.",
       "Each explanation max 3 short sentences (max 10 words each). Address the child directly ('Tengok', 'Tekan', 'Cuba').",
       "NEVER write teacher instructions ('Gunakan objek sebenar', 'Murid memegang', 'Lukiskan di kertas', 'Guru menunjukkan'). The child has ONLY a screen.",
       "abstract.key_term: ONE word/symbol. abstract.key_definition: ONE short child sentence."
@@ -139,8 +142,8 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
     age_appropriateness: "7-year-old reads or hears (TTS) each stage in under 10 seconds. Concrete visual language, no abstract-only text.",
     malaysian_context: "Use Malaysian everyday objects (guli, batu, epal, manggis, kereta mainan, gula-gula).",
     output_contract: {
-      required_fields: ["title", "concrete", "pictorial", "abstract"],
-      schema_description: "Object with title, concrete {title, explanation}, pictorial {title, explanation}, abstract {title, explanation, key_term, key_definition}."
+      required_fields: ["title", "concept_model", "concrete", "pictorial", "abstract"],
+      schema_description: "Object with title, concept_model, and CPA objects. Each phase includes title, explanation, visual_type, and only the visual data that matches the selected concept_model."
     },
     validation_rules: [
       "concrete.explanation MUST describe an on-screen visual the child can see/tap — no classroom-only actions.",
@@ -167,16 +170,17 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
     macro_version: MACRO_VERSION,
     asset_type: "WORKED_EXAMPLE",
     role: "You are a KSSR tutor designing a visual worked-example shown ON a tablet screen to a 7-year-old alone — the child watches animation and reads short captions, not long text steps.",
-    pedagogical_purpose: "Show the child a problem solved visually step-by-step using on-screen pictures/emoji and short captions they can follow.",
+    pedagogical_purpose: "Show the child a problem from the SELECTED Standard Pembelajaran solved visually step-by-step using the on-screen representation that fits that skill.",
     prior_knowledge: "Understands the core concept definitions established in CONCEPT.",
     block_responsibility: "Present a Malaysian problem, 2-5 short visual steps (each describing what the child SEES on screen), one common mistake, and the correct reasoning.",
     content_rules: [
-      "problem_statement: ONE short Malaysian-context sentence the child can read (max 15 words). Use emoji in text where possible (🍎🍎🍎).",
-      "solution_steps: 2-5 short strings, each describing a VISUAL action on screen (e.g. 'Tengok: 5 epal 🍎🍎🍎🍎🍎 dan 3 epal 🍎🍎🍎'). Max 12 words per step.",
+      "problem_statement: ONE short Malaysian-context sentence the child can read (max 15 words). Its skill and answer MUST match the selected SP, not a generic comparison question.",
+      "solution_steps: 2-5 short strings, each describing a VISUAL action on screen. Select the action for the actual skill: count and name objects, arrange a number sequence, build tens and ones, write a numeral, or compare only when the SP requests comparison. Max 12 words per step.",
       "Each step must describe what the child SEES, not what a teacher does.",
-      "common_mistake: ONE short child sentence about what kids usually get wrong (e.g. 'Ada kawan fikir epal besar itu banyak, tapi sebenarnya sedikit!').",
-      "correct_reasoning: ONE short child sentence explaining WHY the answer is right (e.g. 'Sebab 5 lebih besar daripada 3!').",
-      "Use emoji to represent objects visually in the text so the child can count on screen."
+      "visual_aid: Return {type, object_emoji, count, label, numeral, left_count, right_count, left_label, right_label}. Use type 'single_count' for counting/naming, 'comparison' only for comparison SP, 'number_line' for sequences, or 'none' when a visual aid would misrepresent the skill. Populate only relevant fields.",
+      "common_mistake: ONE short child sentence about a mistake relevant to THIS SP — never reuse a banyak/sedikit misconception unless this is a comparison SP.",
+      "correct_reasoning: ONE short child sentence explaining WHY the answer is right for THIS SP.",
+      "Use emoji only when it helps the selected skill; do not force two groups of objects."
     ],
     language_rules: ["Child-direct, short Bahasa Melayu. Use emoji as visual aids."],
     age_appropriateness: "7-year-old follows visually. Each step short enough to read/hear in one breath.",
@@ -612,6 +616,7 @@ export function buildMacroPrompt(options: any = {}): string {
   const age = learner_profile.age || (yearLevel.includes("1") ? 7 : yearLevel.includes("2") ? 8 : 9);
   const language = learner_profile.language || "Bahasa Melayu";
   const topic = curriculum_context.topic || curriculum_context.topic_name || "Topik Pelajaran";
+  const subtopic = curriculum_context.subtopic || curriculum_context.subtopic_name || "";
   const spCode = curriculum_context.sp_code || "SP 1.1.1";
   const learningStandard = curriculum_context.learning_standard || curriculum_context.sp_description || "Standard Pembelajaran";
 
@@ -626,8 +631,14 @@ ${contract.role}
 - Subjek: ${subject}
 - Tingkatan / Tahun: ${yearLevel}
 - Topik: ${topic}
+- Unit / Subtopik: ${subtopic || "Tidak dinyatakan"}
 - Standard Pembelajaran (SP Code): ${spCode}
 - Penerangan Standard: ${learningStandard}
+
+[MACRO 2B — CURRICULUM BOUNDARY (WAJIB)]
+- Fokus tunggal aset ini ialah: ${learningStandard}.
+- Topik hanya konteks induk. Unit/subtopik dan SP di atas menentukan kemahiran yang mesti diajar, divisualkan, dan dinilai.
+- Jangan bawa kemahiran daripada unit lain. Khususnya, JANGAN menghasilkan aktiviti 'Banyak dan Sedikit', padanan satu-ke-satu, atau simbol > < = kecuali penerangan SP di atas benar-benar meminta perbandingan kuantiti/nombor.
 
 [MACRO 3 — LEARNER PROFILE]
 - Target Learner: Murid ${yearLevel} (Anggaran umur: ${age} tahun)

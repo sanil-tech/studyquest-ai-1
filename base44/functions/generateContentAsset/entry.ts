@@ -48,12 +48,23 @@ const ASSET_OUTPUT_SCHEMAS: Record<string, any> = {
     type: "object",
     properties: {
       title: { type: "string" },
+      concept_model: { type: "string", enum: ["count_and_name", "compare_quantities", "compare_numbers", "write_numerals", "place_value", "sequence", "general"] },
       object_emoji: { type: "string", description: "SATU emoji yang mewakili objek utama topik ini (cth '🔵' untuk guli, '🍎' untuk epal). MESTI sepadan dengan objek yang disebut dalam penerangan supaya gambar sama dengan soalan." },
       concrete: {
         type: "object",
         properties: {
           title: { type: "string" },
           explanation: { type: "string", description: "Penerangan peringkat Konkrit dengan objek sebenar" },
+          visual_type: { type: "string", enum: ["single_count", "comparison", "number_sequence", "place_value", "symbol_card"] },
+          object_emoji: { type: "string" },
+          count: { type: "number", description: "Bilangan satu kumpulan untuk konsep menamai/mengira nombor" },
+          label: { type: "string" },
+          numeral: { type: "string" },
+          sequence_values: { type: "array", items: { type: "number" } },
+          missing_value: { type: "number" },
+          tens: { type: "number" },
+          ones: { type: "number" },
+          display_value: { type: "string" },
           object_emoji_a: { type: "string", description: "Emoji kumpulan A (lalai = object_emoji)" },
           object_emoji_b: { type: "string", description: "Emoji kumpulan B (lalai = object_emoji)" },
           count_a: { type: "number", description: "Bilangan objek kumpulan A" },
@@ -68,6 +79,16 @@ const ASSET_OUTPUT_SCHEMAS: Record<string, any> = {
         properties: {
           title: { type: "string" },
           explanation: { type: "string", description: "Penerangan peringkat Bergambar dengan rajah/lukisan. BOLEH rujuk 'garisan kuning' kerana ia dipaparkan pada skrin." },
+          visual_type: { type: "string", enum: ["single_count", "comparison", "number_sequence", "place_value", "symbol_card"] },
+          object_emoji: { type: "string" },
+          count: { type: "number" },
+          label: { type: "string" },
+          numeral: { type: "string" },
+          sequence_values: { type: "array", items: { type: "number" } },
+          missing_value: { type: "number" },
+          tens: { type: "number" },
+          ones: { type: "number" },
+          display_value: { type: "string" },
           object_emoji_top: { type: "string", description: "Emoji baris atas (lalai = object_emoji)" },
           object_emoji_bottom: { type: "string", description: "Emoji baris bawah (lalai = object_emoji)" },
           count_top: { type: "number", description: "Bilangan objek baris atas" },
@@ -82,13 +103,20 @@ const ASSET_OUTPUT_SCHEMAS: Record<string, any> = {
         properties: {
           title: { type: "string" },
           explanation: { type: "string", description: "Penerangan peringkat Abstrak dengan simbol/aturan" },
+          visual_type: { type: "string", enum: ["single_count", "comparison", "number_sequence", "place_value", "symbol_card"] },
+          numeral: { type: "string" },
+          sequence_values: { type: "array", items: { type: "number" } },
+          missing_value: { type: "number" },
+          tens: { type: "number" },
+          ones: { type: "number" },
+          display_value: { type: "string" },
           key_term: { type: "string" },
           key_definition: { type: "string" },
         },
         required: ["title", "explanation"],
       },
     },
-    required: ["title", "object_emoji", "concrete", "pictorial", "abstract"],
+    required: ["title", "concept_model", "concrete", "pictorial", "abstract"],
   },
   WORKED_EXAMPLE: {
     type: "object",
@@ -102,8 +130,23 @@ const ASSET_OUTPUT_SCHEMAS: Record<string, any> = {
       },
       common_mistake: { type: "string", description: "Kesilapan lazim murid" },
       correct_reasoning: { type: "string", description: "Penalaran betul mengapa jawapan itu benar" },
+      visual_aid: {
+        type: "object",
+        properties: {
+          type: { type: "string", enum: ["single_count", "comparison", "number_line", "none"] },
+          object_emoji: { type: "string" },
+          count: { type: "number" },
+          label: { type: "string" },
+          numeral: { type: "string" },
+          left_count: { type: "number" },
+          right_count: { type: "number" },
+          left_label: { type: "string" },
+          right_label: { type: "string" },
+          values: { type: "array", items: { type: "number" } },
+        },
+      },
     },
-    required: ["title", "problem_statement", "solution_steps", "correct_reasoning"],
+    required: ["title", "problem_statement", "solution_steps", "correct_reasoning", "visual_aid"],
   },
   GUIDED_PRACTICE: {
     type: "object",
@@ -270,7 +313,7 @@ export default async function (req: Request): Promise<Response> {
 
     // 2. Parse Input & Validate Request Parameters
     const body = await req.json().catch(() => ({}));
-    const { topic_id, subtopic_id, sp_code, asset_type, subject_name, year_level, topic_name, sp_description } = body;
+    const { topic_id, subtopic_id, sp_code, asset_type, subject_name, year_level, topic_name, subtopic_name, sp_description } = body;
 
     if (!topic_id || !subtopic_id || !sp_code || !asset_type) {
       return Response.json(
@@ -336,6 +379,7 @@ export default async function (req: Request): Promise<Response> {
         subject,
         topic_id,
         topic: topic_name || topic_id,
+        subtopic: subtopic_name || subtopic_id,
         sp_code,
         sp_description: sp_description || "Standard Pembelajaran",
         learning_standard: sp_description || "Standard Pembelajaran",

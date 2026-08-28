@@ -375,6 +375,25 @@ export default function AdminContentStudio() {
     setSelectedBlockKey("LESSON_HOOK");
   }, []);
 
+  // Keep the curriculum identity valid in the same user action. This prevents a
+  // generation request from briefly combining a new subtopic with the prior SP.
+  const selectTopic = useCallback((nextTopic) => {
+    const nextSubtopics = getTaxonomySubtopics(curriculum, yearLevel, subject, "", nextTopic);
+    const nextSubtopic = nextSubtopics[0] || "";
+    const nextSPs = getTaxonomySPs(curriculum, yearLevel, subject, "", nextTopic, nextSubtopic);
+    setTopic(nextTopic);
+    setSubtopic(nextSubtopic);
+    setSpCode(nextSPs[0]?.sp_code || "");
+    setSelectedBlockKey("LESSON_HOOK");
+  }, [curriculum, yearLevel, subject]);
+
+  const selectSubtopic = useCallback((nextSubtopic) => {
+    const nextSPs = getTaxonomySPs(curriculum, yearLevel, subject, "", topic, nextSubtopic);
+    setSubtopic(nextSubtopic);
+    setSpCode(nextSPs[0]?.sp_code || "");
+    setSelectedBlockKey("LESSON_HOOK");
+  }, [curriculum, yearLevel, subject, topic]);
+
   // 3. CANONICAL LESSON & ASSET GENERATION HANDLER (generateModularLessonContent)
   const handleGenerateSingleAsset = async (targetBlockKey = selectedBlockKey) => {
     const config = CANONICAL_BLOCKS.find((b) => b.key === targetBlockKey) || selectedBlockConfig;
@@ -389,6 +408,7 @@ export default function AdminContentStudio() {
         subject_name: subject,
         year_level: yearLevel,
         topic_name: topic,
+        subtopic_name: subtopic,
         sp_description: `${subtopic} — ${currentSPDetail?.title || currentSPDetail?.description || ""}`,
       });
 
@@ -451,6 +471,7 @@ export default function AdminContentStudio() {
             subject_name: subject,
             year_level: yearLevel,
             topic_name: topic,
+            subtopic_name: subtopic,
             sp_description: `${subtopic} — ${currentSPDetail?.title || currentSPDetail?.description || ""}`,
           });
 
@@ -787,7 +808,7 @@ export default function AdminContentStudio() {
               <label className="text-[10px] font-bold text-stone-400 uppercase">Topik Utama</label>
               <select
                 value={topic}
-                onChange={(e) => setTopic(e.target.value)}
+                onChange={(e) => selectTopic(e.target.value)}
                 className="w-full h-9 px-2.5 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 font-bold focus:border-amber-500 outline-none"
               >
                 {availableTopics.map((t) => (
@@ -800,10 +821,7 @@ export default function AdminContentStudio() {
               <label className="text-[10px] font-bold text-stone-400 uppercase">Subtopik (Unit Pelajaran)</label>
               <select
                 value={subtopic}
-                onChange={(e) => {
-                  setSubtopic(e.target.value);
-                  setSelectedBlockKey("LESSON_HOOK");
-                }}
+                onChange={(e) => selectSubtopic(e.target.value)}
                 className="w-full h-9 px-2.5 bg-stone-950 border border-stone-800 rounded-xl text-stone-200 font-bold focus:border-amber-500 outline-none"
               >
                 {availableSubtopics.map((st) => (

@@ -8,6 +8,55 @@ import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
 import TapCountVisual from "@/components/lesson/blocks/TapCountVisual";
 
+const toPositiveInteger = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric > 0 ? Math.floor(numeric) : null;
+};
+
+/** @param {{ visualAid?: any }} props */
+function WorkedExampleVisual({ visualAid }) {
+  if (!visualAid || visualAid.type === "none") return null;
+
+  if (visualAid.type === "comparison") {
+    const leftCount = toPositiveInteger(visualAid.left_count);
+    const rightCount = toPositiveInteger(visualAid.right_count);
+    if (!leftCount || !rightCount) return null;
+    const emoji = visualAid.object_emoji || "🔢";
+    return (
+      <TapCountVisual
+        emojisA={Array.from({ length: leftCount }, () => emoji)}
+        emojisB={Array.from({ length: rightCount }, () => emoji)}
+        labelA={visualAid.left_label || "Kumpulan A"}
+        labelB={visualAid.right_label || "Kumpulan B"}
+      />
+    );
+  }
+
+  if (visualAid.type === "single_count") {
+    const count = toPositiveInteger(visualAid.count);
+    if (!count) return null;
+    return (
+      <div className="p-3 bg-stone-950/60 border border-amber-500/20 rounded-2xl text-center space-y-2">
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {Array.from({ length: count }, (_, index) => <span key={index} className="text-2xl">{visualAid.object_emoji || "🔢"}</span>)}
+        </div>
+        <p className="text-xs font-black text-amber-300">{visualAid.label || visualAid.numeral || count}</p>
+      </div>
+    );
+  }
+
+  if (visualAid.type === "number_line" && Array.isArray(visualAid.values) && visualAid.values.length > 0) {
+    return (
+      <div className="flex flex-wrap justify-center gap-2 p-3 bg-stone-950/60 border border-cyan-500/20 rounded-2xl">
+        {visualAid.values.map((value, index) => <span key={index} className="px-3 py-2 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-200 font-black">{value}</span>)}
+      </div>
+    );
+  }
+
+  return null;
+}
+
+/** @param {{ content: any, studentName?: string, onComplete?: Function, isCompleted?: boolean }} props */
 export default function WorkedExampleBlock({ content, studentName, onComplete, isCompleted }) {
   const [revealedSteps, setRevealedSteps] = useState(0);
   const [showMistake, setShowMistake] = useState(false);
@@ -42,13 +91,8 @@ export default function WorkedExampleBlock({ content, studentName, onComplete, i
         <p className="text-sm font-black text-white leading-relaxed">{problem}</p>
       </div>
 
-      {/* Interactive visual aid — tap along to count & compare */}
-      <TapCountVisual
-        emojisA={["🍎", "🍎", "🍎", "🍎", "🍎"]}
-        emojisB={["🍎", "🍎", "🍎"]}
-        labelA="Kumpulan A"
-        labelB="Kumpulan B"
-      />
+      {/* The visual is generated from the selected SP; no fixed comparison aid. */}
+      <WorkedExampleVisual visualAid={content.visual_aid} />
 
       {/* Progressive step reveal */}
       <div className="space-y-2">

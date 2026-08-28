@@ -46,8 +46,59 @@ const CPA_PHASES = [
   }
 ];
 
+const toPositiveInteger = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric > 0 ? Math.floor(numeric) : null;
+};
+
+/** @param {{ phaseContent?: any, fallbackEmoji?: string }} props */
+function SkillVisual({ phaseContent = {}, fallbackEmoji = "🔢" }) {
+  const visualType = phaseContent.visual_type;
+  const emoji = phaseContent.object_emoji || fallbackEmoji;
+  const count = toPositiveInteger(phaseContent.count);
+  const sequence = Array.isArray(phaseContent.sequence_values) ? phaseContent.sequence_values : [];
+
+  if (visualType === "single_count" && count) {
+    return (
+      <div className="p-3 bg-stone-950/60 border border-amber-500/20 rounded-2xl text-center space-y-2">
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {Array.from({ length: count }, (_, index) => <span key={index} className="text-2xl">{emoji}</span>)}
+        </div>
+        <p className="text-xs font-black text-amber-300">{phaseContent.label || phaseContent.numeral || count}</p>
+      </div>
+    );
+  }
+
+  if (visualType === "number_sequence" && sequence.length > 0) {
+    return (
+      <div className="flex flex-wrap justify-center gap-2 p-3 bg-stone-950/60 border border-cyan-500/20 rounded-2xl">
+        {sequence.map((value, index) => (
+          <span key={index} className="min-w-9 px-3 py-2 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-200 font-black">
+            {value === phaseContent.missing_value ? "?" : value}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  if (visualType === "place_value" && (phaseContent.tens !== undefined || phaseContent.ones !== undefined)) {
+    return (
+      <div className="grid grid-cols-2 gap-2 text-center">
+        <div className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30"><p className="text-[10px] text-indigo-300 font-black">PULUH</p><p className="text-2xl text-white font-black">{phaseContent.tens ?? 0}</p></div>
+        <div className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30"><p className="text-[10px] text-indigo-300 font-black">SA</p><p className="text-2xl text-white font-black">{phaseContent.ones ?? 0}</p></div>
+      </div>
+    );
+  }
+
+  const displayValue = phaseContent.display_value || phaseContent.numeral;
+  return displayValue ? <div className="p-3 bg-stone-950/60 border border-indigo-500/20 rounded-2xl text-center text-2xl font-black text-indigo-200">{displayValue}</div> : null;
+}
+
+/** @param {{ content?: any, studentName?: string, onComplete?: Function, isCompleted?: boolean }} props */
 export default function ConceptCPABlock({ content = {}, studentName, onComplete, isCompleted }) {
   const [activePhase, setActivePhase] = useState(0);
+  const isComparison = content.concept_model === "compare_quantities" || content.concept_model === "compare_numbers" ||
+    (content.concrete?.count_b !== undefined && content.pictorial?.count_bottom !== undefined);
 
   return (
     <div className="p-5 bg-stone-900 border-2 border-amber-500/30 rounded-3xl space-y-4 text-left shadow-xl">
@@ -106,46 +157,48 @@ export default function ConceptCPABlock({ content = {}, studentName, onComplete,
               {personalize(phaseContent.explanation || "", studentName)}
             </p>
 
-            {/* Interactive tap-to-count visual (concrete stage only) */}
+            {/* Comparison visuals are shown only for a comparison concept. */}
             {phase.key === "concrete" && (() => {
               const c = content.concrete || {};
-              const emoji = content.object_emoji || "🔵";
-              const ea = c.object_emoji_a || emoji;
-              const eb = c.object_emoji_b || emoji;
-              const na = Math.max(1, Number(c.count_a) || 5);
-              const nb = Math.max(1, Number(c.count_b) || 3);
+              if (!isComparison) return <SkillVisual phaseContent={c} fallbackEmoji={content.object_emoji} />;
+              const emoji = content.object_emoji || "🔢";
+              const na = toPositiveInteger(c.count_a);
+              const nb = toPositiveInteger(c.count_b);
+              if (!na || !nb) return null;
               return (
                 <TapCountVisual
-                  emojisA={Array.from({ length: na }, () => ea)}
-                  emojisB={Array.from({ length: nb }, () => eb)}
-                  labelA={c.label_a || "Banyak"}
-                  labelB={c.label_b || "Sedikit"}
+                  emojisA={Array.from({ length: na }, () => c.object_emoji_a || emoji)}
+                  emojisB={Array.from({ length: nb }, () => c.object_emoji_b || emoji)}
+                  labelA={c.label_a || "Kumpulan A"}
+                  labelB={c.label_b || "Kumpulan B"}
                 />
               );
             })()}
 
-            {/* Interactive one-to-one matching visual (pictorial stage only) */}
+            {/* One-to-one matching is not a universal CPA visual. */}
             {phase.key === "pictorial" && (() => {
               const p = content.pictorial || {};
-              const emoji = content.object_emoji || "🔵";
-              const et = p.object_emoji_top || emoji;
-              const eb = p.object_emoji_bottom || emoji;
-              const nt = Math.max(1, Number(p.count_top) || 5);
-              const nb = Math.max(1, Number(p.count_bottom) || 3);
+              if (!isComparison) return <SkillVisual phaseContent={p} fallbackEmoji={content.object_emoji} />;
+              const emoji = content.object_emoji || "🔢";
+              const nt = toPositiveInteger(p.count_top);
+              const nb = toPositiveInteger(p.count_bottom);
+              if (!nt || !nb) return null;
               return (
                 <MatchPairsVisual
-                  topItems={Array.from({ length: nt }, () => et)}
-                  bottomItems={Array.from({ length: nb }, () => eb)}
-                  topLabel={p.label_top || "Guli Merah"}
-                  bottomLabel={p.label_bottom || "Guli Biru"}
+                  topItems={Array.from({ length: nt }, () => p.object_emoji_top || emoji)}
+                  bottomItems={Array.from({ length: nb }, () => p.object_emoji_bottom || emoji)}
+                  topLabel={p.label_top || "Kumpulan Atas"}
+                  bottomLabel={p.label_bottom || "Kumpulan Bawah"}
                 />
               );
             })()}
 
-            {/* Interactive comparison-symbol reveal (abstract stage only) */}
-            {phase.key === "abstract" && (
-              <CompareSymbolVisual leftCount={5} rightCount={3} leftLabel="Merah" rightLabel="Biru" />
-            )}
+            {phase.key === "abstract" && (isComparison ? (() => {
+              const c = content.concrete || {};
+              const leftCount = toPositiveInteger(c.count_a);
+              const rightCount = toPositiveInteger(c.count_b);
+              return leftCount && rightCount ? <CompareSymbolVisual leftCount={leftCount} rightCount={rightCount} leftLabel={c.label_a || "A"} rightLabel={c.label_b || "B"} /> : null;
+            })() : <SkillVisual phaseContent={phaseContent} fallbackEmoji={content.object_emoji} />)}
 
             {/* Key term (abstract phase only) */}
             {phase.key === "abstract" && phaseContent.key_term && (
