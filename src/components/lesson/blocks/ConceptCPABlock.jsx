@@ -7,6 +7,8 @@ import { BookOpen, Eye, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
 import TapCountVisual from "@/components/lesson/blocks/TapCountVisual";
+import MatchPairsVisual from "@/components/lesson/blocks/MatchPairsVisual";
+import CompareSymbolVisual from "@/components/lesson/blocks/CompareSymbolVisual";
 
 const CPA_PHASES = [
   {
@@ -112,6 +114,21 @@ export default function ConceptCPABlock({ content = {}, studentName, onComplete,
                 labelA="Banyak"
                 labelB="Sedikit"
               />
+            )}
+
+            {/* Interactive one-to-one matching visual (pictorial stage only) */}
+            {phase.key === "pictorial" && (
+              <MatchPairsVisual
+                topItems={["🔴", "🔴", "🔴", "🔴", "🔴"]}
+                bottomItems={["🔵", "🔵", "🔵"]}
+                topLabel="Guli Merah"
+                bottomLabel="Guli Biru"
+              />
+            )}
+
+            {/* Interactive comparison-symbol reveal (abstract stage only) */}
+            {phase.key === "abstract" && (
+              <CompareSymbolVisual leftCount={5} rightCount={3} leftLabel="Merah" rightLabel="Biru" />
             )}
 
             {/* Key term (abstract phase only) */}
