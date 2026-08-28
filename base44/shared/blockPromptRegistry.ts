@@ -642,6 +642,7 @@ ${contract.role}
 - Gunakan emoji/gambar dalam teks supaya kanak-kanak BOLEH LIHAT dan kira di skrin.
 - Ayat maksimum 10-12 patah perkataan. Perkataan mudah. Tiada 'serta', 'manakala', 'sebagai'.
 - Setiap blok mesti boleh diselesaikan seorang diri dalam masa singkat.
+- PERSONALISASI (WAJIB): Sebut nama murid sekurang-kurangnya sekali setiap blok menggunakan placeholder {{nama}} (cth: 'Mari, {{nama}}!', 'Tengok ni, {{nama}}', 'Syabas, {{nama}}!', '{{nama}}, tolong Suku Penyu...'). JANGAN tulis nama sebenar — gunakan {{nama}} sahaja. Sistem akan gantikan {{nama}} dengan nama murid atau nama samaran secara automatik. Ini menjadikan setiap pelajaran terasa mesra dan peribadi untuk kanak-kanak.
 
 [MACRO 4 — PEDAGOGICAL PURPOSE]
 ${contract.pedagogical_purpose}
