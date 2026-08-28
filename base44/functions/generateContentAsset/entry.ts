@@ -523,7 +523,26 @@ export default async function (req: Request): Promise<Response> {
       }
     }
 
-    // 10. Prepare Server-Authoritative Asset Payload & Force DRAFT / UNDER_REVIEW Status
+    // 9D. LESSON_HOOK: generate a dedicated English image prompt FROM the story narrative
+    //     (produced AFTER the story exists, based on that exact story) so the AI image
+    //     depicts the precise mission scene — two baskets of seashells, jars of marbles, etc.
+    //     — instead of a generic mascot pose.
+    if (asset_type === "LESSON_HOOK" && aiRes.story_text) {
+      try {
+        const imgRes = await db.integrations.Core.InvokeLLM({
+          prompt: `You are a 3D animation art director. Read this Malaysian children's story and produce ONE vivid English image-generation prompt depicting the EXACT scene, objects, colors, counts, and setting described in the story. The image MUST include the green sea turtle mascot "Suku Penyu" wearing a blue school jacket AND the specific objects from the story (e.g. two woven baskets, seashells, jars of colorful marbles, apples). Describe the scene concretely. Output ONLY the English prompt (1-2 sentences), no quotes, no preamble, no markdown.\n\nStory: "${aiRes.story_text}"\nVisual cue: "${aiRes.visual_prompt || ""}"`,
+          model: "gemini_3_flash",
+        });
+        const ip = typeof imgRes === "string" ? imgRes.trim() : String(imgRes?.image_prompt || imgRes?.prompt || "");
+        if (ip && ip.length > 15) {
+          aiRes.image_prompt = ip.replace(/^["'`]|["'`]$/g, "").trim();
+        }
+      } catch {
+        // fallback: keep the AI's visual_prompt already in aiRes
+      }
+    }
+
+    // 10. Prepare Server-Authoritarian Asset Payload & Force DRAFT / UNDER_REVIEW Status
     // Server strictly overrides any attempt by client to set approved/published status
     const now = new Date().toISOString();
     let createdAsset: any = null;
