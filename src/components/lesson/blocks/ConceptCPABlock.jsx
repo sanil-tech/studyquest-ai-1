@@ -4,6 +4,7 @@
 
 import React, { useState } from "react";
 import { BookOpen, Eye, Brain } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { personalize } from "@/lib/personalize";
 import TapCountVisual from "@/components/lesson/blocks/TapCountVisual";
@@ -51,24 +52,104 @@ const toPositiveInteger = (value) => {
   return Number.isFinite(numeric) && numeric > 0 ? Math.floor(numeric) : null;
 };
 
-/** @param {{ phaseContent?: any, fallbackEmoji?: string }} props */
-function SkillVisual({ phaseContent = {}, fallbackEmoji = "🔢" }) {
-  const visualType = phaseContent.visual_type;
-  const emoji = phaseContent.object_emoji || fallbackEmoji;
-  const count = toPositiveInteger(phaseContent.count);
-  const sequence = Array.isArray(phaseContent.sequence_values) ? phaseContent.sequence_values : [];
+/**
+ * Smart detection of object and count from text when LLM metadata is sparse
+ */
+function detectObjectAndCount(text = "", fallbackEmoji = "🍎") {
+  const lower = text.toLowerCase();
+  let emoji = fallbackEmoji;
+  if (lower.includes("epal")) emoji = "🍎";
+  else if (lower.includes("biskut") || lower.includes("kuih")) emoji = "🍪";
+  else if (lower.includes("ikan")) emoji = "🐟";
+  else if (lower.includes("guli") || lower.includes("bola")) emoji = "⚽";
+  else if (lower.includes("belon")) emoji = "🎈";
+  else if (lower.includes("bintang")) emoji = "⭐";
+  else if (lower.includes("pensel")) emoji = "✏️";
+  else if (lower.includes("bunga")) emoji = "🌸";
+  else if (lower.includes("oren") || lower.includes("buah")) emoji = "🍊";
+  else if (lower.includes("cengkerang") || lower.includes("ketam")) emoji = "🦀";
+  else if (lower.includes("gula-gula") || lower.includes("manisan")) emoji = "🍬";
 
-  if (visualType === "single_count" && count) {
-    return (
-      <div className="p-3 bg-stone-950/60 border border-amber-500/20 rounded-2xl text-center space-y-2">
-        <div className="flex flex-wrap justify-center gap-1.5">
-          {Array.from({ length: count }, (_, index) => <span key={index} className="text-2xl">{emoji}</span>)}
-        </div>
-        <p className="text-xs font-black text-amber-300">{phaseContent.label || phaseContent.numeral || count}</p>
+  // Try extracting number if mentioned
+  const numberMatch = lower.match(/\b([1-9]|10)\b/);
+  const count = numberMatch ? parseInt(numberMatch[1], 10) : 5;
+
+  return { emoji, count };
+}
+
+/**
+ * Interactive Tap-to-Count for single-group concept visual
+ */
+function SingleTapCountVisual({ count = 5, emoji = "🍎", label = "", visualPrompt = "" }) {
+  const [tapped, setTapped] = useState(new Set());
+
+  const toggle = (idx) => {
+    setTapped((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
+
+  const isAllTapped = tapped.size >= count;
+
+  return (
+    <div className="p-4 bg-stone-950/80 border-2 border-amber-500/30 rounded-2xl text-center space-y-3 shadow-inner">
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[11px] font-black uppercase text-amber-400">
+          {label || `Kira Objek (${count})`}
+        </span>
+        <span className="text-xs font-black text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-lg border border-amber-500/30">
+          Kira: {tapped.size} / {count} {isAllTapped ? "🎉 Selesai!" : "👆 Tekan setiap satu"}
+        </span>
       </div>
-    );
-  }
 
+      <div className="flex flex-wrap justify-center gap-2.5 py-2">
+        {Array.from({ length: count }, (_, index) => {
+          const isTapped = tapped.has(index);
+          return (
+            <motion.button
+              key={index}
+              type="button"
+              whileTap={{ scale: 1.25 }}
+              whileHover={{ scale: 1.08 }}
+              onClick={() => toggle(index)}
+              className={`w-12 h-14 sm:w-14 sm:h-16 rounded-2xl flex flex-col items-center justify-center transition-all shadow-md ${
+                isTapped
+                  ? "bg-amber-500/30 border-2 border-amber-400 scale-105"
+                  : "bg-stone-900 border-2 border-stone-700 hover:border-amber-500/50"
+              }`}
+            >
+              <span className="text-2xl sm:text-3xl filter drop-shadow">{emoji}</span>
+              <span className={`text-[10px] font-black mt-0.5 ${isTapped ? "text-amber-300" : "text-stone-500"}`}>
+                {index + 1}
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {visualPrompt && (
+        <div className="p-2 bg-stone-900/80 border border-stone-800 rounded-xl text-left">
+          <p className="text-[10px] text-amber-300 font-semibold">
+            🎨 <span className="font-bold text-stone-300">Visual 3D Pixar:</span> {visualPrompt}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** @param {{ phaseContent?: any, fallbackEmoji?: string }} props */
+function SkillVisual({ phaseContent = {}, fallbackEmoji = "🍎" }) {
+  const visualType = phaseContent.visual_type;
+  const rawEmoji = phaseContent.object_emoji || fallbackEmoji;
+  const rawCount = toPositiveInteger(phaseContent.count);
+  const sequence = Array.isArray(phaseContent.sequence_values) ? phaseContent.sequence_values : [];
+  const explanation = phaseContent.explanation || phaseContent.title || "";
+
+  // 1. Number Sequence Visual
   if (visualType === "number_sequence" && sequence.length > 0) {
     return (
       <div className="flex flex-wrap justify-center gap-2 p-3 bg-stone-950/60 border border-cyan-500/20 rounded-2xl">
@@ -81,6 +162,7 @@ function SkillVisual({ phaseContent = {}, fallbackEmoji = "🔢" }) {
     );
   }
 
+  // 2. Place Value Visual
   if (visualType === "place_value" && (phaseContent.tens !== undefined || phaseContent.ones !== undefined)) {
     return (
       <div className="grid grid-cols-2 gap-2 text-center">
@@ -90,8 +172,37 @@ function SkillVisual({ phaseContent = {}, fallbackEmoji = "🔢" }) {
     );
   }
 
+  // 3. Single Count / Object Counting Visual (Direct or Inferred)
+  const isCountingAction =
+    visualType === "single_count" ||
+    rawCount ||
+    explanation.toLowerCase().includes("tekan") ||
+    explanation.toLowerCase().includes("kira") ||
+    explanation.toLowerCase().includes("tengok") ||
+    explanation.toLowerCase().includes("epal") ||
+    explanation.toLowerCase().includes("biskut");
+
+  if (isCountingAction) {
+    const detected = detectObjectAndCount(explanation, rawEmoji);
+    const finalCount = rawCount || detected.count;
+    const finalEmoji = (rawEmoji !== "🔢" && rawEmoji) ? rawEmoji : detected.emoji;
+
+    return (
+      <SingleTapCountVisual
+        count={finalCount}
+        emoji={finalEmoji}
+        label={phaseContent.label || `${finalCount} ${finalEmoji} ${phaseContent.title || 'Objek'}`}
+        visualPrompt={phaseContent.visual_prompt || phaseContent.image_prompt || ""}
+      />
+    );
+  }
+
   const displayValue = phaseContent.display_value || phaseContent.numeral;
-  return displayValue ? <div className="p-3 bg-stone-950/60 border border-indigo-500/20 rounded-2xl text-center text-2xl font-black text-indigo-200">{displayValue}</div> : null;
+  return displayValue ? (
+    <div className="p-3 bg-stone-950/60 border border-indigo-500/20 rounded-2xl text-center text-2xl font-black text-indigo-200">
+      {displayValue}
+    </div>
+  ) : null;
 }
 
 /** @param {{ content?: any, studentName?: string, onComplete?: Function, isCompleted?: boolean }} props */

@@ -106,20 +106,32 @@ The JSON must have exactly this shape:
     "i_can_statement": "A child-friendly 'Saya boleh...' statement directly derived from SP '${sp_description}'. Example: 'Saya boleh membandingkan kuantiti banyak dan sedikit.'"
   },
   "concept_cpa": {
+    "concept_model": "Choose ONE: 'count_and_name', 'compare_quantities', 'compare_numbers', 'write_numerals', 'place_value', 'sequence'",
+    "object_emoji": "ONE emoji representing the primary object (e.g. '🍎' for apples, '🍪' for cookies, '🐟' for fish). MUST EXACTLY match the objects named in explanation.",
     "concrete": {
-      "title": "Short title for Concrete phase (e.g. Objek Sebenar: Membanding Kuantiti)",
-      "explanation": "Explain the subtopic concept '${sp_description}' using REAL physical objects children can touch/see (e.g. comparing piles of biscuits/apples). Minimum 2 sentences.",
-      "visual_prompt": "Image generation prompt: describe a child-friendly illustration comparing physical objects for ${sp_description}"
+      "title": "Short title for Concrete phase (e.g. Jom Kira Epal!)",
+      "explanation": "Explain '${sp_description}' using REAL physical objects children see on screen (e.g. 'Tengok 5 biji epal merah ini. Tekan setiap epal dan kira bersama!'). Minimum 2 sentences. MUST EXACTLY match the object_emoji, count, and visual_prompt.",
+      "visual_type": "single_count (for counting/naming) or comparison (for comparing)",
+      "object_emoji": "Emoji matching explanation (e.g. '🍎')",
+      "count": 5,
+      "label": "5 Biji Epal Merah",
+      "visual_prompt": "3D Pixar style render of exactly 5 glossy red apples in a neat row on a rustic wooden table, bright warm lighting, child-friendly 3D aesthetic"
     },
     "pictorial": {
       "title": "Short title for Pictorial phase (e.g. Rajah Visual)",
-      "explanation": "Explain using drawings, card groups, or visual representations for ${sp_description}. Minimum 2 sentences.",
-      "visual_prompt": "Image generation prompt for a visual diagram/card comparison for ${sp_description}"
+      "explanation": "Explain using drawings, dot cards, or visual frame representations for ${sp_description}. Minimum 2 sentences. MUST match the objects and numbers used in concrete phase.",
+      "visual_type": "single_count or comparison",
+      "object_emoji": "Emoji matching explanation (e.g. '🍎')",
+      "count": 5,
+      "label": "Rajah 5 Epal",
+      "visual_prompt": "3D Pixar style render showing visual cards or illustrated frame of 5 red apples with number labels, vibrant educational visual"
     },
     "abstract": {
       "title": "Short title for Abstract phase (e.g. Simbol & Perkataan)",
-      "explanation": "State the rule or concept of ${sp_description} in simple terms. Minimum 2 sentences.",
-      "key_term": "One key vocabulary term for this subtopic",
+      "explanation": "State the numeral, word, or mathematical rule of ${sp_description} in simple terms. Minimum 2 sentences.",
+      "numeral": "5",
+      "display_value": "5 (LIMA)",
+      "key_term": "One key vocabulary term for this subtopic (e.g. Nombor 5 / Lima)",
       "key_definition": "Child-friendly definition of the key term"
     }
   },

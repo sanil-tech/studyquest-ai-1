@@ -16,10 +16,12 @@ This document catalogs the prompt contracts and pedagogical specifications regis
 - **Pedagogical Purpose**: State 1-3 actionable, clear learning goals using 'Di akhir pelajaran ini, anda dapat:' format.
 - **Output Required Fields**: `title`, `objectives`, `success_criteria`.
 
-### 3. `CONCEPT`
+### 3. `CONCEPT` (CPA Model - Konkrit, Bergambar, Abstrak)
 - **Role**: KSSR STEM Master Teacher (Concrete-Pictorial-Abstract specialist).
-- **Pedagogical Purpose**: Deliver scaffolded concept explanation from concrete to abstract with key terms and visual analogies.
-- **Output Required Fields**: `title`, `concept_explanation`, `key_terms`, `visual_analogy`.
+- **Pedagogical Purpose**: Deliver scaffolded concept explanation from concrete to abstract with interactive visual objects and child-friendly analogies.
+- **Output Required Fields**: `title`, `concept_model`, `object_emoji`, `concrete`, `pictorial`, `abstract`.
+- **Mandatory Cohesion Rule**: Sebarang objek atau nombor yang disebut dalam arahan (cth: "Tengok 5 biji epal merah ini. Tekan setiap epal...") MESTI bersepadanan tepat dengan `object_emoji` (🍎), `count` (5), dan `visual_prompt` (Pixar 3D 5 red apples). JANGAN sesekali meminta murid menekan atau melihat objek tanpa menyediakan visual dan item interaktif yang sepadan.
+- **Visual Style**: Pixar-style 3D rendered, cute, high detail, warm lighting.
 
 ### 4. `WORKED_EXAMPLE`
 - **Role**: Malaysian Math & Science Step-by-Step Problem Solving Specialist.

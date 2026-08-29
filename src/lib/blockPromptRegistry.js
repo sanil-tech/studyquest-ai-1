@@ -117,32 +117,33 @@ export const BLOCK_PROMPT_REGISTRY = Object.freeze({
     block_responsibility: "Deliver systematic, scaffolded concept explanation from concrete to abstract.",
     content_rules: [
       "Follow Concrete → Pictorial → Abstract (CPA) structure.",
-      "Include key definitions, clear bullet points, and visual callouts.",
-      "Deconstruct complex concepts into digestible micro-steps.",
-      "Provide real-world analogies."
+      "MANDATORY VISUAL COHESION: Every object and quantity mentioned in the explanation (e.g. 'Tengok 5 biji epal merah ini. Tekan setiap epal...') MUST 100% match the object_emoji ('🍎'), count (5), and visual_prompt ('3D Pixar render of 5 red apples').",
+      "NEVER tell the student to look at, press, or count an object on screen without providing the exact matching object_emoji and count.",
+      "Deconstruct complex concepts into digestible micro-steps with child-friendly interactive visuals.",
+      "Visual style: 3D Pixar render, vibrant colors, child-friendly warm studio lighting."
     ],
-    language_rules: ["Accurate, clear Bahasa Melayu educational terms."],
+    language_rules: ["Accurate, clear Bahasa Melayu educational terms suitable for early primary learners."],
     age_appropriateness: "Appropriate sentence length, formatted bullet points, clear visual cues.",
-    malaysian_context: "Use familiar Malaysian examples and everyday items.",
+    malaysian_context: "Use familiar Malaysian examples and everyday items (epal, biskut, guli, belon, ikan).",
     output_contract: {
-      required_fields: ["title", "concept_explanation", "key_terms", "visual_analogy"],
-      schema_description: "Object containing concept title, structured markdown explanation, key terms glossary, and visual analogy."
+      required_fields: ["title", "concept_model", "object_emoji", "concrete", "pictorial", "abstract"],
+      schema_description: "Object containing concept model, object_emoji, and structured concrete, pictorial, and abstract phase objects with matching visual properties."
     },
     validation_rules: [
-      "Must contain non-empty concept explanation markdown.",
-      "Must define key terms."
+      "Must contain non-empty concrete, pictorial, and abstract stages.",
+      "Objects mentioned in explanation must match object_emoji and count."
     ],
     quality_criteria: {
       curriculum_alignment: 25,
       pedagogical_rigor: 25,
       cpa_progression: 20,
-      clarity_and_simplicity: 15,
-      visual_support: 15
+      visual_cohesion: 20,
+      clarity_and_simplicity: 10
     },
     forbidden_behaviour: [
+      "Do NOT ask the student to tap or look at objects that are not rendered in the visual payload.",
       "Do NOT invent SP codes or fake learning standards.",
-      "Do NOT skip steps in the conceptual explanation.",
-      "Do NOT dump wall-of-text without formatting or headings."
+      "Do NOT dump wall-of-text without visual support."
     ],
     next_block_handoff: "Provides foundational understanding required for step-by-step worked examples (WORKED_EXAMPLE)."
   },
