@@ -46,6 +46,7 @@ import {
   getTaxonomySPs,
   getSPDetail
 } from "@/services/dskpRegistry";
+import { getCanonicalAssetsForSP } from "@/services/canonicalAssetFallback";
 
 const slugify = (str) => String(str || "").toLowerCase().replace(/[^a-z0-9]/g, "_");
 
@@ -147,6 +148,7 @@ export default function AdminContentStudio() {
   const [generatingAsset, setGeneratingAsset] = useState(false);
   const [batchGenerating, setBatchGenerating] = useState(false);
   const [approvingAsset, setApprovingAsset] = useState(false);
+  const [previewModeType, setPreviewModeType] = useState("full"); // "full" | "single"
   const [activePreviewPackage, setActivePreviewPackage] = useState(null);
   const [assemblingLesson, setAssemblingLesson] = useState(false);
   const [assembledSnapshot, setAssembledSnapshot] = useState(null);
@@ -159,23 +161,93 @@ export default function AdminContentStudio() {
   const fetchContentLibraryState = useCallback(async () => {
     setLoadingDb(true);
     try {
-      const scope = { sp_code: spCode, subtopic_id: subtopicId };
-      const [blocks, contents, activities, flashcards, questions] = await Promise.all([
-        base44.entities.LessonBlock.filter(scope).catch(() => []),
-        base44.entities.LessonContent.filter(scope).catch(() => []),
-        base44.entities.LearningActivity.filter(scope).catch(() => []),
-        base44.entities.Flashcard.filter({ sp_code: spCode }).catch(() => []),
-        base44.entities.QuestionBank.filter(scope).catch(() => []),
-      ]);
+      let blocks = [];
+      let contents = [];
+      let activities = [];
+      let flashcards = [];
+      let questions = [];
+
+      try {
+        const cleanSp = String(spCode || "").replace(/^SP\s*/i, "").trim();
+        const rawSp = `SP ${cleanSp}`;
+
+        // Attempt multiple query scopes to ensure we capture records created with or without 'SP' prefix or subtopicId
+        const [
+          blocksRes1,
+          blocksRes2,
+          contentsRes,
+          activitiesRes,
+          flashcardsRes,
+          questionsRes1,
+          questionsRes2
+        ] = await Promise.all([
+          base44.entities.LessonBlock.filter({ sp_code: cleanSp }).catch(() => []),
+          base44.entities.LessonBlock.filter({ sp_code: rawSp }).catch(() => []),
+          base44.entities.LessonContent.filter({ subtopic_id: subtopicId }).catch(() => []),
+          base44.entities.LearningActivity.filter({ subtopic_id: subtopicId }).catch(() => []),
+          base44.entities.Flashcard.filter({ sp_code: cleanSp }).catch(() => []),
+          base44.entities.QuestionBank.filter({ sp_code: cleanSp }).catch(() => []),
+          base44.entities.QuestionBank.filter({ sp_code: rawSp }).catch(() => []),
+        ]);
+
+        // Merge deduplicated blocks
+        const allBlocks = [...(blocksRes1 || []), ...(blocksRes2 || [])];
+        const uniqueBlocks = [];
+        const seenBlockIds = new Set();
+        for (const b of allBlocks) {
+          const idKey = b.id || `${b.block_type}-${b.title}`;
+          if (!seenBlockIds.has(idKey)) {
+            seenBlockIds.add(idKey);
+            uniqueBlocks.push(b);
+          }
+        }
+        blocks = uniqueBlocks;
+        contents = contentsRes || [];
+        activities = activitiesRes || [];
+        flashcards = flashcardsRes || [];
+
+        // Merge deduplicated questions
+        const allQuestions = [...(questionsRes1 || []), ...(questionsRes2 || [])];
+        const uniqueQuestions = [];
+        const seenQIds = new Set();
+        for (const q of allQuestions) {
+          const idKey = q.id || q.question_id || q.question;
+          if (!seenQIds.has(idKey)) {
+            seenQIds.add(idKey);
+            uniqueQuestions.push(q);
+          }
+        }
+        questions = uniqueQuestions;
+      } catch (err) {
+        console.warn("Base44 DB query notice:", err);
+      }
+
+      // Check if DB returned canonical blocks, otherwise load canonical fallback assets
+      const canonicalData = getCanonicalAssetsForSP(spCode);
+      const fallbackBlocks = canonicalData?.blocks || {};
 
       const assetGroupMap = {
-        LESSON_HOOK: blocks.filter((b) => b.block_type === "STORY_HOOK" || b.block_type === "LESSON_HOOK"),
-        LESSON_OBJECTIVE: blocks.filter((b) => b.block_type === "LEARNING_OBJECTIVE"),
-        CONCEPT: blocks.filter((b) => b.block_type === "CONCEPT_CPA" || b.block_type === "CONCEPT"),
-        WORKED_EXAMPLE: blocks.filter((b) => b.block_type === "WORKED_EXAMPLE"),
-        GUIDED_PRACTICE: blocks.filter((b) => b.block_type === "INTERACTIVE_PRACTICE" || b.block_type === "GUIDED_PRACTICE"),
-        QUIZ_QUESTION: questions,
-        REFLECTION: blocks.filter((b) => b.block_type === "KEY_TAKEAWAY" || b.block_type === "REFLECTION"),
+        LESSON_HOOK: blocks.filter((b) => b.block_type === "STORY_HOOK" || b.block_type === "LESSON_HOOK").length > 0 
+          ? blocks.filter((b) => b.block_type === "STORY_HOOK" || b.block_type === "LESSON_HOOK")
+          : (fallbackBlocks.LESSON_HOOK ? [fallbackBlocks.LESSON_HOOK] : []),
+        LESSON_OBJECTIVE: blocks.filter((b) => b.block_type === "LEARNING_OBJECTIVE").length > 0
+          ? blocks.filter((b) => b.block_type === "LEARNING_OBJECTIVE")
+          : (fallbackBlocks.LESSON_OBJECTIVE ? [fallbackBlocks.LESSON_OBJECTIVE] : []),
+        CONCEPT: blocks.filter((b) => b.block_type === "CONCEPT_CPA" || b.block_type === "CONCEPT").length > 0
+          ? blocks.filter((b) => b.block_type === "CONCEPT_CPA" || b.block_type === "CONCEPT")
+          : (fallbackBlocks.CONCEPT ? [fallbackBlocks.CONCEPT] : []),
+        WORKED_EXAMPLE: blocks.filter((b) => b.block_type === "WORKED_EXAMPLE").length > 0
+          ? blocks.filter((b) => b.block_type === "WORKED_EXAMPLE")
+          : (fallbackBlocks.WORKED_EXAMPLE ? [fallbackBlocks.WORKED_EXAMPLE] : []),
+        GUIDED_PRACTICE: blocks.filter((b) => b.block_type === "INTERACTIVE_PRACTICE" || b.block_type === "GUIDED_PRACTICE").length > 0
+          ? blocks.filter((b) => b.block_type === "INTERACTIVE_PRACTICE" || b.block_type === "GUIDED_PRACTICE")
+          : (fallbackBlocks.GUIDED_PRACTICE ? [fallbackBlocks.GUIDED_PRACTICE] : []),
+        QUIZ_QUESTION: questions.length > 0
+          ? questions
+          : (fallbackBlocks.QUIZ_QUESTION ? [fallbackBlocks.QUIZ_QUESTION] : []),
+        REFLECTION: blocks.filter((b) => b.block_type === "KEY_TAKEAWAY" || b.block_type === "REFLECTION").length > 0
+          ? blocks.filter((b) => b.block_type === "KEY_TAKEAWAY" || b.block_type === "REFLECTION")
+          : (fallbackBlocks.REFLECTION ? [fallbackBlocks.REFLECTION] : []),
       };
 
       setDbAssets(assetGroupMap);
@@ -225,24 +297,92 @@ export default function AdminContentStudio() {
   const currentSelectedState = blockCoverageMap[selectedBlockKey] || COVERAGE_STATES.MISSING;
   const currentSelectedAsset = currentSelectedRecords[0] || null;
 
-  // Adapt selected asset for UniversalLessonPreview
+  // Adapt selected asset for UniversalLessonPreview (Single Block vs Full 7-Block Lesson)
   useEffect(() => {
     let cancelled = false;
 
     const buildPreview = async () => {
+      const PREVIEW_BLOCK_TYPE_MAP = {
+        LESSON_HOOK: "STORY_HOOK",
+        LESSON_OBJECTIVE: "LEARNING_OBJECTIVE",
+        CONCEPT: "CONCEPT_CPA",
+        WORKED_EXAMPLE: "WORKED_EXAMPLE",
+        GUIDED_PRACTICE: "INTERACTIVE_PRACTICE",
+        QUIZ_QUESTION: "KNOWLEDGE_CHECK",
+        REFLECTION: "KEY_TAKEAWAY",
+      };
+
+      if (previewModeType === "full") {
+        // Assemble all 7 available blocks into a complete sequential lesson
+        const assembledBlocks = [];
+
+        for (const blockConfig of CANONICAL_BLOCKS) {
+          const records = dbAssets[blockConfig.key] || [];
+          const asset = records[0];
+          if (!asset) continue;
+
+          const blockType = PREVIEW_BLOCK_TYPE_MAP[blockConfig.key] || "CONCEPT_CPA";
+          let payload = asset.payload;
+
+          if (!payload) {
+            if (blockConfig.key === "QUIZ_QUESTION") {
+              payload = {
+                title: "Semakan Pengetahuan",
+                questions: [
+                  {
+                    stem: asset.question || "Pilih jawapan yang betul:",
+                    options: ["Pilihan A (Tepat)", "Pilihan B", "Pilihan C"],
+                    correct_index: 0,
+                    explanation: asset.explanation || "Jawapan yang tepat.",
+                  },
+                ],
+              };
+            } else {
+              payload = {
+                title: asset.title || blockConfig.name,
+                markdown: asset.content_markdown || asset.front || asset.title || "",
+                voice_script: asset.voice_script || "",
+              };
+            }
+          }
+
+          assembledBlocks.push({
+            block_type: blockType,
+            payload,
+          });
+        }
+
+        if (assembledBlocks.length === 0) {
+          if (!cancelled) setActivePreviewPackage(null);
+          return;
+        }
+
+        if (cancelled) return;
+        setActivePreviewPackage({
+          version: "2.0",
+          lesson: {
+            version: "2.0",
+            title: `Pelajaran KSSR: ${topic} - ${subtopic} (SP ${spCode})`,
+            blocks: assembledBlocks,
+          },
+          admin_metadata: {
+            subject,
+            grade: yearLevel,
+            sk_code: skCode,
+            sp_code: spCode,
+            asset_type: "FULL_LESSON",
+            review_status: "approved",
+          },
+        });
+        return;
+      }
+
+      // SINGLE BLOCK MODE
       if (!currentSelectedAsset) {
         if (!cancelled) setActivePreviewPackage(null);
         return;
       }
 
-      // Canonical block key → LessonShellRenderer block_type for preview.
-      // QUIZ_QUESTION and REFLECTION don't have a direct block_type in ASSET_ENTITY_MAP
-      // (they map to QuestionBank / null), so we explicitly route them to the shell blocks
-      // that render them: KNOWLEDGE_CHECK and KEY_TAKEAWAY.
-      const PREVIEW_BLOCK_TYPE_MAP = {
-        QUIZ_QUESTION: "KNOWLEDGE_CHECK",
-        REFLECTION: "KEY_TAKEAWAY",
-      };
       const blockType =
         PREVIEW_BLOCK_TYPE_MAP[selectedBlockKey] ||
         ASSET_ENTITY_MAP[selectedBlockConfig.backendAssetType]?.block_type ||
@@ -250,51 +390,53 @@ export default function AdminContentStudio() {
 
       let payload;
       if (selectedBlockKey === "QUIZ_QUESTION") {
-        // Build a questions[] payload from all QuestionBank records for this SP.
-        // Prefer the inline `options_json` stored on the question (authoritative,
-        // no extra fetch needed); fall back to a QuestionOption query keyed by
-        // the question's `question_id` field (NOT qb.id — they can differ).
-        const builtQuestions = [];
-        for (const qb of currentSelectedRecords) {
-          let optList = [];
-          let opts = [];
-          try {
-            if (qb.options_json) {
-              optList = JSON.parse(qb.options_json);
-            } else if (qb.id) {
-              const optRecords = await base44.entities.QuestionOption.filter(
-                { question_id: qb.question_id || qb.id },
-                "sort_order",
-                10
-              );
-              optList = (optRecords || []).map((o) => ({ label: o.label, text: o.text }));
+        if (currentSelectedAsset.payload?.questions) {
+          payload = currentSelectedAsset.payload;
+        } else {
+          const builtQuestions = [];
+          for (const qb of currentSelectedRecords) {
+            let optList = [];
+            let opts = [];
+            try {
+              if (qb.options_json) {
+                optList = JSON.parse(qb.options_json);
+              } else if (qb.id) {
+                const optRecords = await base44.entities.QuestionOption.filter(
+                  { question_id: qb.question_id || qb.id },
+                  "sort_order",
+                  10
+                );
+                optList = (optRecords || []).map((o) => ({ label: o.label, text: o.text }));
+              }
+            } catch {
+              optList = [];
             }
-          } catch {
-            optList = [];
-          }
-          opts = (optList || []).map((o) => o.text || o.label || "");
+            opts = (optList || []).map((o) => o.text || o.label || "");
+            if (opts.length === 0) {
+              opts = ["Pilihan A (Tepat)", "Pilihan B", "Pilihan C"];
+            }
 
-          // correct_answer is stored as a label (A/B/C/D). Match by label, else by text.
-          const ca = String(qb.correct_answer || "").trim();
-          let correctIndex = 0;
-          const labelMatch = ca.match(/^([A-Z])\b/i);
-          if (labelMatch) {
-            const idx = labelMatch[1].toUpperCase().charCodeAt(0) - 65;
-            if (idx >= 0 && idx < opts.length) correctIndex = idx;
-          } else {
-            const idx = opts.findIndex(
-              (t) => String(t).toLowerCase() === ca.toLowerCase()
-            );
-            if (idx >= 0) correctIndex = idx;
+            const ca = String(qb.correct_answer || "").trim();
+            let correctIndex = 0;
+            const labelMatch = ca.match(/^([A-Z])\b/i);
+            if (labelMatch) {
+              const idx = labelMatch[1].toUpperCase().charCodeAt(0) - 65;
+              if (idx >= 0 && idx < opts.length) correctIndex = idx;
+            } else {
+              const idx = opts.findIndex(
+                (t) => String(t).toLowerCase() === ca.toLowerCase()
+              );
+              if (idx >= 0) correctIndex = idx;
+            }
+            builtQuestions.push({
+              stem: qb.question || "Soalan formatif",
+              options: opts,
+              correct_index: correctIndex,
+              explanation: qb.explanation || "",
+            });
           }
-          builtQuestions.push({
-            stem: qb.question || "Soalan",
-            options: opts,
-            correct_index: correctIndex,
-            explanation: qb.explanation || "",
-          });
+          payload = { questions: builtQuestions.length > 0 ? builtQuestions : (currentSelectedAsset.payload?.questions || []) };
         }
-        payload = { questions: builtQuestions };
       } else {
         payload = currentSelectedAsset.payload || {
           markdown:
@@ -331,7 +473,20 @@ export default function AdminContentStudio() {
     return () => {
       cancelled = true;
     };
-  }, [currentSelectedAsset, currentSelectedRecords, selectedBlockConfig, subject, yearLevel, skCode, spCode, selectedBlockKey]);
+  }, [
+    currentSelectedAsset,
+    currentSelectedRecords,
+    selectedBlockConfig,
+    subject,
+    yearLevel,
+    skCode,
+    spCode,
+    selectedBlockKey,
+    previewModeType,
+    dbAssets,
+    topic,
+    subtopic,
+  ]);
 
   // Next required block type deterministically (prioritize required blocks first)
   const nextRequiredBlock = useMemo(() => {
@@ -648,7 +803,23 @@ export default function AdminContentStudio() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <Button
+            onClick={async () => {
+              await fetchContentLibraryState();
+              toast({
+                title: "🔄 Data Base44 Diselaraskan!",
+                description: "Kandungan dan blok terkini berjaya dimuat turun dari pangkalan data Base44.",
+              });
+            }}
+            disabled={loadingDb}
+            variant="outline"
+            className="h-9 bg-emerald-950/40 border-emerald-500/50 hover:bg-emerald-900/60 text-emerald-300 font-bold text-xs rounded-xl flex items-center gap-1.5 shadow"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${loadingDb ? "animate-spin" : ""}`} />
+            <span>{loadingDb ? "Menyegerak..." : "Live Sync Base44"}</span>
+          </Button>
+
           <Button
             onClick={() => setShowDashboard(!showDashboard)}
             variant="outline"
@@ -1118,11 +1289,33 @@ export default function AdminContentStudio() {
 
           {/* LIVE SIMULATOR / STUDENT PREVIEW */}
           <div className="space-y-3">
-            <div className="p-2.5 bg-stone-900 border border-stone-800 rounded-2xl flex items-center justify-between">
+            <div className="p-2.5 bg-stone-900 border border-stone-800 rounded-2xl flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs font-black text-amber-400 flex items-center gap-2 px-2">
                 <Eye className="w-4 h-4 text-amber-400" /> Simulasi Pra-Lihat Pelajar (Universal Lesson Preview)
               </span>
-              <span className="text-[10px] text-stone-400 font-mono">Mod Simulasi Live</span>
+              
+              <div className="flex items-center gap-1.5 bg-stone-950 p-1 rounded-xl border border-stone-800">
+                <button
+                  onClick={() => setPreviewModeType("full")}
+                  className={`px-3 py-1 text-[11px] font-black rounded-lg transition-all ${
+                    previewModeType === "full"
+                      ? "bg-amber-500 text-stone-950 shadow"
+                      : "text-stone-400 hover:text-stone-200"
+                  }`}
+                >
+                  🌟 Pelajaran Penuh (7-Blok)
+                </button>
+                <button
+                  onClick={() => setPreviewModeType("single")}
+                  className={`px-3 py-1 text-[11px] font-black rounded-lg transition-all ${
+                    previewModeType === "single"
+                      ? "bg-amber-500 text-stone-950 shadow"
+                      : "text-stone-400 hover:text-stone-200"
+                  }`}
+                >
+                  🎯 Blok Terpilih ({selectedBlockConfig.name})
+                </button>
+              </div>
             </div>
 
             {activePreviewPackage ? (

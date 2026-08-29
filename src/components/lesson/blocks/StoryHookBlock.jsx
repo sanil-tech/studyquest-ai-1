@@ -11,35 +11,42 @@ import { generateDynamicImagePrompt, getPromptSeed } from "@/utils/generateDynam
 import { getStaticFallbackImage } from "@/services/aiImageEngine";
 import StoryHookMedia from "@/components/lesson/StoryHookMedia";
 
-export default function StoryHookBlock({ content = {}, mascot, studentName, onComplete, isCompleted }) {
-  const storyText = personalize(content.story_text || "", studentName);
-  const dialogue = personalize(content.mascot_dialogue || "", studentName);
-  const ttsScript = content.tts_script || dialogue;
+export default function StoryHookBlock({ content = {}, mascot, studentName = "Murid Contoh", onComplete, isCompleted }) {
+  const payload = content.payload || content;
+  const storyText = personalize(payload.story_text || payload.story_hook || payload.description || "", studentName);
+  const dialogue = personalize(payload.mascot_dialogue || payload.dialogue_template || payload.dialogue || payload.story_hook || "", studentName);
+  const helpText = personalize(
+    payload.help_continuation ||
+      payload.help_guide ||
+      "Mari kita bantu Suku Penyu menyelesaikan cabaran ini dengan menguasai kemahiran subtopik ini bersama-sama!",
+    studentName
+  );
+  const ttsScript = payload.tts_script || payload.voice_script || dialogue;
   const mascotEmoji = mascot?.includes("🦊") ? "🦊" : "🐢";
   const mascotName = mascot?.includes("Ejen") ? "Ejen Suku" : "Suku Penyu";
 
   // Build high quality Pollinations image URL matching exact story mission
   const computedStoryImageUrl = useMemo(() => {
-    const rawUrl = content.image_url || content.visual_url || content.visual?.image_url;
+    const rawUrl = payload.image_url || payload.visual_url || payload.visual?.image_url || payload.image;
     if (rawUrl && !rawUrl.includes("suku_penyu_mascot")) {
       return rawUrl;
     }
 
-    const storyPromptText = content.image_prompt || content.visual_prompt || storyText || content.topic || "";
+    const storyPromptText = payload.image_prompt || payload.visual_prompt || storyText || payload.topic || "";
     const prompt = generateDynamicImagePrompt({
-      subject: content.subject || "Matematik",
-      grade: content.grade || "Tahun 1",
-      topic: content.topic || "Nombor hingga 100",
+      subject: payload.subject || "Matematik",
+      grade: payload.grade || "Tahun 1",
+      topic: payload.topic || "Nombor hingga 100",
       sceneType: "STORY",
-      visualDescription: content.image_prompt || content.visual_prompt || content.visual_description || "",
+      visualDescription: payload.image_prompt || payload.visual_prompt || payload.visual_description || "",
       storyText: storyPromptText
     });
 
     const seed = getPromptSeed(prompt);
     return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=450&nologo=true&seed=${seed}`;
-  }, [content, storyText]);
+  }, [payload, storyText]);
 
-  const fallbackSceneImg = getStaticFallbackImage(content.topic, storyText);
+  const fallbackSceneImg = getStaticFallbackImage(payload.topic, storyText);
   const storyVisual = computedStoryImageUrl || fallbackSceneImg;
 
   const handleSpeak = () => {

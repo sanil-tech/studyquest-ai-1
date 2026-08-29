@@ -24,107 +24,14 @@ import { sanitizeStudentText } from "@/lib/sanitizeStudentText";
 /**
  * StoryScene Component (Step 1: Briefing)
  */
-function StoryScene({ data, mascotName = "Suku Penyu 🐢", studentName = "Kawan", devView = false }) {
-  const payload = data?.payload || {};
-  const rawHook = (payload.story_hook || data.description || "Mari mulakan pengembaraan pembelajaran hari ini!").replace(/\{student_name\}/g, studentName);
-  const cleanHook = devView ? rawHook : sanitizeStudentText(rawHook);
-
-  const rawDialogue = (payload.mascot_dialogue || payload.dialogue_template || "Hai {student_name}! Jom kita kembara bersama-sama!").replace(/\{student_name\}/g, studentName);
-  const cleanDialogue = devView ? rawDialogue : sanitizeStudentText(rawDialogue);
-
-  const speakDialogue = (text) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = "ms-MY";
-    utt.rate = 0.9;
-    window.speechSynthesis.speak(utt);
-  };
-
-  const storyText = payload.story_text || data.title || "";
-  const fallbackStorySceneImg = getStaticFallbackImage(payload.topic, storyText);
-  const storyImagePrompt = payload.image_prompt || payload.visual_prompt || storyText || payload.topic || "";
-  const dynamicStoryPrompt = generateDynamicImagePrompt({
-    subject: payload.subject || "Matematik",
-    grade: payload.grade || "Tahun 1",
-    topic: payload.topic || "Nombor hingga 100",
-    sceneType: "STORY",
-    visualDescription: payload.visual_description || "",
-    storyText: storyImagePrompt
-  });
-  const storySeed = getPromptSeed(dynamicStoryPrompt);
-  const storyBannerUrl = (payload.image_url && !payload.image_url.includes("suku_penyu_mascot"))
-    ? payload.image_url
-    : `https://image.pollinations.ai/prompt/${encodeURIComponent(dynamicStoryPrompt)}?width=800&height=450&nologo=true&seed=${storySeed}`;
-
+function StoryScene({ data, mascotName = "Suku Penyu 🐢", studentName = "Murid Contoh", devView = false }) {
+  const payload = data?.payload || data || {};
   return (
-    <div className="space-y-4 text-left font-sans">
-      {/* Story Banner with Suku Penyu Visual & Text */}
-      <div className="overflow-hidden bg-stone-900 border border-stone-800 rounded-2xl space-y-3 shadow-lg">
-        <div className="relative w-full h-44 sm:h-52 bg-gradient-to-t from-stone-950 via-stone-900 to-amber-950/40 flex items-center justify-center overflow-hidden">
-          <StoryHookMedia content={payload} storyVisual={storyBannerUrl} fallbackSceneImg={fallbackStorySceneImg} />
-          <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-transparent pointer-events-none" />
-          <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
-            <span className="px-2.5 py-1 bg-amber-500/90 text-stone-950 text-[10px] font-black uppercase rounded-lg shadow">
-              Kisah Misi Kembara
-            </span>
-            <span className="text-xs">🐢✨</span>
-          </div>
-        </div>
-
-        <div className="p-4 space-y-2">
-          <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider block">
-            📣 Pengenalan Misi Kembara
-          </span>
-          <h3 className="text-base font-black text-amber-200">
-            {devView ? (data.title || "Kisah Misi KSSR") : sanitizeStudentText(data.title || "Kisah Misi Kembara")}
-          </h3>
-          <p className="text-xs text-stone-300 leading-relaxed font-medium">
-            {cleanHook}
-          </p>
-        </div>
-      </div>
-
-      {/* Suggestive Story Continuation: How to Help Suku Penyu */}
-      <div className="p-3.5 bg-gradient-to-r from-amber-900/40 via-amber-950/60 to-stone-900 rounded-2xl border border-amber-500/40 flex items-start gap-3 shadow-md">
-        <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center shrink-0 text-amber-300 font-bold text-sm shadow">
-          💡
-        </div>
-        <div className="space-y-0.5 text-left">
-          <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider block">
-            Cara Membantu {mascotName} 🐢
-          </span>
-          <p className="text-xs sm:text-sm text-stone-200 font-semibold leading-relaxed">
-            {devView
-              ? payload.help_continuation || payload.help_guide || "Mari kita bantu Suku Penyu menyelesaikan cabaran ini dengan menguasai kemahiran subtopik ini bersama-sama!"
-              : sanitizeStudentText(
-                  payload.help_continuation || payload.help_guide || "Mari kita bantu Suku Penyu menyelesaikan cabaran ini dengan menguasai kemahiran subtopik ini bersama-sama!"
-                )}
-          </p>
-        </div>
-      </div>
-
-      {/* Mascot Dialogue Bubble with Profile Picture */}
-      <div className="p-4 bg-stone-900 border border-stone-800 rounded-2xl flex items-start gap-3 shadow-md">
-        <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center shrink-0 overflow-hidden shadow-md">
-          <span className="text-2xl" role="img" aria-label={mascotName}>🐢</span>
-        </div>
-        <div className="space-y-2 flex-1">
-          <div className="flex items-center justify-between">
-            <h4 className="text-xs font-black text-amber-400">{mascotName}</h4>
-            <button
-              onClick={() => speakDialogue(cleanDialogue)}
-              className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-stone-950 rounded-xl text-[10px] font-black flex items-center gap-1 transition-all"
-            >
-              🔊 Dengar Suku
-            </button>
-          </div>
-          <p className="text-xs text-stone-200 font-bold leading-relaxed">
-            "{cleanDialogue}"
-          </p>
-        </div>
-      </div>
-    </div>
+    <StoryHookBlock
+      content={payload}
+      mascot={mascotName}
+      studentName={studentName}
+    />
   );
 }
 
