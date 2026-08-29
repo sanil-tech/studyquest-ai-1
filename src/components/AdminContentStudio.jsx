@@ -371,7 +371,7 @@ export default function AdminContentStudio() {
             sk_code: skCode,
             sp_code: spCode,
             asset_type: "FULL_LESSON",
-            review_status: "approved",
+            review_status: "draft",
           },
         });
         return;
@@ -782,6 +782,37 @@ export default function AdminContentStudio() {
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 p-4 sm:p-8 space-y-6 font-sans">
       
+      {/* UNAPPROVE BUTTON */}
+      <div className="flex justify-end mb-4">
+        <Button 
+          variant="destructive" 
+          onClick={async () => {
+            if(!confirm('Unapprove all lessons?')) return;
+            try {
+              const blocks = await base44.entities.LessonBlock.list();
+              for(const b of blocks) {
+                if(b.review_status === 'approved' || b.status === 'approved') {
+                  await base44.entities.LessonBlock.update(b.id, { review_status: 'draft', status: 'draft' });
+                }
+              }
+              const assets = await base44.entities.LessonContent.list();
+              for(const a of assets) {
+                if(a.review_status === 'approved' || a.status === 'approved') {
+                  await base44.entities.LessonContent.update(a.id, { review_status: 'draft', status: 'draft' });
+                }
+              }
+              alert('Successfully unapproved all content');
+              window.location.reload();
+            } catch(err) {
+              console.error(err);
+              alert('Failed to unapprove');
+            }
+          }}
+        >
+          Bulk Unapprove All Content (Dev Tool)
+        </Button>
+      </div>
+
       {/* 1. PERSISTENT CANONICAL CURRICULUM BREADCRUMB HEADER */}
       <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
