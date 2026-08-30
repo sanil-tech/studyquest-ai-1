@@ -67,7 +67,9 @@ function detectObjectAndCount(text = "", fallbackEmoji = "🍎") {
   else if (lower.includes("pensel")) emoji = "✏️";
   else if (lower.includes("bunga")) emoji = "🌸";
   else if (lower.includes("oren") || lower.includes("buah")) emoji = "🍊";
-  else if (lower.includes("cengkerang") || lower.includes("ketam")) emoji = "🦀";
+  else if (lower.includes("cengkerang") || lower.includes("siput")) emoji = "🐚";
+  else if (lower.includes("penyu")) emoji = "🐢";
+  else if (lower.includes("telur")) emoji = "🥚";
   else if (lower.includes("gula-gula") || lower.includes("manisan")) emoji = "🍬";
 
   // Try extracting number if mentioned
@@ -275,7 +277,9 @@ export default function ConceptCPABlock({ content = {}, studentName, onComplete,
               const emoji = content.object_emoji || "🔢";
               const na = toPositiveInteger(c.count_a);
               const nb = toPositiveInteger(c.count_b);
-              if (!na || !nb) return null;
+              if (!na || !nb) return <SkillVisual phaseContent={c || p} fallbackEmoji={emoji} />;
+              // Fix for pictorial
+              if (phase.key === 'pictorial') { p = p || phaseContent; if (!nt || !nb) return <SkillVisual phaseContent={p} fallbackEmoji={emoji} />; }
               return (
                 <TapCountVisual
                   emojisA={Array.from({ length: na }, () => c.object_emoji_a || emoji)}
@@ -293,7 +297,7 @@ export default function ConceptCPABlock({ content = {}, studentName, onComplete,
               const emoji = content.object_emoji || "🔢";
               const nt = toPositiveInteger(p.count_top);
               const nb = toPositiveInteger(p.count_bottom);
-              if (!nt || !nb) return null;
+              if (!nt || !nb) return <SkillVisual phaseContent={p} fallbackEmoji={emoji} />;
               return (
                 <MatchPairsVisual
                   topItems={Array.from({ length: nt }, () => p.object_emoji_top || emoji)}

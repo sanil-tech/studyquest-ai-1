@@ -24,7 +24,7 @@ import { sanitizeStudentText } from "@/lib/sanitizeStudentText";
 /**
  * StoryScene Component (Step 1: Briefing)
  */
-function StoryScene({ data, mascotName = "Suku Penyu 🐢", studentName = "Murid Contoh", devView = false }) {
+function StoryScene({ data, mascotName = "Suku Penyu 🐢", studentName = "Adik", devView = false }) {
   const payload = data?.payload || data || {};
   return (
     <StoryHookBlock
@@ -438,7 +438,7 @@ export default function UniversalLessonPreview({ lessonPackage, previewMode = tr
           }`}>
             <LessonShellRenderer 
               lesson={lessonPackage.lesson || lessonPackage} 
-              studentName="Murid Contoh" 
+              studentName="Adik" 
               onLessonComplete={() => {
                 confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
               }}

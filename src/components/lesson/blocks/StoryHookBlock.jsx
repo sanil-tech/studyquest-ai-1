@@ -11,7 +11,7 @@ import { generateDynamicImagePrompt, getPromptSeed } from "@/utils/generateDynam
 import { getStaticFallbackImage } from "@/services/aiImageEngine";
 import StoryHookMedia from "@/components/lesson/StoryHookMedia";
 
-export default function StoryHookBlock({ content = {}, mascot, studentName = "Murid Contoh", onComplete, isCompleted }) {
+export default function StoryHookBlock({ content = {}, mascot, studentName = "Adik", onComplete, isCompleted }) {
   const payload = content.payload || content;
   const storyText = personalize(payload.story_text || payload.story_hook || payload.description || "", studentName);
   const dialogue = personalize(payload.mascot_dialogue || payload.dialogue_template || payload.dialogue || payload.story_hook || "", studentName);
