@@ -379,12 +379,11 @@ export default async function (req: Request): Promise<Response> {
     let hookContext = "";
     if (["REFLECTION", "KEY_TAKEAWAY", "CONCEPT", "CONCEPT_CPA", "WORKED_EXAMPLE", "INTERACTIVE_PRACTICE", "GUIDED_PRACTICE"].includes(asset_type)) {
       try {
-        const query = {
+        const query: any = {
           topic_id,
-          sp_code,
           block_type: "STORY_HOOK"
         };
-        if (subtopic_id) query.subtopic_id = subtopic_id;
+        // We removed sp_code from strict filter to ensure we grab the hook even if SP varies slightly.
         const hookBlocks = await db.entities.LessonBlock.filter(query);
         if (hookBlocks && hookBlocks.length > 0) {
           // Get the MOST RECENT hook (last item in the array if sorted ascending, or we can just sort it ourselves)

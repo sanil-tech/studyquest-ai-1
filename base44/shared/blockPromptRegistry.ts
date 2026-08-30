@@ -142,7 +142,7 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
     ],
     language_rules: ["Child-direct Bahasa Melayu. Short sentences. Words a 7-year-old knows."],
     age_appropriateness: "7-year-old reads or hears (TTS) each stage in under 10 seconds. Concrete visual language, no abstract-only text.",
-    malaysian_context: "Use Malaysian everyday objects (guli, batu, epal, manggis, kereta mainan, gula-gula).",
+    malaysian_context: "Gunakan objek yang SEPADAN dengan jalan cerita (Story Hook) atau objek asas Malaysia yang relevan.",
     output_contract: {
       required_fields: ["title", "concept_model", "concrete", "pictorial", "abstract"],
       schema_description: "Object with title, concept_model, and CPA objects. Each phase includes title, explanation, visual_type, and only the visual data that matches the selected concept_model."
