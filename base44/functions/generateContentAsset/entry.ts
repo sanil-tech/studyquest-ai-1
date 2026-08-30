@@ -315,7 +315,7 @@ export default async function (req: Request): Promise<Response> {
 
     // 2. Parse Input & Validate Request Parameters
     const body = await req.json().catch(() => ({}));
-    const { topic_id, subtopic_id, sp_code, asset_type, subject_name, year_level, topic_name, subtopic_name, sp_description } = body;
+    const { topic_id, subtopic_id, sp_code, subtopic_id, asset_type, subject_name, year_level, topic_name, subtopic_name, sp_description } = body;
 
     if (!topic_id || !subtopic_id || !sp_code || !asset_type) {
       return Response.json(
@@ -366,7 +366,7 @@ export default async function (req: Request): Promise<Response> {
     const existingApproved = await db.entities[targetEntity]
       .filter({
         topic_id,
-        sp_code,
+        sp_code, subtopic_id,
         status: "published",
       })
       .catch(() => []);
@@ -375,14 +375,41 @@ export default async function (req: Request): Promise<Response> {
     const subject = subject_name || "Matematik";
     const level = year_level || "Tahun 4";
 
-    const promptText = buildMacroPrompt({
+    // Fetch STORY_HOOK to pass into REFLECTION for continuity
+    let hookContext = "";
+    if (asset_type === "REFLECTION" || asset_type === "KEY_TAKEAWAY") {
+      try {
+        const query = {
+          topic_id,
+          sp_code,
+          block_type: "STORY_HOOK"
+        };
+        if (subtopic_id) query.subtopic_id = subtopic_id;
+        const hookBlocks = await db.entities.LessonBlock.filter(query);
+        if (hookBlocks && hookBlocks.length > 0) {
+          // Get the MOST RECENT hook (last item in the array if sorted ascending, or we can just sort it ourselves)
+          hookBlocks.sort((a,b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+          const latestHook = hookBlocks[hookBlocks.length - 1];
+          if (latestHook.payload) {
+            const hookPayload = typeof latestHook.payload === "string" ? JSON.parse(latestHook.payload) : latestHook.payload;
+          if (hookPayload.story_text) {
+             hookContext = "\n\n[CRITICAL CONTEXT: EXISTING STORY HOOK]\nThe opening hook for this lesson was:\n\"" + hookPayload.story_text + "\"\n\nYou MUST ensure the reflection_prompt closing question explicitly references the EXACT SAME objects/mission mentioned in this hook (e.g. shells, apples, turtles, whatever was mentioned above). Do NOT invent new objects.\n";
+          }
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch STORY_HOOK context", e);
+      }
+    }
+
+    let promptText = buildMacroPrompt({
       asset_type,
       curriculum_context: {
         subject,
         topic_id,
         topic: topic_name || topic_id,
         subtopic: subtopic_name || subtopic_id,
-        sp_code,
+        sp_code, subtopic_id,
         sp_description: sp_description || "Standard Pembelajaran",
         learning_standard: sp_description || "Standard Pembelajaran",
       },
@@ -390,6 +417,10 @@ export default async function (req: Request): Promise<Response> {
         year_level: level,
       },
     });
+    
+    if (hookContext) {
+      promptText += hookContext;
+    }
 
     // 6. Invoke LLM via Core Integration
     let aiRes: any = null;
@@ -648,7 +679,7 @@ export default async function (req: Request): Promise<Response> {
         lesson_version_id: null,
         topic_id,
         subtopic_id,
-        sp_code,
+        sp_code, subtopic_id,
         block_type: mapping.block_type || "TEXT_MARKDOWN",
         title: aiRes.title || "Aset Kandungan",
         order_number: 0,
@@ -664,7 +695,7 @@ export default async function (req: Request): Promise<Response> {
         lesson_version_id: null,
         topic_id,
         subtopic_id,
-        sp_code,
+        sp_code, subtopic_id,
         content_type: mapping.content_type || "notes",
         title: aiRes.title || "Kandungan Nota/Video",
         content_markdown: aiRes.markdown || "",
@@ -680,7 +711,7 @@ export default async function (req: Request): Promise<Response> {
         lesson_id: null,
         topic_id,
         subtopic_id,
-        sp_code,
+        sp_code, subtopic_id,
         widget_type: aiRes.widget_type || "drag_and_drop",
         activity_type: mapping.content_type || "interactive",
         title: aiRes.title || "Aktiviti Interaktif",
@@ -698,7 +729,7 @@ export default async function (req: Request): Promise<Response> {
         const fc = await db.entities.Flashcard.create({
           lesson_version_id: null,
           topic_id,
-          sp_code,
+          sp_code, subtopic_id,
           front: card.front || card.front_text || aiRes.title,
           back: card.back || card.back_text || "",
           explanation: card.explanation || "",
@@ -772,7 +803,7 @@ export default async function (req: Request): Promise<Response> {
           question_id: qId,
           topic_id,
           subtopic_id,
-          sp_code,
+          sp_code, subtopic_id,
           question: q.question_text || q.question || q.stem || aiRes.title,
           question_type: q.question_type || "mcq",
           correct_answer: correctLabel,
@@ -825,7 +856,7 @@ export default async function (req: Request): Promise<Response> {
         curriculum_tags: {
           topic_id,
           subtopic_id,
-          sp_code,
+          sp_code, subtopic_id,
         },
         has_existing_approved: existingApproved.length > 0,
       },

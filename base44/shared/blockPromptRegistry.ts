@@ -310,7 +310,7 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
       "summary_points: 3-5 short bullets about the ACTUAL lesson topic, each max 10 words, child-direct ('Kita belajar...', 'Ingat: ...').",
       "memory_tip: ONE short catchy sentence using a child-friendly analogy (e.g. 'Lebih macam makan banyak, kurang macam makan sikit!').",
       "common_mistakes: 1-2 short child sentences about mistakes to avoid.",
-      "reflection_prompt: ONE short closing question to resolve the STORY_HOOK. IMPORTANT: The question MUST specifically mention the concrete objects the student just learned to count (e.g., shells, apples). If the hook involved Suku Penyu finding shells, ask them to count the shells!",
+      "reflection_prompt: ONE short closing question to resolve the STORY_HOOK. IMPORTANT: The question MUST specifically mention the concrete objects the student just learned to count (e.g., shells, apples). Jika Blok 1 (STORY HOOK) sebelum ini menggunakan objek 'cengkerang' (shells), soalan ini WAJIB bertanya tentang 'cengkerang'. JANGAN reka objek baru (seperti epal) jika cerita asalnya adalah cengkerang/penyu/dsb!",
       "flashcards: 2-4 objects each with 'term' (one word) and 'definition' (one short child sentence).",
       "Write DIRECTLY to the child, encouraging and warm ('Syabas!', 'Tahniah!').",
       "Do NOT introduce brand-new un-taught concepts."

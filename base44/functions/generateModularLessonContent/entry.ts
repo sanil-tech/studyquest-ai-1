@@ -295,7 +295,7 @@ CRITICAL QUALITY RULE:
 DO NOT use placeholder text or dummy fallbacks (e.g., "Sila jana semula", "Lorem Ipsum", "Node 1").
 All text MUST be rich, complete, educational Bahasa Melayu content tailored to ${subject} ${yearLevel}.`;
 
-    const userPrompt = `Jana pakej pelajaran 8-Blok DETERMINISTIK bagi ${skCode} - ${spCode}. Pastikan ia mematuhi skema JSON yang ditetapkan.`;
+    const userPrompt = `Jana pakej pelajaran 8-Blok DETERMINISTIK bagi ${skCode} - ${spCode}. Pastikan ia mematuhi skema JSON yang ditetapkan.\n\nAMARAN KERAS: Blok 7 (KEY_TAKEAWAY) reflection_prompt MESTI dan WAJIB bersambung semula dengan objek dan misi yang dicipta dalam Blok 1 (STORY_HOOK). Jika Blok 1 bercakap tentang mengira cengkerang, Blok 7 MESTI bertanya tentang cengkerang. Jangan reka objek baru seperti epal atau guli secara rawak!`;
 
     const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: systemPrompt + "\n\n" + userPrompt,
