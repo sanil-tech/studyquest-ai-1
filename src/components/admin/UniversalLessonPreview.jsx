@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { generateDynamicImagePrompt, getPromptSeed } from "@/utils/generateDynamicImagePrompt";
-import { getStaticFallbackImage } from "@/services/aiImageEngine";
-import StoryHookMedia from "@/components/lesson/StoryHookMedia";
+
+
+
 import {
   Heart,
   Star,

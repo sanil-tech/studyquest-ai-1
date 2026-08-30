@@ -6,6 +6,9 @@ import React, { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { generateDynamicImagePrompt, getPromptSeed } from "@/utils/generateDynamicImagePrompt";
+import { getStaticFallbackImage } from "@/services/aiImageEngine";
+import { personalize } from "@/lib/personalize";
 
 // 8 focused block components
 import StoryHookBlock from "./blocks/StoryHookBlock";
@@ -114,8 +117,29 @@ export default function LessonShellRenderer({
   const hookImageUrl = useMemo(() => {
     const hook = blocks.find((b) => b?.block_type === "STORY_HOOK");
     const p = hook?.payload || hook?.content || {};
-    return p.image_url || p.image || null;
-  }, [blocks]);
+    const rawUrl = p.image_url || p.visual_url || p.visual?.image_url || p.image;
+    if (rawUrl && !rawUrl.includes("suku_penyu_mascot")) {
+      return rawUrl;
+    }
+    const storyText = personalize(p.story_text || p.story_hook || p.description || "", studentName);
+    const storyPromptText = p.image_prompt || p.visual_prompt || storyText || p.topic || "";
+    
+    // Ensure we don't try to generate prompt if nothing exists
+    if (!storyPromptText) return null;
+
+    const prompt = generateDynamicImagePrompt({
+      subject: p.subject || "Matematik",
+      grade: p.grade || "Tahun 1",
+      topic: p.topic || "Nombor hingga 100",
+      sceneType: "STORY",
+      visualDescription: p.image_prompt || p.visual_prompt || p.visual_description || "",
+      storyText: storyPromptText
+    });
+    const seed = getPromptSeed(prompt);
+    const computedUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=450&nologo=true&seed=${seed}`;
+    
+    return computedUrl || getStaticFallbackImage(p.topic, storyText);
+  }, [blocks, studentName]);
 
   // Mapping from block_type to its index for quick navigation via stage clicks
   const blockIndexByType = useMemo(() => {

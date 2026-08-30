@@ -8,6 +8,7 @@ interface ModularGenInput {
   lesson_version_id: string;
   sk_code?: string;
   sp_code?: string;
+  sp_description?: string;
   subject?: string;
   year_level?: string;
   curriculum_type?: "KSSR_SEMAKAN" | "KSSM";
@@ -261,6 +262,7 @@ export default async function (req: Request): Promise<Response> {
 
     const skCode = body.sk_code || version.sk_code || "SK 1.1 Pecahan";
     const spCode = body.sp_code || version.sp_code || "SP 1.1.1 Penambahan Pecahan";
+    const spDesc = body.sp_description || "";
     const subject = body.subject || "Matematik";
     const yearLevel = body.year_level || version.year_level || "Tahun 4";
     const curriculumType = body.curriculum_type || version.curriculum_type || "KSSR_SEMAKAN";
@@ -274,19 +276,19 @@ Your task is to generate a comprehensive, highly structured 8-block deterministi
 - Tingkat/Tahun: ${yearLevel}
 - Topik: ${topic}
 - Standard Kandungan (SK): ${skCode}
-- Standard Pembelajaran (SP): ${spCode}
+- Standard Pembelajaran (SP): ${spCode} ${spDesc ? `- ${spDesc}` : ""}
 - Bahasa: ${language}
 - Taksonomi: ${taxonomy}
 
 STRICT GENERATION RULES FOR THE 8 DETERMINISTIC BLOCKS:
 You MUST generate EXACTLY 8 blocks in this exact order:
-1. Block 1 (STORY_HOOK): Engaging narrative story hook with mascot dialogue and curiosity question.
+1. Block 1 (STORY_HOOK): Engaging narrative story hook with mascot dialogue and a concrete mission/curiosity question (e.g., finding shells). You MUST define specific concrete objects in the story_text that the student will need to count or analyze.
 2. Block 2 (LEARNING_OBJECTIVE): Clear 'I can' (Saya boleh) student outcome statement aligned to SP code.
 3. Block 3 (CONCEPT_CPA): Scaffolded Concrete-Pictorial-Abstract explanation with visual prompt and definitions.
-4. Block 4 (WORKED_EXAMPLE): Clear problem statement with step-by-step solution, common mistake callout, and reasoning.
+4. Block 4 (WORKED_EXAMPLE): Clear problem statement aligned STRICTLY to the SP (do not ask comparison questions if SP is identifying numbers), step-by-step solution, common mistake callout, reasoning, and include a "visual_aid" object ({type: "single_count"|"comparison"|"number_line"|"none", count, left_count, right_count, object_emoji, label, left_label, right_label}).
 5. Block 5 (INTERACTIVE_PRACTICE): Interactive activity instruction and seed data. 'widget_type' MUST be one of: base_ten_blocks, number_scale, fraction_slicer, sentence_builder, drag_and_drop, matching_cards, quiz_wheel.
 6. Block 6 (KNOWLEDGE_CHECK): Formative quiz with 3-5 MCQ questions (question, options [3-4 items], correct_answer, explanation, cognitive_level, difficulty).
-7. Block 7 (KEY_TAKEAWAY): Exactly 3 key summary points, memory tip, and 2-4 flashcard terms/definitions.
+7. Block 7 (KEY_TAKEAWAY): Exactly 3 key summary points, memory tip, 2-4 flashcard terms/definitions, and a "reflection_prompt" string (a closing question that explicitly resolves the exact same mission/objects introduced in the STORY_HOOK. If the hook was about shells, this question MUST ask the student to count the shells).
 8. Block 8 (MISSION_COMPLETE): Celebration message, badge name, total_xp (100), total_coins (25).
 
 CRITICAL QUALITY RULE:

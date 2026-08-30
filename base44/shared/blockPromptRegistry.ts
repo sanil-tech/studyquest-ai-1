@@ -176,10 +176,10 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
     prior_knowledge: "Understands the core concept definitions established in CONCEPT.",
     block_responsibility: "Present a Malaysian problem, 2-5 short visual steps (each describing what the child SEES on screen), one common mistake, and the correct reasoning.",
     content_rules: [
-      "problem_statement: ONE short Malaysian-context sentence the child can read (max 15 words). Its skill and answer MUST match the selected SP, not a generic comparison question.",
+      "problem_statement: ONE short Malaysian-context sentence the child can read (max 15 words). STRICT REQUIREMENT: Its skill and answer MUST match the selected SP EXACTLY (e.g., if SP is about naming 1-10, just ask them to count 6 objects, DO NOT ask comparison like \"Siapa ada lebih?\").",
       "solution_steps: 2-5 short strings, each describing a VISUAL action on screen. Select the action for the actual skill: count and name objects, arrange a number sequence, build tens and ones, write a numeral, or compare only when the SP requests comparison. Max 12 words per step.",
       "Each step must describe what the child SEES, not what a teacher does.",
-      "visual_aid: Return {type, object_emoji, count, label, numeral, left_count, right_count, left_label, right_label}. Use type 'single_count' for counting/naming, 'comparison' only for comparison SP, 'number_line' for sequences, or 'none' when a visual aid would misrepresent the skill. Populate only relevant fields.",
+      "visual_aid: Return {type, object_emoji, count, label, numeral, left_count, right_count, left_label, right_label}. STRICT RULE: Use type 'single_count' for counting/naming (e.g. Kenali 1-10), 'comparison' ONLY for comparison SP (lebih/kurang), 'number_line' for sequences, or 'none' when a visual aid would misrepresent the skill. Populate only relevant fields.",
       "common_mistake: ONE short child sentence about a mistake relevant to THIS SP — never reuse a banyak/sedikit misconception unless this is a comparison SP.",
       "correct_reasoning: ONE short child sentence explaining WHY the answer is right for THIS SP.",
       "Use emoji only when it helps the selected skill; do not force two groups of objects."
@@ -310,7 +310,7 @@ export const BLOCK_PROMPT_REGISTRY: Record<string, PromptContract> = Object.free
       "summary_points: 3-5 short bullets about the ACTUAL lesson topic, each max 10 words, child-direct ('Kita belajar...', 'Ingat: ...').",
       "memory_tip: ONE short catchy sentence using a child-friendly analogy (e.g. 'Lebih macam makan banyak, kurang macam makan sikit!').",
       "common_mistakes: 1-2 short child sentences about mistakes to avoid.",
-      "reflection_prompt: ONE short question yang meminta murid MENYELESAIKAN kisah misi dari hook — kaitkan terus dengan situasi cerita sebenar (cth: '{{nama}}, balang mana satu lebih banyak guli?'). Ini menutup loop cerita dan mengajak murid selesaikan misi Suku Penyu.",
+      "reflection_prompt: ONE short closing question to resolve the STORY_HOOK. IMPORTANT: The question MUST specifically mention the concrete objects the student just learned to count (e.g., shells, apples). If the hook involved Suku Penyu finding shells, ask them to count the shells!",
       "flashcards: 2-4 objects each with 'term' (one word) and 'definition' (one short child sentence).",
       "Write DIRECTLY to the child, encouraging and warm ('Syabas!', 'Tahniah!').",
       "Do NOT introduce brand-new un-taught concepts."
