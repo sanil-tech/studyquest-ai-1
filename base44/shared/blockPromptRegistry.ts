@@ -658,6 +658,11 @@ ${contract.role}
 - Setiap blok mesti boleh diselesaikan seorang diri dalam masa singkat.
 - PERSONALISASI (WAJIB): Sebut nama murid sekurang-kurangnya sekali setiap blok menggunakan placeholder {{nama}} (cth: 'Mari, {{nama}}!', 'Tengok ni, {{nama}}', 'Syabas, {{nama}}!', '{{nama}}, tolong Suku Penyu...'). JANGAN tulis nama sebenar — gunakan {{nama}} sahaja. Sistem akan gantikan {{nama}} dengan nama murid atau nama samaran secara automatik. Ini menjadikan setiap pelajaran terasa mesra dan peribadi untuk kanak-kanak.
 
+[MACRO 3C — KSSR PEDAGOGY & NUMBER RANGE (WAJIB)]
+- JULAT NOMBOR (NUMBER RANGE): Jika SP meliputi satu julat (contoh: "Kenali 1 hingga 10", "Nombor hingga 100"), anda WAJIB menyertakan contoh dari JULAT ATAS (upper range) untuk menguji penguasaan sebenar (contoh: guna nombor 7, 8, atau 9, JANGAN terhad hanya kepada kuantiti 1-5).
+- ALATAN KOGNITIF (JARI & ANGGOTA): Walaupun tiada objek fizikal, anda SANGAT DIGALAKKAN menyuruh murid menggunakan jari mereka sendiri (cth: "Angkat 7 jari adik 🖐️✌️", "Kira guna jari") atau merujuk anggota badan untuk mengira, ini adalah kaedah KSSR yang kuat.
+- KAEDAH VISUAL: Sokong konsep dengan Garis Nombor (Number Line), Kombinasi Nombor (Number Bonds), atau Bongkah Asas Sepuluh jika sesuai dengan SP.
+
 [MACRO 4 — PEDAGOGICAL PURPOSE]
 ${contract.pedagogical_purpose}
 
